@@ -17,12 +17,12 @@ message S2CJoinRoomRsp {
 }
 
 // 客户端 - 载入游戏进度请求参数
-message C2SJoinRoomProgressReq {
+message C2SLoadProgressReq {
     int32 progress = 2;
 }
 
 // 服务器端 - 载入游戏进度信息
-message S2CJoinRoomProgressRsp {
+message S2CLoadProgressRsp {
     uint64 playerId = 1;
     int32 progress = 2;
 }

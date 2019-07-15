@@ -49,11 +49,17 @@ func (this *ServerHandler) OnMessage(c *net4go.Conn, p net4go.Packet) bool {
 			// 验证 Token
 			c.Set("player_id", req.PlayerId)
 
+			// 返回加入房间结果
 			var rsp = &protocol.S2CJoinRoomRsp{}
-			rsp.Code = 10
+			rsp.Code = 1
 
 			c.WritePacket(protocol.NewPacket(1001, rsp))
-
+		case 1002:
+			var req = &protocol.C2SLoadProgressReq{}
+			if err := v.UnmarshalProtoMessage(req); err != nil {
+				return false
+			}
+			fmt.Println("加入房间进度", c.Get("player_id"), req.Progress)
 		}
 	}
 	return true

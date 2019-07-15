@@ -5,6 +5,7 @@ import (
 	"github.com/smartwalle/net4go"
 	"github.com/smartwalle/newbee/protocol"
 	"net"
+	"time"
 )
 
 func main() {
@@ -19,15 +20,13 @@ func main() {
 
 	cc := net4go.NewConn(c, p, h)
 
-
 	var pJoinRoom = &protocol.C2SJoinRoomReq{}
 	pJoinRoom.PlayerId = 1009
 	pJoinRoom.Token = "这是我的 Token"
 
 	cc.WritePacket(protocol.NewPacket(1000, pJoinRoom))
 
-	select {
-	}
+	select {}
 }
 
 type ClientHandler struct {
@@ -45,6 +44,21 @@ func (this *ClientHandler) OnMessage(c *net4go.Conn, p net4go.Packet) bool {
 				return false
 			}
 			fmt.Println("加入房间返回结果", rsp.Code)
+
+			if rsp.Code == 1 {
+				for i := 1; i <= 10; i++ {
+					var req = &protocol.C2SLoadProgressReq{}
+					req.Progress = int32(i) * 10
+					c.WritePacket(protocol.NewPacket(1002, req))
+					time.Sleep(time.Second * 1)
+				}
+			}
+		case 1003:
+			var rsp = &protocol.S2CLoadProgressRsp{}
+			if err := v.UnmarshalProtoMessage(rsp); err != nil {
+				return false
+			}
+			fmt.Println("加入房间进度", rsp.PlayerId, rsp.Progress)
 		}
 
 	}
