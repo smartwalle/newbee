@@ -23,39 +23,30 @@ const _ = proto.ProtoPackageIsVersion3 // please upgrade the proto package
 type PT int32
 
 const (
-	PT_UNKNOWN           PT = 0
-	PT_HEARTBEAT_REQ     PT = 900001
-	PT_HEARTBEAT_RSP     PT = 900002
-	PT_CONNECT_REQ       PT = 900003
-	PT_CONNECT_RSP       PT = 900004
-	PT_JOIN_ROOM_REQ     PT = 900005
-	PT_JOIN_ROOM_RSP     PT = 900006
-	PT_LOAD_PROGRESS_REQ PT = 900007
-	PT_LOAD_PROGRESS_RSP PT = 900008
+	PT_UNKNOWN       PT = 0
+	PT_HEARTBEAT     PT = 900001
+	PT_JOIN_ROOM     PT = 900002
+	PT_LOAD_PROGRESS PT = 900003
+	PT_GAME_FRAME    PT = 900004
+	PT_GAME_START    PT = 900005
 )
 
 var PT_name = map[int32]string{
 	0:      "UNKNOWN",
-	900001: "HEARTBEAT_REQ",
-	900002: "HEARTBEAT_RSP",
-	900003: "CONNECT_REQ",
-	900004: "CONNECT_RSP",
-	900005: "JOIN_ROOM_REQ",
-	900006: "JOIN_ROOM_RSP",
-	900007: "LOAD_PROGRESS_REQ",
-	900008: "LOAD_PROGRESS_RSP",
+	900001: "HEARTBEAT",
+	900002: "JOIN_ROOM",
+	900003: "LOAD_PROGRESS",
+	900004: "GAME_FRAME",
+	900005: "GAME_START",
 }
 
 var PT_value = map[string]int32{
-	"UNKNOWN":           0,
-	"HEARTBEAT_REQ":     900001,
-	"HEARTBEAT_RSP":     900002,
-	"CONNECT_REQ":       900003,
-	"CONNECT_RSP":       900004,
-	"JOIN_ROOM_REQ":     900005,
-	"JOIN_ROOM_RSP":     900006,
-	"LOAD_PROGRESS_REQ": 900007,
-	"LOAD_PROGRESS_RSP": 900008,
+	"UNKNOWN":       0,
+	"HEARTBEAT":     900001,
+	"JOIN_ROOM":     900002,
+	"LOAD_PROGRESS": 900003,
+	"GAME_FRAME":    900004,
+	"GAME_START":    900005,
 }
 
 func (x PT) String() string {
@@ -98,71 +89,73 @@ func (JOIN_ROOM_CODE) EnumDescriptor() ([]byte, []int) {
 }
 
 // --------------------------------------------------------------------------------
-type HeartbeatReq struct {
+// 客户端 - 心跳请求参数
+type C2SHeartbeat struct {
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
 	XXX_unrecognized     []byte   `json:"-"`
 	XXX_sizecache        int32    `json:"-"`
 }
 
-func (m *HeartbeatReq) Reset()         { *m = HeartbeatReq{} }
-func (m *HeartbeatReq) String() string { return proto.CompactTextString(m) }
-func (*HeartbeatReq) ProtoMessage()    {}
-func (*HeartbeatReq) Descriptor() ([]byte, []int) {
+func (m *C2SHeartbeat) Reset()         { *m = C2SHeartbeat{} }
+func (m *C2SHeartbeat) String() string { return proto.CompactTextString(m) }
+func (*C2SHeartbeat) ProtoMessage()    {}
+func (*C2SHeartbeat) Descriptor() ([]byte, []int) {
 	return fileDescriptor_e7594dbd1bcb6139, []int{0}
 }
 
-func (m *HeartbeatReq) XXX_Unmarshal(b []byte) error {
-	return xxx_messageInfo_HeartbeatReq.Unmarshal(m, b)
+func (m *C2SHeartbeat) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_C2SHeartbeat.Unmarshal(m, b)
 }
-func (m *HeartbeatReq) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	return xxx_messageInfo_HeartbeatReq.Marshal(b, m, deterministic)
+func (m *C2SHeartbeat) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_C2SHeartbeat.Marshal(b, m, deterministic)
 }
-func (m *HeartbeatReq) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_HeartbeatReq.Merge(m, src)
+func (m *C2SHeartbeat) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_C2SHeartbeat.Merge(m, src)
 }
-func (m *HeartbeatReq) XXX_Size() int {
-	return xxx_messageInfo_HeartbeatReq.Size(m)
+func (m *C2SHeartbeat) XXX_Size() int {
+	return xxx_messageInfo_C2SHeartbeat.Size(m)
 }
-func (m *HeartbeatReq) XXX_DiscardUnknown() {
-	xxx_messageInfo_HeartbeatReq.DiscardUnknown(m)
+func (m *C2SHeartbeat) XXX_DiscardUnknown() {
+	xxx_messageInfo_C2SHeartbeat.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_HeartbeatReq proto.InternalMessageInfo
+var xxx_messageInfo_C2SHeartbeat proto.InternalMessageInfo
 
-type HeartbeatRsp struct {
+// 服务器端 - 心跳返回结果
+type S2CHeartbeat struct {
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
 	XXX_unrecognized     []byte   `json:"-"`
 	XXX_sizecache        int32    `json:"-"`
 }
 
-func (m *HeartbeatRsp) Reset()         { *m = HeartbeatRsp{} }
-func (m *HeartbeatRsp) String() string { return proto.CompactTextString(m) }
-func (*HeartbeatRsp) ProtoMessage()    {}
-func (*HeartbeatRsp) Descriptor() ([]byte, []int) {
+func (m *S2CHeartbeat) Reset()         { *m = S2CHeartbeat{} }
+func (m *S2CHeartbeat) String() string { return proto.CompactTextString(m) }
+func (*S2CHeartbeat) ProtoMessage()    {}
+func (*S2CHeartbeat) Descriptor() ([]byte, []int) {
 	return fileDescriptor_e7594dbd1bcb6139, []int{1}
 }
 
-func (m *HeartbeatRsp) XXX_Unmarshal(b []byte) error {
-	return xxx_messageInfo_HeartbeatRsp.Unmarshal(m, b)
+func (m *S2CHeartbeat) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_S2CHeartbeat.Unmarshal(m, b)
 }
-func (m *HeartbeatRsp) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	return xxx_messageInfo_HeartbeatRsp.Marshal(b, m, deterministic)
+func (m *S2CHeartbeat) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_S2CHeartbeat.Marshal(b, m, deterministic)
 }
-func (m *HeartbeatRsp) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_HeartbeatRsp.Merge(m, src)
+func (m *S2CHeartbeat) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_S2CHeartbeat.Merge(m, src)
 }
-func (m *HeartbeatRsp) XXX_Size() int {
-	return xxx_messageInfo_HeartbeatRsp.Size(m)
+func (m *S2CHeartbeat) XXX_Size() int {
+	return xxx_messageInfo_S2CHeartbeat.Size(m)
 }
-func (m *HeartbeatRsp) XXX_DiscardUnknown() {
-	xxx_messageInfo_HeartbeatRsp.DiscardUnknown(m)
+func (m *S2CHeartbeat) XXX_DiscardUnknown() {
+	xxx_messageInfo_S2CHeartbeat.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_HeartbeatRsp proto.InternalMessageInfo
+var xxx_messageInfo_S2CHeartbeat proto.InternalMessageInfo
 
 // --------------------------------------------------------------------------------
 // 客户端 - 加入房间请求参数
-type JoinRoomReq struct {
+type C2SJoinRoom struct {
 	RoomId               uint64   `protobuf:"varint,1,opt,name=roomId,proto3" json:"roomId,omitempty"`
 	PlayerId             uint64   `protobuf:"varint,2,opt,name=playerId,proto3" json:"playerId,omitempty"`
 	Token                string   `protobuf:"bytes,3,opt,name=token,proto3" json:"token,omitempty"`
@@ -171,46 +164,46 @@ type JoinRoomReq struct {
 	XXX_sizecache        int32    `json:"-"`
 }
 
-func (m *JoinRoomReq) Reset()         { *m = JoinRoomReq{} }
-func (m *JoinRoomReq) String() string { return proto.CompactTextString(m) }
-func (*JoinRoomReq) ProtoMessage()    {}
-func (*JoinRoomReq) Descriptor() ([]byte, []int) {
+func (m *C2SJoinRoom) Reset()         { *m = C2SJoinRoom{} }
+func (m *C2SJoinRoom) String() string { return proto.CompactTextString(m) }
+func (*C2SJoinRoom) ProtoMessage()    {}
+func (*C2SJoinRoom) Descriptor() ([]byte, []int) {
 	return fileDescriptor_e7594dbd1bcb6139, []int{2}
 }
 
-func (m *JoinRoomReq) XXX_Unmarshal(b []byte) error {
-	return xxx_messageInfo_JoinRoomReq.Unmarshal(m, b)
+func (m *C2SJoinRoom) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_C2SJoinRoom.Unmarshal(m, b)
 }
-func (m *JoinRoomReq) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	return xxx_messageInfo_JoinRoomReq.Marshal(b, m, deterministic)
+func (m *C2SJoinRoom) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_C2SJoinRoom.Marshal(b, m, deterministic)
 }
-func (m *JoinRoomReq) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_JoinRoomReq.Merge(m, src)
+func (m *C2SJoinRoom) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_C2SJoinRoom.Merge(m, src)
 }
-func (m *JoinRoomReq) XXX_Size() int {
-	return xxx_messageInfo_JoinRoomReq.Size(m)
+func (m *C2SJoinRoom) XXX_Size() int {
+	return xxx_messageInfo_C2SJoinRoom.Size(m)
 }
-func (m *JoinRoomReq) XXX_DiscardUnknown() {
-	xxx_messageInfo_JoinRoomReq.DiscardUnknown(m)
+func (m *C2SJoinRoom) XXX_DiscardUnknown() {
+	xxx_messageInfo_C2SJoinRoom.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_JoinRoomReq proto.InternalMessageInfo
+var xxx_messageInfo_C2SJoinRoom proto.InternalMessageInfo
 
-func (m *JoinRoomReq) GetRoomId() uint64 {
+func (m *C2SJoinRoom) GetRoomId() uint64 {
 	if m != nil {
 		return m.RoomId
 	}
 	return 0
 }
 
-func (m *JoinRoomReq) GetPlayerId() uint64 {
+func (m *C2SJoinRoom) GetPlayerId() uint64 {
 	if m != nil {
 		return m.PlayerId
 	}
 	return 0
 }
 
-func (m *JoinRoomReq) GetToken() string {
+func (m *C2SJoinRoom) GetToken() string {
 	if m != nil {
 		return m.Token
 	}
@@ -218,39 +211,39 @@ func (m *JoinRoomReq) GetToken() string {
 }
 
 // 服务器端 - 加入房间请求结果
-type JoinRoomRsp struct {
+type S2CJoinRoom struct {
 	Code                 JOIN_ROOM_CODE `protobuf:"varint,1,opt,name=code,proto3,enum=protocol.JOIN_ROOM_CODE" json:"code,omitempty"`
 	XXX_NoUnkeyedLiteral struct{}       `json:"-"`
 	XXX_unrecognized     []byte         `json:"-"`
 	XXX_sizecache        int32          `json:"-"`
 }
 
-func (m *JoinRoomRsp) Reset()         { *m = JoinRoomRsp{} }
-func (m *JoinRoomRsp) String() string { return proto.CompactTextString(m) }
-func (*JoinRoomRsp) ProtoMessage()    {}
-func (*JoinRoomRsp) Descriptor() ([]byte, []int) {
+func (m *S2CJoinRoom) Reset()         { *m = S2CJoinRoom{} }
+func (m *S2CJoinRoom) String() string { return proto.CompactTextString(m) }
+func (*S2CJoinRoom) ProtoMessage()    {}
+func (*S2CJoinRoom) Descriptor() ([]byte, []int) {
 	return fileDescriptor_e7594dbd1bcb6139, []int{3}
 }
 
-func (m *JoinRoomRsp) XXX_Unmarshal(b []byte) error {
-	return xxx_messageInfo_JoinRoomRsp.Unmarshal(m, b)
+func (m *S2CJoinRoom) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_S2CJoinRoom.Unmarshal(m, b)
 }
-func (m *JoinRoomRsp) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	return xxx_messageInfo_JoinRoomRsp.Marshal(b, m, deterministic)
+func (m *S2CJoinRoom) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_S2CJoinRoom.Marshal(b, m, deterministic)
 }
-func (m *JoinRoomRsp) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_JoinRoomRsp.Merge(m, src)
+func (m *S2CJoinRoom) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_S2CJoinRoom.Merge(m, src)
 }
-func (m *JoinRoomRsp) XXX_Size() int {
-	return xxx_messageInfo_JoinRoomRsp.Size(m)
+func (m *S2CJoinRoom) XXX_Size() int {
+	return xxx_messageInfo_S2CJoinRoom.Size(m)
 }
-func (m *JoinRoomRsp) XXX_DiscardUnknown() {
-	xxx_messageInfo_JoinRoomRsp.DiscardUnknown(m)
+func (m *S2CJoinRoom) XXX_DiscardUnknown() {
+	xxx_messageInfo_S2CJoinRoom.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_JoinRoomRsp proto.InternalMessageInfo
+var xxx_messageInfo_S2CJoinRoom proto.InternalMessageInfo
 
-func (m *JoinRoomRsp) GetCode() JOIN_ROOM_CODE {
+func (m *S2CJoinRoom) GetCode() JOIN_ROOM_CODE {
 	if m != nil {
 		return m.Code
 	}
@@ -258,39 +251,39 @@ func (m *JoinRoomRsp) GetCode() JOIN_ROOM_CODE {
 }
 
 // 客户端 - 载入游戏进度请求参数
-type LoadProgressReq struct {
+type C2SLoadProgress struct {
 	Progress             int32    `protobuf:"varint,2,opt,name=progress,proto3" json:"progress,omitempty"`
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
 	XXX_unrecognized     []byte   `json:"-"`
 	XXX_sizecache        int32    `json:"-"`
 }
 
-func (m *LoadProgressReq) Reset()         { *m = LoadProgressReq{} }
-func (m *LoadProgressReq) String() string { return proto.CompactTextString(m) }
-func (*LoadProgressReq) ProtoMessage()    {}
-func (*LoadProgressReq) Descriptor() ([]byte, []int) {
+func (m *C2SLoadProgress) Reset()         { *m = C2SLoadProgress{} }
+func (m *C2SLoadProgress) String() string { return proto.CompactTextString(m) }
+func (*C2SLoadProgress) ProtoMessage()    {}
+func (*C2SLoadProgress) Descriptor() ([]byte, []int) {
 	return fileDescriptor_e7594dbd1bcb6139, []int{4}
 }
 
-func (m *LoadProgressReq) XXX_Unmarshal(b []byte) error {
-	return xxx_messageInfo_LoadProgressReq.Unmarshal(m, b)
+func (m *C2SLoadProgress) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_C2SLoadProgress.Unmarshal(m, b)
 }
-func (m *LoadProgressReq) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	return xxx_messageInfo_LoadProgressReq.Marshal(b, m, deterministic)
+func (m *C2SLoadProgress) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_C2SLoadProgress.Marshal(b, m, deterministic)
 }
-func (m *LoadProgressReq) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_LoadProgressReq.Merge(m, src)
+func (m *C2SLoadProgress) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_C2SLoadProgress.Merge(m, src)
 }
-func (m *LoadProgressReq) XXX_Size() int {
-	return xxx_messageInfo_LoadProgressReq.Size(m)
+func (m *C2SLoadProgress) XXX_Size() int {
+	return xxx_messageInfo_C2SLoadProgress.Size(m)
 }
-func (m *LoadProgressReq) XXX_DiscardUnknown() {
-	xxx_messageInfo_LoadProgressReq.DiscardUnknown(m)
+func (m *C2SLoadProgress) XXX_DiscardUnknown() {
+	xxx_messageInfo_C2SLoadProgress.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_LoadProgressReq proto.InternalMessageInfo
+var xxx_messageInfo_C2SLoadProgress proto.InternalMessageInfo
 
-func (m *LoadProgressReq) GetProgress() int32 {
+func (m *C2SLoadProgress) GetProgress() int32 {
 	if m != nil {
 		return m.Progress
 	}
@@ -298,7 +291,46 @@ func (m *LoadProgressReq) GetProgress() int32 {
 }
 
 // 服务器端 - 载入游戏进度信息
-type LoadProgressRsp struct {
+type S2CLoadProgress struct {
+	Infos                []*LoadProgressInfo `protobuf:"bytes,1,rep,name=infos,proto3" json:"infos,omitempty"`
+	XXX_NoUnkeyedLiteral struct{}            `json:"-"`
+	XXX_unrecognized     []byte              `json:"-"`
+	XXX_sizecache        int32               `json:"-"`
+}
+
+func (m *S2CLoadProgress) Reset()         { *m = S2CLoadProgress{} }
+func (m *S2CLoadProgress) String() string { return proto.CompactTextString(m) }
+func (*S2CLoadProgress) ProtoMessage()    {}
+func (*S2CLoadProgress) Descriptor() ([]byte, []int) {
+	return fileDescriptor_e7594dbd1bcb6139, []int{5}
+}
+
+func (m *S2CLoadProgress) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_S2CLoadProgress.Unmarshal(m, b)
+}
+func (m *S2CLoadProgress) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_S2CLoadProgress.Marshal(b, m, deterministic)
+}
+func (m *S2CLoadProgress) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_S2CLoadProgress.Merge(m, src)
+}
+func (m *S2CLoadProgress) XXX_Size() int {
+	return xxx_messageInfo_S2CLoadProgress.Size(m)
+}
+func (m *S2CLoadProgress) XXX_DiscardUnknown() {
+	xxx_messageInfo_S2CLoadProgress.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_S2CLoadProgress proto.InternalMessageInfo
+
+func (m *S2CLoadProgress) GetInfos() []*LoadProgressInfo {
+	if m != nil {
+		return m.Infos
+	}
+	return nil
+}
+
+type LoadProgressInfo struct {
 	PlayerId             uint64   `protobuf:"varint,1,opt,name=playerId,proto3" json:"playerId,omitempty"`
 	Progress             int32    `protobuf:"varint,2,opt,name=progress,proto3" json:"progress,omitempty"`
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
@@ -306,82 +338,452 @@ type LoadProgressRsp struct {
 	XXX_sizecache        int32    `json:"-"`
 }
 
-func (m *LoadProgressRsp) Reset()         { *m = LoadProgressRsp{} }
-func (m *LoadProgressRsp) String() string { return proto.CompactTextString(m) }
-func (*LoadProgressRsp) ProtoMessage()    {}
-func (*LoadProgressRsp) Descriptor() ([]byte, []int) {
-	return fileDescriptor_e7594dbd1bcb6139, []int{5}
+func (m *LoadProgressInfo) Reset()         { *m = LoadProgressInfo{} }
+func (m *LoadProgressInfo) String() string { return proto.CompactTextString(m) }
+func (*LoadProgressInfo) ProtoMessage()    {}
+func (*LoadProgressInfo) Descriptor() ([]byte, []int) {
+	return fileDescriptor_e7594dbd1bcb6139, []int{6}
 }
 
-func (m *LoadProgressRsp) XXX_Unmarshal(b []byte) error {
-	return xxx_messageInfo_LoadProgressRsp.Unmarshal(m, b)
+func (m *LoadProgressInfo) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_LoadProgressInfo.Unmarshal(m, b)
 }
-func (m *LoadProgressRsp) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	return xxx_messageInfo_LoadProgressRsp.Marshal(b, m, deterministic)
+func (m *LoadProgressInfo) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_LoadProgressInfo.Marshal(b, m, deterministic)
 }
-func (m *LoadProgressRsp) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_LoadProgressRsp.Merge(m, src)
+func (m *LoadProgressInfo) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_LoadProgressInfo.Merge(m, src)
 }
-func (m *LoadProgressRsp) XXX_Size() int {
-	return xxx_messageInfo_LoadProgressRsp.Size(m)
+func (m *LoadProgressInfo) XXX_Size() int {
+	return xxx_messageInfo_LoadProgressInfo.Size(m)
 }
-func (m *LoadProgressRsp) XXX_DiscardUnknown() {
-	xxx_messageInfo_LoadProgressRsp.DiscardUnknown(m)
+func (m *LoadProgressInfo) XXX_DiscardUnknown() {
+	xxx_messageInfo_LoadProgressInfo.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_LoadProgressRsp proto.InternalMessageInfo
+var xxx_messageInfo_LoadProgressInfo proto.InternalMessageInfo
 
-func (m *LoadProgressRsp) GetPlayerId() uint64 {
+func (m *LoadProgressInfo) GetPlayerId() uint64 {
 	if m != nil {
 		return m.PlayerId
 	}
 	return 0
 }
 
-func (m *LoadProgressRsp) GetProgress() int32 {
+func (m *LoadProgressInfo) GetProgress() int32 {
 	if m != nil {
 		return m.Progress
 	}
 	return 0
 }
 
+// --------------------------------------------------------------------------------
+// 客户端 - 游戏加载完成，可以开始游戏
+type C2SGameStart struct {
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
+}
+
+func (m *C2SGameStart) Reset()         { *m = C2SGameStart{} }
+func (m *C2SGameStart) String() string { return proto.CompactTextString(m) }
+func (*C2SGameStart) ProtoMessage()    {}
+func (*C2SGameStart) Descriptor() ([]byte, []int) {
+	return fileDescriptor_e7594dbd1bcb6139, []int{7}
+}
+
+func (m *C2SGameStart) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_C2SGameStart.Unmarshal(m, b)
+}
+func (m *C2SGameStart) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_C2SGameStart.Marshal(b, m, deterministic)
+}
+func (m *C2SGameStart) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_C2SGameStart.Merge(m, src)
+}
+func (m *C2SGameStart) XXX_Size() int {
+	return xxx_messageInfo_C2SGameStart.Size(m)
+}
+func (m *C2SGameStart) XXX_DiscardUnknown() {
+	xxx_messageInfo_C2SGameStart.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_C2SGameStart proto.InternalMessageInfo
+
+// 服务器端 - 发送游戏开始指令
+type S2CGameStart struct {
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
+}
+
+func (m *S2CGameStart) Reset()         { *m = S2CGameStart{} }
+func (m *S2CGameStart) String() string { return proto.CompactTextString(m) }
+func (*S2CGameStart) ProtoMessage()    {}
+func (*S2CGameStart) Descriptor() ([]byte, []int) {
+	return fileDescriptor_e7594dbd1bcb6139, []int{8}
+}
+
+func (m *S2CGameStart) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_S2CGameStart.Unmarshal(m, b)
+}
+func (m *S2CGameStart) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_S2CGameStart.Marshal(b, m, deterministic)
+}
+func (m *S2CGameStart) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_S2CGameStart.Merge(m, src)
+}
+func (m *S2CGameStart) XXX_Size() int {
+	return xxx_messageInfo_S2CGameStart.Size(m)
+}
+func (m *S2CGameStart) XXX_DiscardUnknown() {
+	xxx_messageInfo_S2CGameStart.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_S2CGameStart proto.InternalMessageInfo
+
+// --------------------------------------------------------------------------------
+// 客户端 - 游戏帧请求参数
+type C2SGameFrame struct {
+	FrameId              uint64       `protobuf:"varint,1,opt,name=FrameId,proto3" json:"FrameId,omitempty"`
+	PlayerMove           *PlayerMove  `protobuf:"bytes,2,opt,name=playerMove,proto3" json:"playerMove,omitempty"`
+	PlayerSkill          *PlayerSkill `protobuf:"bytes,3,opt,name=playerSkill,proto3" json:"playerSkill,omitempty"`
+	XXX_NoUnkeyedLiteral struct{}     `json:"-"`
+	XXX_unrecognized     []byte       `json:"-"`
+	XXX_sizecache        int32        `json:"-"`
+}
+
+func (m *C2SGameFrame) Reset()         { *m = C2SGameFrame{} }
+func (m *C2SGameFrame) String() string { return proto.CompactTextString(m) }
+func (*C2SGameFrame) ProtoMessage()    {}
+func (*C2SGameFrame) Descriptor() ([]byte, []int) {
+	return fileDescriptor_e7594dbd1bcb6139, []int{9}
+}
+
+func (m *C2SGameFrame) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_C2SGameFrame.Unmarshal(m, b)
+}
+func (m *C2SGameFrame) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_C2SGameFrame.Marshal(b, m, deterministic)
+}
+func (m *C2SGameFrame) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_C2SGameFrame.Merge(m, src)
+}
+func (m *C2SGameFrame) XXX_Size() int {
+	return xxx_messageInfo_C2SGameFrame.Size(m)
+}
+func (m *C2SGameFrame) XXX_DiscardUnknown() {
+	xxx_messageInfo_C2SGameFrame.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_C2SGameFrame proto.InternalMessageInfo
+
+func (m *C2SGameFrame) GetFrameId() uint64 {
+	if m != nil {
+		return m.FrameId
+	}
+	return 0
+}
+
+func (m *C2SGameFrame) GetPlayerMove() *PlayerMove {
+	if m != nil {
+		return m.PlayerMove
+	}
+	return nil
+}
+
+func (m *C2SGameFrame) GetPlayerSkill() *PlayerSkill {
+	if m != nil {
+		return m.PlayerSkill
+	}
+	return nil
+}
+
+type PlayerMove struct {
+	X                    uint32   `protobuf:"varint,1,opt,name=x,proto3" json:"x,omitempty"`
+	Y                    uint32   `protobuf:"varint,2,opt,name=y,proto3" json:"y,omitempty"`
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
+}
+
+func (m *PlayerMove) Reset()         { *m = PlayerMove{} }
+func (m *PlayerMove) String() string { return proto.CompactTextString(m) }
+func (*PlayerMove) ProtoMessage()    {}
+func (*PlayerMove) Descriptor() ([]byte, []int) {
+	return fileDescriptor_e7594dbd1bcb6139, []int{10}
+}
+
+func (m *PlayerMove) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_PlayerMove.Unmarshal(m, b)
+}
+func (m *PlayerMove) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_PlayerMove.Marshal(b, m, deterministic)
+}
+func (m *PlayerMove) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_PlayerMove.Merge(m, src)
+}
+func (m *PlayerMove) XXX_Size() int {
+	return xxx_messageInfo_PlayerMove.Size(m)
+}
+func (m *PlayerMove) XXX_DiscardUnknown() {
+	xxx_messageInfo_PlayerMove.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_PlayerMove proto.InternalMessageInfo
+
+func (m *PlayerMove) GetX() uint32 {
+	if m != nil {
+		return m.X
+	}
+	return 0
+}
+
+func (m *PlayerMove) GetY() uint32 {
+	if m != nil {
+		return m.Y
+	}
+	return 0
+}
+
+type PlayerSkill struct {
+	SkillId              uint32   `protobuf:"varint,1,opt,name=SkillId,proto3" json:"SkillId,omitempty"`
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
+}
+
+func (m *PlayerSkill) Reset()         { *m = PlayerSkill{} }
+func (m *PlayerSkill) String() string { return proto.CompactTextString(m) }
+func (*PlayerSkill) ProtoMessage()    {}
+func (*PlayerSkill) Descriptor() ([]byte, []int) {
+	return fileDescriptor_e7594dbd1bcb6139, []int{11}
+}
+
+func (m *PlayerSkill) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_PlayerSkill.Unmarshal(m, b)
+}
+func (m *PlayerSkill) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_PlayerSkill.Marshal(b, m, deterministic)
+}
+func (m *PlayerSkill) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_PlayerSkill.Merge(m, src)
+}
+func (m *PlayerSkill) XXX_Size() int {
+	return xxx_messageInfo_PlayerSkill.Size(m)
+}
+func (m *PlayerSkill) XXX_DiscardUnknown() {
+	xxx_messageInfo_PlayerSkill.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_PlayerSkill proto.InternalMessageInfo
+
+func (m *PlayerSkill) GetSkillId() uint32 {
+	if m != nil {
+		return m.SkillId
+	}
+	return 0
+}
+
+// 服务器端 - 游戏返回帧数据
+type S2CGameFrame struct {
+	Frames               []*GameFrame `protobuf:"bytes,1,rep,name=frames,proto3" json:"frames,omitempty"`
+	XXX_NoUnkeyedLiteral struct{}     `json:"-"`
+	XXX_unrecognized     []byte       `json:"-"`
+	XXX_sizecache        int32        `json:"-"`
+}
+
+func (m *S2CGameFrame) Reset()         { *m = S2CGameFrame{} }
+func (m *S2CGameFrame) String() string { return proto.CompactTextString(m) }
+func (*S2CGameFrame) ProtoMessage()    {}
+func (*S2CGameFrame) Descriptor() ([]byte, []int) {
+	return fileDescriptor_e7594dbd1bcb6139, []int{12}
+}
+
+func (m *S2CGameFrame) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_S2CGameFrame.Unmarshal(m, b)
+}
+func (m *S2CGameFrame) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_S2CGameFrame.Marshal(b, m, deterministic)
+}
+func (m *S2CGameFrame) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_S2CGameFrame.Merge(m, src)
+}
+func (m *S2CGameFrame) XXX_Size() int {
+	return xxx_messageInfo_S2CGameFrame.Size(m)
+}
+func (m *S2CGameFrame) XXX_DiscardUnknown() {
+	xxx_messageInfo_S2CGameFrame.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_S2CGameFrame proto.InternalMessageInfo
+
+func (m *S2CGameFrame) GetFrames() []*GameFrame {
+	if m != nil {
+		return m.Frames
+	}
+	return nil
+}
+
+type GameFrame struct {
+	FrameId              uint64       `protobuf:"varint,1,opt,name=frameId,proto3" json:"frameId,omitempty"`
+	FrameData            []*FrameData `protobuf:"bytes,2,rep,name=frameData,proto3" json:"frameData,omitempty"`
+	XXX_NoUnkeyedLiteral struct{}     `json:"-"`
+	XXX_unrecognized     []byte       `json:"-"`
+	XXX_sizecache        int32        `json:"-"`
+}
+
+func (m *GameFrame) Reset()         { *m = GameFrame{} }
+func (m *GameFrame) String() string { return proto.CompactTextString(m) }
+func (*GameFrame) ProtoMessage()    {}
+func (*GameFrame) Descriptor() ([]byte, []int) {
+	return fileDescriptor_e7594dbd1bcb6139, []int{13}
+}
+
+func (m *GameFrame) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_GameFrame.Unmarshal(m, b)
+}
+func (m *GameFrame) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_GameFrame.Marshal(b, m, deterministic)
+}
+func (m *GameFrame) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_GameFrame.Merge(m, src)
+}
+func (m *GameFrame) XXX_Size() int {
+	return xxx_messageInfo_GameFrame.Size(m)
+}
+func (m *GameFrame) XXX_DiscardUnknown() {
+	xxx_messageInfo_GameFrame.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_GameFrame proto.InternalMessageInfo
+
+func (m *GameFrame) GetFrameId() uint64 {
+	if m != nil {
+		return m.FrameId
+	}
+	return 0
+}
+
+func (m *GameFrame) GetFrameData() []*FrameData {
+	if m != nil {
+		return m.FrameData
+	}
+	return nil
+}
+
+type FrameData struct {
+	PlayerId             uint64       `protobuf:"varint,1,opt,name=playerId,proto3" json:"playerId,omitempty"`
+	PlayerMove           *PlayerMove  `protobuf:"bytes,2,opt,name=playerMove,proto3" json:"playerMove,omitempty"`
+	PlayerSkill          *PlayerSkill `protobuf:"bytes,3,opt,name=playerSkill,proto3" json:"playerSkill,omitempty"`
+	XXX_NoUnkeyedLiteral struct{}     `json:"-"`
+	XXX_unrecognized     []byte       `json:"-"`
+	XXX_sizecache        int32        `json:"-"`
+}
+
+func (m *FrameData) Reset()         { *m = FrameData{} }
+func (m *FrameData) String() string { return proto.CompactTextString(m) }
+func (*FrameData) ProtoMessage()    {}
+func (*FrameData) Descriptor() ([]byte, []int) {
+	return fileDescriptor_e7594dbd1bcb6139, []int{14}
+}
+
+func (m *FrameData) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_FrameData.Unmarshal(m, b)
+}
+func (m *FrameData) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_FrameData.Marshal(b, m, deterministic)
+}
+func (m *FrameData) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_FrameData.Merge(m, src)
+}
+func (m *FrameData) XXX_Size() int {
+	return xxx_messageInfo_FrameData.Size(m)
+}
+func (m *FrameData) XXX_DiscardUnknown() {
+	xxx_messageInfo_FrameData.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_FrameData proto.InternalMessageInfo
+
+func (m *FrameData) GetPlayerId() uint64 {
+	if m != nil {
+		return m.PlayerId
+	}
+	return 0
+}
+
+func (m *FrameData) GetPlayerMove() *PlayerMove {
+	if m != nil {
+		return m.PlayerMove
+	}
+	return nil
+}
+
+func (m *FrameData) GetPlayerSkill() *PlayerSkill {
+	if m != nil {
+		return m.PlayerSkill
+	}
+	return nil
+}
+
 func init() {
 	proto.RegisterEnum("protocol.PT", PT_name, PT_value)
 	proto.RegisterEnum("protocol.JOIN_ROOM_CODE", JOIN_ROOM_CODE_name, JOIN_ROOM_CODE_value)
-	proto.RegisterType((*HeartbeatReq)(nil), "protocol.HeartbeatReq")
-	proto.RegisterType((*HeartbeatRsp)(nil), "protocol.HeartbeatRsp")
-	proto.RegisterType((*JoinRoomReq)(nil), "protocol.JoinRoomReq")
-	proto.RegisterType((*JoinRoomRsp)(nil), "protocol.JoinRoomRsp")
-	proto.RegisterType((*LoadProgressReq)(nil), "protocol.LoadProgressReq")
-	proto.RegisterType((*LoadProgressRsp)(nil), "protocol.LoadProgressRsp")
+	proto.RegisterType((*C2SHeartbeat)(nil), "protocol.C2SHeartbeat")
+	proto.RegisterType((*S2CHeartbeat)(nil), "protocol.S2CHeartbeat")
+	proto.RegisterType((*C2SJoinRoom)(nil), "protocol.C2SJoinRoom")
+	proto.RegisterType((*S2CJoinRoom)(nil), "protocol.S2CJoinRoom")
+	proto.RegisterType((*C2SLoadProgress)(nil), "protocol.C2SLoadProgress")
+	proto.RegisterType((*S2CLoadProgress)(nil), "protocol.S2CLoadProgress")
+	proto.RegisterType((*LoadProgressInfo)(nil), "protocol.LoadProgressInfo")
+	proto.RegisterType((*C2SGameStart)(nil), "protocol.C2SGameStart")
+	proto.RegisterType((*S2CGameStart)(nil), "protocol.S2CGameStart")
+	proto.RegisterType((*C2SGameFrame)(nil), "protocol.C2SGameFrame")
+	proto.RegisterType((*PlayerMove)(nil), "protocol.PlayerMove")
+	proto.RegisterType((*PlayerSkill)(nil), "protocol.PlayerSkill")
+	proto.RegisterType((*S2CGameFrame)(nil), "protocol.S2CGameFrame")
+	proto.RegisterType((*GameFrame)(nil), "protocol.GameFrame")
+	proto.RegisterType((*FrameData)(nil), "protocol.FrameData")
 }
 
 func init() { proto.RegisterFile("newbee.proto", fileDescriptor_e7594dbd1bcb6139) }
 
 var fileDescriptor_e7594dbd1bcb6139 = []byte{
-	// 384 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x7c, 0x91, 0xcd, 0x8e, 0xd3, 0x30,
-	0x14, 0x85, 0x27, 0x9d, 0x1f, 0x86, 0xdb, 0x21, 0xe3, 0xf1, 0x8c, 0x20, 0x62, 0x35, 0xca, 0x6a,
-	0x54, 0x41, 0x17, 0x20, 0x65, 0xc3, 0x2a, 0xa4, 0x16, 0x4d, 0x5b, 0x6c, 0x63, 0xa7, 0x2a, 0x48,
-	0x48, 0x51, 0xda, 0x58, 0x08, 0xd1, 0xd6, 0x69, 0x12, 0x09, 0xf1, 0x38, 0xfc, 0xf3, 0x12, 0x3c,
-	0x57, 0xb6, 0x28, 0x6e, 0x29, 0x6d, 0x40, 0xac, 0xac, 0x73, 0xee, 0xf1, 0xd1, 0x77, 0x6d, 0x38,
-	0x5b, 0xaa, 0xf7, 0x53, 0xa5, 0xba, 0x59, 0xae, 0x4b, 0x8d, 0x4f, 0xcd, 0x31, 0xd3, 0x73, 0xd7,
-	0x86, 0xb3, 0xbe, 0x4a, 0xf2, 0x72, 0xaa, 0x92, 0x52, 0xa8, 0xd5, 0xbe, 0x2e, 0x32, 0x77, 0x02,
-	0xed, 0x81, 0x7e, 0xbb, 0x14, 0x5a, 0x2f, 0x84, 0x5a, 0xe1, 0xbb, 0x70, 0x92, 0x6b, 0xbd, 0x08,
-	0x53, 0xc7, 0xba, 0xb6, 0x6e, 0x8e, 0xc4, 0x46, 0xe1, 0xfb, 0x70, 0x9a, 0xcd, 0x93, 0x0f, 0x2a,
-	0x0f, 0x53, 0xa7, 0x65, 0x26, 0x5b, 0x8d, 0xaf, 0xe0, 0xb8, 0xd4, 0xef, 0xd4, 0xd2, 0x39, 0xbc,
-	0xb6, 0x6e, 0x6e, 0x8b, 0xb5, 0x70, 0x9f, 0xec, 0x14, 0x17, 0x19, 0x7e, 0x00, 0x47, 0x33, 0x9d,
-	0x2a, 0x53, 0x6b, 0x3f, 0x72, 0xba, 0xbf, 0x01, 0xbb, 0x03, 0x16, 0xd2, 0x58, 0x30, 0xf6, 0x3c,
-	0x0e, 0x58, 0x8f, 0x08, 0x93, 0x72, 0x1f, 0xc2, 0xf9, 0x48, 0x27, 0x29, 0xcf, 0xf5, 0x9b, 0x5c,
-	0x15, 0x45, 0x4d, 0x56, 0x13, 0x6c, 0xa4, 0x21, 0x38, 0x16, 0x5b, 0xed, 0x86, 0x8d, 0x78, 0x91,
-	0xed, 0x01, 0x5b, 0x0d, 0xe0, 0xff, 0x54, 0x75, 0x7e, 0x5a, 0xd0, 0xe2, 0x11, 0x6e, 0xc3, 0xad,
-	0x31, 0x1d, 0x52, 0x36, 0xa1, 0xe8, 0x00, 0x5f, 0xc2, 0x9d, 0x3e, 0xf1, 0x45, 0xf4, 0x94, 0xf8,
-	0x51, 0x2c, 0xc8, 0x0b, 0xf4, 0xb1, 0xf2, 0x1a, 0xa6, 0xe4, 0xe8, 0x53, 0xe5, 0xe1, 0x0b, 0x68,
-	0x07, 0x8c, 0x52, 0x12, 0xac, 0x73, 0x9f, 0x1b, 0x96, 0xe4, 0xe8, 0xcb, 0xfa, 0xea, 0x9f, 0xad,
-	0xeb, 0xdc, 0xd7, 0xbf, 0x4c, 0xc9, 0xd1, 0xb7, 0xca, 0xc3, 0xf7, 0xe0, 0x62, 0xc4, 0xfc, 0x5e,
-	0xcc, 0x05, 0x7b, 0x26, 0x88, 0x94, 0x26, 0xfd, 0xfd, 0x9f, 0x03, 0xc9, 0xd1, 0x8f, 0xca, 0xeb,
-	0xbc, 0x06, 0x7b, 0xff, 0x45, 0xeb, 0x55, 0xe4, 0x38, 0x08, 0x88, 0x94, 0xe8, 0x00, 0x63, 0xb0,
-	0xcd, 0x84, 0xb2, 0x28, 0x26, 0x2f, 0x43, 0x19, 0x21, 0x0b, 0x5f, 0x01, 0xe2, 0x23, 0xff, 0x15,
-	0x11, 0x3b, 0x6e, 0x0b, 0x5f, 0xc2, 0x79, 0xc4, 0x86, 0x84, 0xee, 0x98, 0x87, 0xd3, 0x13, 0xf3,
-	0x6d, 0x8f, 0x7f, 0x05, 0x00, 0x00, 0xff, 0xff, 0x6d, 0x45, 0xb5, 0x60, 0x6e, 0x02, 0x00, 0x00,
+	// 558 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xbc, 0x53, 0x4d, 0x6f, 0xda, 0x40,
+	0x10, 0xcd, 0x42, 0x20, 0x61, 0xcc, 0x87, 0xb5, 0xd0, 0xca, 0xca, 0x09, 0xf9, 0x52, 0x94, 0xb6,
+	0xa8, 0x75, 0x2b, 0x7a, 0xc8, 0xc9, 0x35, 0x86, 0x40, 0xc0, 0x46, 0xbb, 0x8e, 0x92, 0x4a, 0x95,
+	0x90, 0x09, 0x4b, 0x85, 0x02, 0x6c, 0x64, 0xac, 0x36, 0xfc, 0x91, 0xf6, 0xdc, 0xaf, 0xdf, 0xc8,
+	0xb5, 0xf2, 0x1a, 0x7f, 0xc0, 0x21, 0xc7, 0x9e, 0x3c, 0x6f, 0xe6, 0x79, 0xe6, 0xbd, 0x19, 0x2d,
+	0x14, 0x57, 0xec, 0xdb, 0x84, 0xb1, 0xe6, 0x83, 0xc7, 0x7d, 0x8e, 0x4f, 0xc5, 0xe7, 0x8e, 0x2f,
+	0xd4, 0x32, 0x14, 0x0d, 0x8d, 0x5e, 0x32, 0xd7, 0xf3, 0x27, 0xcc, 0xf5, 0x03, 0x4c, 0x35, 0x23,
+	0xc1, 0x37, 0x20, 0x19, 0x1a, 0xed, 0xf3, 0xf9, 0x8a, 0x70, 0xbe, 0xc4, 0xcf, 0x21, 0xef, 0x71,
+	0xbe, 0xec, 0x4d, 0x15, 0x54, 0x47, 0x8d, 0x63, 0xb2, 0x43, 0xf8, 0x0c, 0x4e, 0x1f, 0x16, 0xee,
+	0x86, 0x79, 0xbd, 0xa9, 0x92, 0x11, 0x95, 0x18, 0xe3, 0x1a, 0xe4, 0x7c, 0x7e, 0xcf, 0x56, 0x4a,
+	0xb6, 0x8e, 0x1a, 0x05, 0x12, 0x02, 0xf5, 0x02, 0x24, 0xaa, 0x19, 0x71, 0xe3, 0x57, 0x70, 0x7c,
+	0xc7, 0xa7, 0x4c, 0xb4, 0x2d, 0x6b, 0x4a, 0x33, 0x12, 0xd8, 0xec, 0xdb, 0x3d, 0x6b, 0x4c, 0x6c,
+	0x7b, 0x38, 0x36, 0xec, 0xb6, 0x49, 0x04, 0x4b, 0x7d, 0x0d, 0x15, 0x43, 0xa3, 0x03, 0xee, 0x4e,
+	0x47, 0x1e, 0xff, 0xe2, 0xb1, 0xf5, 0x5a, 0x28, 0xd8, 0xc5, 0x42, 0x41, 0x8e, 0xc4, 0x58, 0x35,
+	0xa0, 0x42, 0x35, 0x63, 0x8f, 0xfe, 0x06, 0x72, 0xf3, 0xd5, 0x8c, 0xaf, 0x15, 0x54, 0xcf, 0x36,
+	0x24, 0xed, 0x2c, 0x19, 0x98, 0xa6, 0xf5, 0x56, 0x33, 0x4e, 0x42, 0xa2, 0xda, 0x07, 0xf9, 0xb0,
+	0xb4, 0x67, 0x1b, 0x1d, 0xd8, 0x7e, 0x4a, 0x50, 0xb8, 0xf5, 0xae, 0xbb, 0x64, 0xd4, 0x77, 0xbd,
+	0x68, 0xeb, 0x09, 0xfe, 0x81, 0x62, 0x42, 0xc7, 0x73, 0x97, 0x0c, 0x2b, 0x70, 0x22, 0x82, 0x78,
+	0x4e, 0x04, 0xf1, 0x7b, 0x80, 0x70, 0xe4, 0x90, 0x7f, 0x65, 0x62, 0x90, 0xa4, 0xd5, 0x12, 0x37,
+	0xa3, 0xb8, 0x46, 0x52, 0x3c, 0xfc, 0x01, 0xa4, 0x10, 0xd1, 0xfb, 0xf9, 0x62, 0x21, 0x2e, 0x23,
+	0x69, 0xcf, 0x0e, 0x7f, 0x13, 0x45, 0x92, 0x66, 0xaa, 0x0d, 0x80, 0xa4, 0x25, 0x2e, 0x02, 0x7a,
+	0x14, 0x82, 0x4a, 0x04, 0x3d, 0x06, 0x68, 0x23, 0x14, 0x94, 0x08, 0xda, 0xa8, 0x2f, 0x40, 0x4a,
+	0x75, 0x09, 0x1c, 0x88, 0x60, 0xe7, 0xa0, 0x44, 0x22, 0xa8, 0x5e, 0xc4, 0xe6, 0x43, 0xaf, 0x2f,
+	0x21, 0x3f, 0x0b, 0x82, 0xe8, 0x36, 0xd5, 0x44, 0x56, 0x4c, 0x22, 0x3b, 0x8a, 0x7a, 0x0b, 0x85,
+	0xbd, 0x2d, 0xcd, 0xf6, 0xb7, 0xb4, 0x83, 0xf8, 0x2d, 0x14, 0x44, 0xd8, 0x76, 0x7d, 0x57, 0xc9,
+	0x1c, 0xb6, 0xed, 0x44, 0x25, 0x92, 0xb0, 0xd4, 0xef, 0x08, 0x0a, 0x71, 0xe1, 0xc9, 0x4b, 0xff,
+	0xdf, 0x13, 0x9c, 0x2f, 0x20, 0x33, 0x72, 0xb0, 0x04, 0x27, 0xd7, 0xd6, 0x95, 0x65, 0xdf, 0x58,
+	0xf2, 0x11, 0xae, 0x40, 0xe1, 0xd2, 0xd4, 0x89, 0xf3, 0xd1, 0xd4, 0x1d, 0xf9, 0xe7, 0xb6, 0x15,
+	0x24, 0xe2, 0x87, 0x23, 0xff, 0xda, 0xb6, 0x70, 0x15, 0x4a, 0x03, 0x5b, 0x6f, 0x8f, 0x47, 0xc4,
+	0xee, 0x12, 0x93, 0x52, 0xf9, 0xf7, 0xb6, 0x85, 0x65, 0x80, 0xae, 0x3e, 0x34, 0xc7, 0x1d, 0xa2,
+	0x0f, 0x4d, 0xf9, 0x4f, 0x2a, 0x43, 0x1d, 0x9d, 0x38, 0xf2, 0xdf, 0x6d, 0xeb, 0xfc, 0x33, 0x94,
+	0xf7, 0x9f, 0x60, 0x30, 0x99, 0x5e, 0x1b, 0x46, 0xd0, 0xe4, 0x08, 0x63, 0x28, 0x8b, 0x8a, 0x65,
+	0x3b, 0x63, 0xf3, 0xb6, 0x47, 0x1d, 0x19, 0xe1, 0x1a, 0xc8, 0xa3, 0x81, 0xfe, 0xc9, 0x24, 0xa9,
+	0x6c, 0x06, 0x57, 0xa1, 0xe2, 0xd8, 0x57, 0xa6, 0x95, 0x4a, 0x66, 0x27, 0x79, 0x61, 0xf7, 0xdd,
+	0xbf, 0x00, 0x00, 0x00, 0xff, 0xff, 0x52, 0x4c, 0xaf, 0xf4, 0x9f, 0x04, 0x00, 0x00,
 }

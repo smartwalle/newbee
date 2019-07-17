@@ -1,6 +1,7 @@
 package newbee
 
 import (
+	"fmt"
 	"github.com/smartwalle/net4go"
 	"github.com/smartwalle/newbee/protocol"
 	"sync"
@@ -9,10 +10,6 @@ import (
 
 const (
 	kPlayerId = "player_id"
-)
-
-const (
-	kTimeoutTime = time.Minute * 5 //超时时间
 )
 
 type message struct {
@@ -35,18 +32,23 @@ type Room struct {
 
 func newRoom(players []*Player) *Room {
 	var r = &Room{}
+	r.id = 9999 // TODO 房间 id 生成规则
 	r.players = make(map[uint64]*Player)
 	for _, player := range players {
 		r.players[player.GetId()] = player
 	}
-	r.game = newGame(r)
 	r.messageChan = make(chan *message, 1024)
 
 	r.playerInChan = make(chan *net4go.Conn, 32)
 	r.playerOutChan = make(chan *net4go.Conn, 32)
+
+	r.game = newGame(r) // TODO 游戏信息从外部传进来
+	go r.run()
+
 	return r
 }
 
+// --------------------------------------------------------------------------------
 func (this *Room) GetId() uint64 {
 	return this.id
 }
@@ -70,23 +72,52 @@ func (this *Room) GetPlayers() []*Player {
 	return ps
 }
 
-func (this *Room) Join(playerId uint64, c *net4go.Conn) {
-	c.Set(kPlayerId, playerId)
-	c.SetHandler(this)
-	this.playerInChan <- c
+// --------------------------------------------------------------------------------
+// Connect 将玩家和连接进行绑定
+func (this *Room) Connect(playerId uint64, c *net4go.Conn) {
+	if c != nil {
+		c.Set(kPlayerId, playerId)
+		c.SetHandler(this)
+		this.playerInChan <- c
+	}
 }
 
+// Join 加入新的玩家，如果连接不为空，则将该玩家和连接进行绑定
+func (this *Room) Join(player *Player, c *net4go.Conn) {
+	if player != nil {
+		this.mu.Lock()
+		defer this.mu.Unlock()
+
+		// 玩家不存在则添加该玩家
+		if _, ok := this.players[player.GetId()]; ok == false {
+			this.players[player.GetId()] = player
+		}
+
+		if c != nil {
+			this.Connect(player.GetId(), c)
+		}
+	}
+}
+
+// --------------------------------------------------------------------------------
 func (this *Room) run() {
 	defer func() {
-
+		fmt.Println("游戏停止，房间解散")
 	}()
+
+	if this.game == nil {
+		return
+	}
 
 	var ticker = time.NewTicker(time.Second / time.Duration(this.game.Frequency()))
 
 	for {
 		select {
 		case msg := <-this.messageChan:
-			this.game.ProcessMessage(msg.PlayerId, msg.Packet)
+			var player = this.GetPlayer(msg.PlayerId)
+			if player != nil {
+				this.game.ProcessMessage(player, msg.Packet)
+			}
 		case <-ticker.C:
 			if this.game.Tick(time.Now().Unix()) == false {
 				return
@@ -95,7 +126,7 @@ func (this *Room) run() {
 			var playerId = c.Get(kPlayerId).(uint64)
 			var player = this.GetPlayer(playerId)
 			if player != nil {
-				player.Connect(c)
+				player.Online(c)
 			}
 		case c := <-this.playerOutChan:
 			var playerId = c.Get(kPlayerId).(uint64)
@@ -132,8 +163,7 @@ func (this *Room) OnClose(c *net4go.Conn, err error) {
 }
 
 // --------------------------------------------------------------------------------
-
-// --------------------------------------------------------------------------------
+// SendMessage 向指定玩家发送消息
 func (this *Room) SendMessage(playerId uint64, p net4go.Packet) {
 	var player = this.GetPlayer(playerId)
 	if player != nil {
@@ -141,17 +171,82 @@ func (this *Room) SendMessage(playerId uint64, p net4go.Packet) {
 	}
 }
 
+// Broadcast 向所有玩家发送消息
 func (this *Room) Broadcast(p net4go.Packet) {
+	this.mu.RLock()
+	defer this.mu.RUnlock()
+
 	for _, player := range this.players {
 		player.SendMessage(p)
 	}
 }
 
-func (this *Room) BroadcastWithoutPlayer(playerId uint64, p net4go.Packet) {
-	for _, player := range this.players {
-		if player.GetId() == playerId {
-			continue
-		}
-		player.SendMessage(p)
+// --------------------------------------------------------------------------------
+
+// CheckAllPlayerOnline 检测所有玩家是否在线
+func (this *Room) CheckAllPlayerOnline() bool {
+	this.mu.RLock()
+	defer this.mu.RUnlock()
+
+	if len(this.players) == 0 {
+		return false
 	}
+
+	for _, p := range this.players {
+		if p.IsOnline() == false {
+			return false
+		}
+	}
+	return true
+}
+
+// CheckAllReady 检测所有玩家是否准备就绪
+func (this *Room) CheckAllPlayerReady() bool {
+	this.mu.RLock()
+	defer this.mu.RUnlock()
+
+	if len(this.players) == 0 {
+		return false
+	}
+
+	for _, p := range this.players {
+		if p.IsReady() == false {
+			return false
+		}
+	}
+	return true
+}
+
+func (this *Room) GetPlayerCount() int {
+	this.mu.RLock()
+	defer this.mu.RUnlock()
+	return len(this.players)
+}
+
+// GetOnlinePlayerCount 获取在线玩家数量
+func (this *Room) GetOnlinePlayerCount() int {
+	this.mu.RLock()
+	defer this.mu.RUnlock()
+
+	var i = 0
+	for _, p := range this.players {
+		if p.IsOnline() {
+			i++
+		}
+	}
+	return i
+}
+
+// GetReadyPlayerCount 获取准备就绪玩家数量
+func (this *Room) GetReadyPlayerCount() int {
+	this.mu.RLock()
+	defer this.mu.RUnlock()
+
+	var i = 0
+	for _, p := range this.players {
+		if p.IsReady() {
+			i++
+		}
+	}
+	return i
 }

@@ -7,29 +7,29 @@ package protocol;
 enum PT {
     UNKNOWN = 0;
 
-    HEARTBEAT_REQ = 900001;
-    HEARTBEAT_RSP = 900002;
+    HEARTBEAT = 900001;
 
-    CONNECT_REQ = 900003;
-    CONNECT_RSP = 900004;
+    JOIN_ROOM = 900002;
 
-    JOIN_ROOM_REQ = 900005;
-    JOIN_ROOM_RSP = 900006;
+    LOAD_PROGRESS = 900003;
 
-    LOAD_PROGRESS_REQ = 900007;
-    LOAD_PROGRESS_RSP = 900008;
+    GAME_FRAME = 900004;
+
+    GAME_START = 900005;
 }
 
 // --------------------------------------------------------------------------------
-message HeartbeatReq {
+// 客户端 - 心跳请求参数
+message C2SHeartbeat {
 }
 
-message HeartbeatRsp {
+// 服务器端 - 心跳返回结果
+message S2CHeartbeat {
 }
 
 // --------------------------------------------------------------------------------
 // 客户端 - 加入房间请求参数
-message JoinRoomReq {
+message C2SJoinRoom {
     uint64 roomId = 1;
     uint64 playerId = 2;
     string token = 3;
@@ -43,17 +43,63 @@ enum JOIN_ROOM_CODE {
 }
 
 // 服务器端 - 加入房间请求结果
-message JoinRoomRsp {
+message S2CJoinRoom {
     JOIN_ROOM_CODE code = 1;
 }
 
 // 客户端 - 载入游戏进度请求参数
-message LoadProgressReq {
+message C2SLoadProgress {
     int32 progress = 2;
 }
 
 // 服务器端 - 载入游戏进度信息
-message LoadProgressRsp {
+message S2CLoadProgress {
+    repeated LoadProgressInfo infos = 1;
+}
+
+message LoadProgressInfo {
     uint64 playerId = 1;
     int32 progress = 2;
+}
+
+// --------------------------------------------------------------------------------
+// 客户端 - 游戏加载完成，可以开始游戏
+message C2SGameStart {
+}
+
+// 服务器端 - 发送游戏开始指令
+message S2CGameStart {
+}
+
+// --------------------------------------------------------------------------------
+// 客户端 - 游戏帧请求参数
+message C2SGameFrame {
+    uint64 FrameId = 1;
+    PlayerMove playerMove = 2;
+    PlayerSkill playerSkill = 3;
+}
+
+message PlayerMove {
+    uint32 x = 1;
+    uint32 y = 2;
+}
+
+message PlayerSkill {
+    uint32 SkillId = 1;
+}
+
+// 服务器端 - 游戏返回帧数据
+message S2CGameFrame {
+    repeated GameFrame frames = 1;
+}
+
+message GameFrame {
+    uint64 frameId = 1;
+    repeated FrameData frameData = 2;
+}
+
+message FrameData {
+    uint64 playerId = 1;
+    PlayerMove playerMove = 2;
+    PlayerSkill playerSkill = 3;
 }
