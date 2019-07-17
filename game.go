@@ -25,7 +25,7 @@ type Game struct {
 	maxOfflinePendingTime int64     // 游戏所有玩家掉线最长等待时间
 	offlineTime           int64     // 游戏所有玩家掉线开始时间点
 
-	logic            *LockStep
+	frameManager     *FrameManager
 	clientFrameCount uint64 // 已经向客户端广播的帧数
 }
 
@@ -38,7 +38,7 @@ func newGame(room *Room) *Game {
 	g.maxOfflinePendingTime = 20
 	g.offlineTime = 0
 
-	g.logic = NewLockStep()
+	g.frameManager = NewLockStep()
 	return g
 }
 
@@ -63,18 +63,19 @@ func (this *Game) ProcessMessage(player *Player, p *protocol.Packet) {
 
 		var req = &protocol.C2SLoadProgress{}
 		if err := p.UnmarshalProtoMessage(req); err != nil {
+			return
 		}
 
 		// 更新玩家的加载进度
 		player.UpdateLoadProgress(req.Progress)
 
 		// 向所有玩家广播加载进度
-		var S2CLoadProgress = &protocol.S2CLoadProgress{}
+		var rsp = &protocol.S2CLoadProgress{}
 		for _, player := range this.room.GetPlayers() {
-			S2CLoadProgress.Infos = append(S2CLoadProgress.Infos, &protocol.LoadProgressInfo{PlayerId: player.GetId(), Progress: player.GetLoadProgress()})
+			rsp.Infos = append(rsp.Infos, &protocol.LoadProgressInfo{PlayerId: player.GetId(), Progress: player.GetLoadProgress()})
 		}
-		this.room.Broadcast(protocol.NewPacket(protocol.PT_LOAD_PROGRESS, S2CLoadProgress))
-	case protocol.PT_GAME_START:
+		this.room.Broadcast(protocol.NewPacket(protocol.PT_LOAD_PROGRESS, rsp))
+	case protocol.PT_GAME_READY:
 		if this.state != GameStatePending {
 			return
 		}
@@ -85,25 +86,23 @@ func (this *Game) ProcessMessage(player *Player, p *protocol.Packet) {
 		}
 		var req = &protocol.C2SGameFrame{}
 		if err := p.UnmarshalProtoMessage(req); err != nil {
+			return
 		}
 
 		var frameData = &protocol.FrameData{}
 		frameData.PlayerId = player.GetId()
 		frameData.PlayerMove = req.PlayerMove
 
-		this.logic.Push(req.FrameId, frameData)
+		this.frameManager.Push(req.FrameId, frameData)
 	}
 }
 
 // GameStart 开始游戏
 func (this *Game) GameStart() {
 	this.state = GameStateGaming
-	// TODO 向所有玩家发送开始游戏指令
 
-	var rsp = &protocol.S2CGameStart{}
-	this.room.Broadcast(protocol.NewPacket(protocol.PT_GAME_START, rsp))
-
-	fmt.Println("Game Start")
+	var rsp = &protocol.S2CGameReady{}
+	this.room.Broadcast(protocol.NewPacket(protocol.PT_GAME_READY, rsp))
 }
 
 // GameOver 结束游戏
@@ -170,7 +169,7 @@ func (this *Game) Tick(now int64) bool {
 			this.offlineTime = 0
 		}
 
-		this.logic.Tick()
+		this.frameManager.Tick()
 
 		this.broadcastFrameData()
 
@@ -188,7 +187,7 @@ func (this *Game) Tick(now int64) bool {
 }
 
 func (this *Game) broadcastFrameData() {
-	var frameCount = this.logic.GetFrameCount()
+	var frameCount = this.frameManager.GetFrameCount()
 
 	defer func() {
 		this.clientFrameCount = frameCount
@@ -196,7 +195,7 @@ func (this *Game) broadcastFrameData() {
 
 	var rsp = &protocol.S2CGameFrame{}
 	for i := this.clientFrameCount; i < frameCount; i++ {
-		var frame = this.logic.GetFrame(i)
+		var frame = this.frameManager.GetFrame(i)
 
 		if frame == nil && i != frameCount-1 {
 			continue

@@ -64,7 +64,7 @@ func main() {
 //			c.Set("player_id", req.PlayerId)
 //
 //			// 返回加入房间结果
-//			var rsp = &protocol.S2CJoinRoom{}
+//			var rsp = &protocol.joinRoomRsp{}
 //			rsp.Code = 1
 //
 //			c.WritePacket(protocol.NewPacket(1001, rsp))

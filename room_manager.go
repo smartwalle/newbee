@@ -66,30 +66,30 @@ func (this *RoomManager) joinRoom(c *net4go.Conn, req *protocol.C2SJoinRoom) boo
 	// 验证要加入的房间是否存在
 	var room = this.GetRoom(req.RoomId)
 	if room == nil {
-		this.S2CJoinRoom(c, protocol.JOIN_ROOM_CODE_ROOM_NOT_EXIST)
+		this.joinRoomRsp(c, protocol.JOIN_ROOM_CODE_ROOM_NOT_EXIST)
 		return false
 	}
 
 	// 验证房间是否有该用户的信息及该用户是否已经有连接
 	var player = room.GetPlayer(req.PlayerId)
 	if player == nil || player.IsOnline() {
-		this.S2CJoinRoom(c, protocol.JOIN_ROOM_CODE_PLAYER_NOT_EXIST)
+		this.joinRoomRsp(c, protocol.JOIN_ROOM_CODE_PLAYER_NOT_EXIST)
 		return false
 	}
 
 	// 验证用户的 Token 信息
 	if player.GetToken() != req.Token {
-		this.S2CJoinRoom(c, protocol.JOIN_ROOM_CODE_TOKEN_NOT_EXIST)
+		this.joinRoomRsp(c, protocol.JOIN_ROOM_CODE_TOKEN_NOT_EXIST)
 		return false
 	}
 
 	room.Connect(player.GetId(), c)
 
-	this.S2CJoinRoom(c, protocol.JOIN_ROOM_CODE_SUCCESS)
+	this.joinRoomRsp(c, protocol.JOIN_ROOM_CODE_SUCCESS)
 	return true
 }
 
-func (this *RoomManager) S2CJoinRoom(c *net4go.Conn, code protocol.JOIN_ROOM_CODE) {
+func (this *RoomManager) joinRoomRsp(c *net4go.Conn, code protocol.JOIN_ROOM_CODE) {
 	var rsp = &protocol.S2CJoinRoom{}
 	rsp.Code = code
 	c.WritePacket(protocol.NewPacket(protocol.PT_JOIN_ROOM, rsp))

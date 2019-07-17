@@ -61,6 +61,9 @@ func (this *ClientHandler) OnMessage(c *net4go.Conn, p net4go.Packet) bool {
 						c.WritePacket(protocol.NewPacket(protocol.PT_LOAD_PROGRESS, req))
 						//time.Sleep(time.Second * 1)
 					}
+
+					var req = &protocol.C2SGameReady{}
+					c.WritePacket(protocol.NewPacket(protocol.PT_GAME_READY, req))
 				}
 			}()
 		case protocol.PT_LOAD_PROGRESS:
@@ -73,12 +76,7 @@ func (this *ClientHandler) OnMessage(c *net4go.Conn, p net4go.Packet) bool {
 			for _, info := range rsp.Infos {
 				fmt.Println("加入房间进度", info.PlayerId, info.Progress)
 			}
-
-			var req = &protocol.C2SGameStart{}
-			c.WritePacket(protocol.NewPacket(protocol.PT_GAME_START, req))
-		case protocol.PT_GAME_START:
-			fmt.Println(time.Now().Unix())
-
+		case protocol.PT_GAME_READY:
 			var req = &protocol.C2SGameFrame{}
 			req.FrameId = 0
 			req.PlayerMove = &protocol.PlayerMove{X: 10, Y: 11}

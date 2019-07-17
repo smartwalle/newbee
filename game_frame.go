@@ -1,7 +1,6 @@
 package newbee
 
 import (
-	"fmt"
 	"github.com/smartwalle/newbee/protocol"
 )
 
@@ -14,21 +13,25 @@ func NewFrame(id uint64) *Frame {
 	return &Frame{Id: id}
 }
 
-type LockStep struct {
+type FrameManager struct {
 	frameCount uint64
 	frames     map[uint64]*Frame
 }
 
-func NewLockStep() *LockStep {
-	var ls = &LockStep{}
+func NewLockStep() *FrameManager {
+	var ls = &FrameManager{}
 	ls.frameCount = 0
 	ls.frames = make(map[uint64]*Frame)
 	return ls
 }
 
-func (this *LockStep) Push(frameId uint64, data *protocol.FrameData) {
+func (this *FrameManager) Reset() {
+	this.frameCount = 0
+	this.frames = make(map[uint64]*Frame)
+}
+
+func (this *FrameManager) Push(frameId uint64, data *protocol.FrameData) {
 	if frameId != this.frameCount {
-		fmt.Println(frameId, this.frameCount)
 		return
 	}
 
@@ -47,15 +50,15 @@ func (this *LockStep) Push(frameId uint64, data *protocol.FrameData) {
 	frame.Data = append(frame.Data, data)
 }
 
-func (this *LockStep) Tick() uint64 {
+func (this *FrameManager) Tick() uint64 {
 	this.frameCount++
 	return this.frameCount
 }
 
-func (this *LockStep) GetFrameCount() uint64 {
+func (this *FrameManager) GetFrameCount() uint64 {
 	return this.frameCount
 }
 
-func (this *LockStep) GetFrame(id uint64) *Frame {
+func (this *FrameManager) GetFrame(id uint64) *Frame {
 	return this.frames[id]
 }
