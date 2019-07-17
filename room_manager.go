@@ -48,7 +48,7 @@ func (this *RoomManager) OnMessage(c *net4go.Conn, p net4go.Packet) bool {
 	case *protocol.Packet:
 		switch v.GetType() {
 		case protocol.PT_JOIN_ROOM_REQ:
-			var req = &protocol.C2SJoinRoomReq{}
+			var req = &protocol.JoinRoomReq{}
 			if err := v.UnmarshalProtoMessage(req); err != nil {
 				return false
 			}
@@ -67,7 +67,7 @@ func (this *RoomManager) OnClose(c *net4go.Conn, err error) {
 }
 
 // --------------------------------------------------------------------------------
-func (this *RoomManager) joinRoom(c *net4go.Conn, req *protocol.C2SJoinRoomReq) bool {
+func (this *RoomManager) joinRoom(c *net4go.Conn, req *protocol.JoinRoomReq) bool {
 	fmt.Println(req.RoomId, req.PlayerId, req.Token)
 
 	// 验证要加入的房间是否存在
@@ -97,7 +97,7 @@ func (this *RoomManager) joinRoom(c *net4go.Conn, req *protocol.C2SJoinRoomReq) 
 }
 
 func (this *RoomManager) joinRoomRsp(c *net4go.Conn, code protocol.JOIN_ROOM_CODE) {
-	var rsp = &protocol.S2CJoinRoomRsp{}
+	var rsp = &protocol.JoinRoomRsp{}
 	rsp.Code = code
 	c.WritePacket(protocol.NewPacket(protocol.PT_JOIN_ROOM_RSP, rsp))
 }

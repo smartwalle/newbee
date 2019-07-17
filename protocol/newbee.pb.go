@@ -98,71 +98,71 @@ func (JOIN_ROOM_CODE) EnumDescriptor() ([]byte, []int) {
 }
 
 // --------------------------------------------------------------------------------
-type C2SHeartbeatReq struct {
+type HeartbeatReq struct {
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
 	XXX_unrecognized     []byte   `json:"-"`
 	XXX_sizecache        int32    `json:"-"`
 }
 
-func (m *C2SHeartbeatReq) Reset()         { *m = C2SHeartbeatReq{} }
-func (m *C2SHeartbeatReq) String() string { return proto.CompactTextString(m) }
-func (*C2SHeartbeatReq) ProtoMessage()    {}
-func (*C2SHeartbeatReq) Descriptor() ([]byte, []int) {
+func (m *HeartbeatReq) Reset()         { *m = HeartbeatReq{} }
+func (m *HeartbeatReq) String() string { return proto.CompactTextString(m) }
+func (*HeartbeatReq) ProtoMessage()    {}
+func (*HeartbeatReq) Descriptor() ([]byte, []int) {
 	return fileDescriptor_e7594dbd1bcb6139, []int{0}
 }
 
-func (m *C2SHeartbeatReq) XXX_Unmarshal(b []byte) error {
-	return xxx_messageInfo_C2SHeartbeatReq.Unmarshal(m, b)
+func (m *HeartbeatReq) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_HeartbeatReq.Unmarshal(m, b)
 }
-func (m *C2SHeartbeatReq) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	return xxx_messageInfo_C2SHeartbeatReq.Marshal(b, m, deterministic)
+func (m *HeartbeatReq) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_HeartbeatReq.Marshal(b, m, deterministic)
 }
-func (m *C2SHeartbeatReq) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_C2SHeartbeatReq.Merge(m, src)
+func (m *HeartbeatReq) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_HeartbeatReq.Merge(m, src)
 }
-func (m *C2SHeartbeatReq) XXX_Size() int {
-	return xxx_messageInfo_C2SHeartbeatReq.Size(m)
+func (m *HeartbeatReq) XXX_Size() int {
+	return xxx_messageInfo_HeartbeatReq.Size(m)
 }
-func (m *C2SHeartbeatReq) XXX_DiscardUnknown() {
-	xxx_messageInfo_C2SHeartbeatReq.DiscardUnknown(m)
+func (m *HeartbeatReq) XXX_DiscardUnknown() {
+	xxx_messageInfo_HeartbeatReq.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_C2SHeartbeatReq proto.InternalMessageInfo
+var xxx_messageInfo_HeartbeatReq proto.InternalMessageInfo
 
-type S2CHeartbeatRsp struct {
+type HeartbeatRsp struct {
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
 	XXX_unrecognized     []byte   `json:"-"`
 	XXX_sizecache        int32    `json:"-"`
 }
 
-func (m *S2CHeartbeatRsp) Reset()         { *m = S2CHeartbeatRsp{} }
-func (m *S2CHeartbeatRsp) String() string { return proto.CompactTextString(m) }
-func (*S2CHeartbeatRsp) ProtoMessage()    {}
-func (*S2CHeartbeatRsp) Descriptor() ([]byte, []int) {
+func (m *HeartbeatRsp) Reset()         { *m = HeartbeatRsp{} }
+func (m *HeartbeatRsp) String() string { return proto.CompactTextString(m) }
+func (*HeartbeatRsp) ProtoMessage()    {}
+func (*HeartbeatRsp) Descriptor() ([]byte, []int) {
 	return fileDescriptor_e7594dbd1bcb6139, []int{1}
 }
 
-func (m *S2CHeartbeatRsp) XXX_Unmarshal(b []byte) error {
-	return xxx_messageInfo_S2CHeartbeatRsp.Unmarshal(m, b)
+func (m *HeartbeatRsp) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_HeartbeatRsp.Unmarshal(m, b)
 }
-func (m *S2CHeartbeatRsp) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	return xxx_messageInfo_S2CHeartbeatRsp.Marshal(b, m, deterministic)
+func (m *HeartbeatRsp) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_HeartbeatRsp.Marshal(b, m, deterministic)
 }
-func (m *S2CHeartbeatRsp) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_S2CHeartbeatRsp.Merge(m, src)
+func (m *HeartbeatRsp) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_HeartbeatRsp.Merge(m, src)
 }
-func (m *S2CHeartbeatRsp) XXX_Size() int {
-	return xxx_messageInfo_S2CHeartbeatRsp.Size(m)
+func (m *HeartbeatRsp) XXX_Size() int {
+	return xxx_messageInfo_HeartbeatRsp.Size(m)
 }
-func (m *S2CHeartbeatRsp) XXX_DiscardUnknown() {
-	xxx_messageInfo_S2CHeartbeatRsp.DiscardUnknown(m)
+func (m *HeartbeatRsp) XXX_DiscardUnknown() {
+	xxx_messageInfo_HeartbeatRsp.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_S2CHeartbeatRsp proto.InternalMessageInfo
+var xxx_messageInfo_HeartbeatRsp proto.InternalMessageInfo
 
 // --------------------------------------------------------------------------------
 // 客户端 - 加入房间请求参数
-type C2SJoinRoomReq struct {
+type JoinRoomReq struct {
 	RoomId               uint64   `protobuf:"varint,1,opt,name=roomId,proto3" json:"roomId,omitempty"`
 	PlayerId             uint64   `protobuf:"varint,2,opt,name=playerId,proto3" json:"playerId,omitempty"`
 	Token                string   `protobuf:"bytes,3,opt,name=token,proto3" json:"token,omitempty"`
@@ -171,46 +171,46 @@ type C2SJoinRoomReq struct {
 	XXX_sizecache        int32    `json:"-"`
 }
 
-func (m *C2SJoinRoomReq) Reset()         { *m = C2SJoinRoomReq{} }
-func (m *C2SJoinRoomReq) String() string { return proto.CompactTextString(m) }
-func (*C2SJoinRoomReq) ProtoMessage()    {}
-func (*C2SJoinRoomReq) Descriptor() ([]byte, []int) {
+func (m *JoinRoomReq) Reset()         { *m = JoinRoomReq{} }
+func (m *JoinRoomReq) String() string { return proto.CompactTextString(m) }
+func (*JoinRoomReq) ProtoMessage()    {}
+func (*JoinRoomReq) Descriptor() ([]byte, []int) {
 	return fileDescriptor_e7594dbd1bcb6139, []int{2}
 }
 
-func (m *C2SJoinRoomReq) XXX_Unmarshal(b []byte) error {
-	return xxx_messageInfo_C2SJoinRoomReq.Unmarshal(m, b)
+func (m *JoinRoomReq) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_JoinRoomReq.Unmarshal(m, b)
 }
-func (m *C2SJoinRoomReq) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	return xxx_messageInfo_C2SJoinRoomReq.Marshal(b, m, deterministic)
+func (m *JoinRoomReq) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_JoinRoomReq.Marshal(b, m, deterministic)
 }
-func (m *C2SJoinRoomReq) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_C2SJoinRoomReq.Merge(m, src)
+func (m *JoinRoomReq) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_JoinRoomReq.Merge(m, src)
 }
-func (m *C2SJoinRoomReq) XXX_Size() int {
-	return xxx_messageInfo_C2SJoinRoomReq.Size(m)
+func (m *JoinRoomReq) XXX_Size() int {
+	return xxx_messageInfo_JoinRoomReq.Size(m)
 }
-func (m *C2SJoinRoomReq) XXX_DiscardUnknown() {
-	xxx_messageInfo_C2SJoinRoomReq.DiscardUnknown(m)
+func (m *JoinRoomReq) XXX_DiscardUnknown() {
+	xxx_messageInfo_JoinRoomReq.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_C2SJoinRoomReq proto.InternalMessageInfo
+var xxx_messageInfo_JoinRoomReq proto.InternalMessageInfo
 
-func (m *C2SJoinRoomReq) GetRoomId() uint64 {
+func (m *JoinRoomReq) GetRoomId() uint64 {
 	if m != nil {
 		return m.RoomId
 	}
 	return 0
 }
 
-func (m *C2SJoinRoomReq) GetPlayerId() uint64 {
+func (m *JoinRoomReq) GetPlayerId() uint64 {
 	if m != nil {
 		return m.PlayerId
 	}
 	return 0
 }
 
-func (m *C2SJoinRoomReq) GetToken() string {
+func (m *JoinRoomReq) GetToken() string {
 	if m != nil {
 		return m.Token
 	}
@@ -218,39 +218,39 @@ func (m *C2SJoinRoomReq) GetToken() string {
 }
 
 // 服务器端 - 加入房间请求结果
-type S2CJoinRoomRsp struct {
+type JoinRoomRsp struct {
 	Code                 JOIN_ROOM_CODE `protobuf:"varint,1,opt,name=code,proto3,enum=protocol.JOIN_ROOM_CODE" json:"code,omitempty"`
 	XXX_NoUnkeyedLiteral struct{}       `json:"-"`
 	XXX_unrecognized     []byte         `json:"-"`
 	XXX_sizecache        int32          `json:"-"`
 }
 
-func (m *S2CJoinRoomRsp) Reset()         { *m = S2CJoinRoomRsp{} }
-func (m *S2CJoinRoomRsp) String() string { return proto.CompactTextString(m) }
-func (*S2CJoinRoomRsp) ProtoMessage()    {}
-func (*S2CJoinRoomRsp) Descriptor() ([]byte, []int) {
+func (m *JoinRoomRsp) Reset()         { *m = JoinRoomRsp{} }
+func (m *JoinRoomRsp) String() string { return proto.CompactTextString(m) }
+func (*JoinRoomRsp) ProtoMessage()    {}
+func (*JoinRoomRsp) Descriptor() ([]byte, []int) {
 	return fileDescriptor_e7594dbd1bcb6139, []int{3}
 }
 
-func (m *S2CJoinRoomRsp) XXX_Unmarshal(b []byte) error {
-	return xxx_messageInfo_S2CJoinRoomRsp.Unmarshal(m, b)
+func (m *JoinRoomRsp) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_JoinRoomRsp.Unmarshal(m, b)
 }
-func (m *S2CJoinRoomRsp) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	return xxx_messageInfo_S2CJoinRoomRsp.Marshal(b, m, deterministic)
+func (m *JoinRoomRsp) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_JoinRoomRsp.Marshal(b, m, deterministic)
 }
-func (m *S2CJoinRoomRsp) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_S2CJoinRoomRsp.Merge(m, src)
+func (m *JoinRoomRsp) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_JoinRoomRsp.Merge(m, src)
 }
-func (m *S2CJoinRoomRsp) XXX_Size() int {
-	return xxx_messageInfo_S2CJoinRoomRsp.Size(m)
+func (m *JoinRoomRsp) XXX_Size() int {
+	return xxx_messageInfo_JoinRoomRsp.Size(m)
 }
-func (m *S2CJoinRoomRsp) XXX_DiscardUnknown() {
-	xxx_messageInfo_S2CJoinRoomRsp.DiscardUnknown(m)
+func (m *JoinRoomRsp) XXX_DiscardUnknown() {
+	xxx_messageInfo_JoinRoomRsp.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_S2CJoinRoomRsp proto.InternalMessageInfo
+var xxx_messageInfo_JoinRoomRsp proto.InternalMessageInfo
 
-func (m *S2CJoinRoomRsp) GetCode() JOIN_ROOM_CODE {
+func (m *JoinRoomRsp) GetCode() JOIN_ROOM_CODE {
 	if m != nil {
 		return m.Code
 	}
@@ -258,39 +258,39 @@ func (m *S2CJoinRoomRsp) GetCode() JOIN_ROOM_CODE {
 }
 
 // 客户端 - 载入游戏进度请求参数
-type C2SLoadProgressReq struct {
+type LoadProgressReq struct {
 	Progress             int32    `protobuf:"varint,2,opt,name=progress,proto3" json:"progress,omitempty"`
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
 	XXX_unrecognized     []byte   `json:"-"`
 	XXX_sizecache        int32    `json:"-"`
 }
 
-func (m *C2SLoadProgressReq) Reset()         { *m = C2SLoadProgressReq{} }
-func (m *C2SLoadProgressReq) String() string { return proto.CompactTextString(m) }
-func (*C2SLoadProgressReq) ProtoMessage()    {}
-func (*C2SLoadProgressReq) Descriptor() ([]byte, []int) {
+func (m *LoadProgressReq) Reset()         { *m = LoadProgressReq{} }
+func (m *LoadProgressReq) String() string { return proto.CompactTextString(m) }
+func (*LoadProgressReq) ProtoMessage()    {}
+func (*LoadProgressReq) Descriptor() ([]byte, []int) {
 	return fileDescriptor_e7594dbd1bcb6139, []int{4}
 }
 
-func (m *C2SLoadProgressReq) XXX_Unmarshal(b []byte) error {
-	return xxx_messageInfo_C2SLoadProgressReq.Unmarshal(m, b)
+func (m *LoadProgressReq) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_LoadProgressReq.Unmarshal(m, b)
 }
-func (m *C2SLoadProgressReq) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	return xxx_messageInfo_C2SLoadProgressReq.Marshal(b, m, deterministic)
+func (m *LoadProgressReq) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_LoadProgressReq.Marshal(b, m, deterministic)
 }
-func (m *C2SLoadProgressReq) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_C2SLoadProgressReq.Merge(m, src)
+func (m *LoadProgressReq) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_LoadProgressReq.Merge(m, src)
 }
-func (m *C2SLoadProgressReq) XXX_Size() int {
-	return xxx_messageInfo_C2SLoadProgressReq.Size(m)
+func (m *LoadProgressReq) XXX_Size() int {
+	return xxx_messageInfo_LoadProgressReq.Size(m)
 }
-func (m *C2SLoadProgressReq) XXX_DiscardUnknown() {
-	xxx_messageInfo_C2SLoadProgressReq.DiscardUnknown(m)
+func (m *LoadProgressReq) XXX_DiscardUnknown() {
+	xxx_messageInfo_LoadProgressReq.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_C2SLoadProgressReq proto.InternalMessageInfo
+var xxx_messageInfo_LoadProgressReq proto.InternalMessageInfo
 
-func (m *C2SLoadProgressReq) GetProgress() int32 {
+func (m *LoadProgressReq) GetProgress() int32 {
 	if m != nil {
 		return m.Progress
 	}
@@ -298,7 +298,7 @@ func (m *C2SLoadProgressReq) GetProgress() int32 {
 }
 
 // 服务器端 - 载入游戏进度信息
-type S2CLoadProgressRsp struct {
+type LoadProgressRsp struct {
 	PlayerId             uint64   `protobuf:"varint,1,opt,name=playerId,proto3" json:"playerId,omitempty"`
 	Progress             int32    `protobuf:"varint,2,opt,name=progress,proto3" json:"progress,omitempty"`
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
@@ -306,39 +306,39 @@ type S2CLoadProgressRsp struct {
 	XXX_sizecache        int32    `json:"-"`
 }
 
-func (m *S2CLoadProgressRsp) Reset()         { *m = S2CLoadProgressRsp{} }
-func (m *S2CLoadProgressRsp) String() string { return proto.CompactTextString(m) }
-func (*S2CLoadProgressRsp) ProtoMessage()    {}
-func (*S2CLoadProgressRsp) Descriptor() ([]byte, []int) {
+func (m *LoadProgressRsp) Reset()         { *m = LoadProgressRsp{} }
+func (m *LoadProgressRsp) String() string { return proto.CompactTextString(m) }
+func (*LoadProgressRsp) ProtoMessage()    {}
+func (*LoadProgressRsp) Descriptor() ([]byte, []int) {
 	return fileDescriptor_e7594dbd1bcb6139, []int{5}
 }
 
-func (m *S2CLoadProgressRsp) XXX_Unmarshal(b []byte) error {
-	return xxx_messageInfo_S2CLoadProgressRsp.Unmarshal(m, b)
+func (m *LoadProgressRsp) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_LoadProgressRsp.Unmarshal(m, b)
 }
-func (m *S2CLoadProgressRsp) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	return xxx_messageInfo_S2CLoadProgressRsp.Marshal(b, m, deterministic)
+func (m *LoadProgressRsp) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_LoadProgressRsp.Marshal(b, m, deterministic)
 }
-func (m *S2CLoadProgressRsp) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_S2CLoadProgressRsp.Merge(m, src)
+func (m *LoadProgressRsp) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_LoadProgressRsp.Merge(m, src)
 }
-func (m *S2CLoadProgressRsp) XXX_Size() int {
-	return xxx_messageInfo_S2CLoadProgressRsp.Size(m)
+func (m *LoadProgressRsp) XXX_Size() int {
+	return xxx_messageInfo_LoadProgressRsp.Size(m)
 }
-func (m *S2CLoadProgressRsp) XXX_DiscardUnknown() {
-	xxx_messageInfo_S2CLoadProgressRsp.DiscardUnknown(m)
+func (m *LoadProgressRsp) XXX_DiscardUnknown() {
+	xxx_messageInfo_LoadProgressRsp.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_S2CLoadProgressRsp proto.InternalMessageInfo
+var xxx_messageInfo_LoadProgressRsp proto.InternalMessageInfo
 
-func (m *S2CLoadProgressRsp) GetPlayerId() uint64 {
+func (m *LoadProgressRsp) GetPlayerId() uint64 {
 	if m != nil {
 		return m.PlayerId
 	}
 	return 0
 }
 
-func (m *S2CLoadProgressRsp) GetProgress() int32 {
+func (m *LoadProgressRsp) GetProgress() int32 {
 	if m != nil {
 		return m.Progress
 	}
@@ -348,42 +348,40 @@ func (m *S2CLoadProgressRsp) GetProgress() int32 {
 func init() {
 	proto.RegisterEnum("protocol.PT", PT_name, PT_value)
 	proto.RegisterEnum("protocol.JOIN_ROOM_CODE", JOIN_ROOM_CODE_name, JOIN_ROOM_CODE_value)
-	proto.RegisterType((*C2SHeartbeatReq)(nil), "protocol.C2SHeartbeatReq")
-	proto.RegisterType((*S2CHeartbeatRsp)(nil), "protocol.S2CHeartbeatRsp")
-	proto.RegisterType((*C2SJoinRoomReq)(nil), "protocol.C2SJoinRoomReq")
-	proto.RegisterType((*S2CJoinRoomRsp)(nil), "protocol.S2CJoinRoomRsp")
-	proto.RegisterType((*C2SLoadProgressReq)(nil), "protocol.C2SLoadProgressReq")
-	proto.RegisterType((*S2CLoadProgressRsp)(nil), "protocol.S2CLoadProgressRsp")
+	proto.RegisterType((*HeartbeatReq)(nil), "protocol.HeartbeatReq")
+	proto.RegisterType((*HeartbeatRsp)(nil), "protocol.HeartbeatRsp")
+	proto.RegisterType((*JoinRoomReq)(nil), "protocol.JoinRoomReq")
+	proto.RegisterType((*JoinRoomRsp)(nil), "protocol.JoinRoomRsp")
+	proto.RegisterType((*LoadProgressReq)(nil), "protocol.LoadProgressReq")
+	proto.RegisterType((*LoadProgressRsp)(nil), "protocol.LoadProgressRsp")
 }
 
 func init() { proto.RegisterFile("newbee.proto", fileDescriptor_e7594dbd1bcb6139) }
 
 var fileDescriptor_e7594dbd1bcb6139 = []byte{
-	// 402 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x7c, 0x91, 0x5f, 0x6b, 0xd4, 0x40,
-	0x14, 0xc5, 0x9b, 0xed, 0x1f, 0xeb, 0xad, 0xa6, 0xb3, 0xd3, 0xa2, 0x8b, 0x4f, 0x25, 0x4f, 0xa5,
-	0xc8, 0x22, 0x11, 0xf6, 0x51, 0x88, 0xd3, 0xc1, 0xa6, 0x8d, 0x33, 0xe3, 0xdc, 0x14, 0xff, 0x20,
-	0x84, 0x6c, 0x33, 0x88, 0xd8, 0xee, 0xa4, 0x49, 0x40, 0xfc, 0x38, 0xfe, 0xf7, 0x4b, 0xf8, 0xb9,
-	0xf2, 0x2a, 0x99, 0xad, 0xdb, 0xdd, 0x55, 0xfa, 0x14, 0xce, 0xef, 0x9e, 0x7b, 0x38, 0x37, 0x03,
-	0x77, 0x26, 0xe6, 0xe3, 0xd8, 0x98, 0x61, 0x59, 0xd9, 0xc6, 0xd2, 0x4d, 0xf7, 0x39, 0xb3, 0xe7,
-	0x41, 0x1f, 0xb6, 0x59, 0x88, 0x47, 0x26, 0xaf, 0x9a, 0xb1, 0xc9, 0x1b, 0x6d, 0x2e, 0x3b, 0x84,
-	0x21, 0xbb, 0x46, 0x75, 0x19, 0xbc, 0x01, 0x9f, 0x85, 0x78, 0x6c, 0xdf, 0x4f, 0xb4, 0xb5, 0x17,
-	0xda, 0x5c, 0xd2, 0x7b, 0xb0, 0x51, 0x59, 0x7b, 0x11, 0x17, 0x03, 0x6f, 0xcf, 0xdb, 0x5f, 0xd3,
-	0x57, 0x8a, 0x3e, 0x80, 0xcd, 0xf2, 0x3c, 0xff, 0x64, 0xaa, 0xb8, 0x18, 0xf4, 0xdc, 0x64, 0xa6,
-	0xe9, 0x2e, 0xac, 0x37, 0xf6, 0x83, 0x99, 0x0c, 0x56, 0xf7, 0xbc, 0xfd, 0xdb, 0x7a, 0x2a, 0x82,
-	0x27, 0xe0, 0x63, 0xc8, 0x66, 0xd9, 0x75, 0x49, 0x1f, 0xc2, 0xda, 0x99, 0x2d, 0x8c, 0x4b, 0xf6,
-	0xc3, 0xc1, 0xf0, 0x6f, 0xd9, 0xe1, 0xb1, 0x8c, 0x45, 0xa6, 0xa5, 0x7c, 0x9e, 0x31, 0x79, 0xc8,
-	0xb5, 0x73, 0x05, 0x8f, 0x80, 0xb2, 0x10, 0x13, 0x9b, 0x17, 0xaa, 0xb2, 0xef, 0x2a, 0x53, 0xd7,
-	0x5d, 0xbf, 0xae, 0xc7, 0x95, 0x74, 0x3d, 0xd6, 0xf5, 0x4c, 0x07, 0x09, 0x50, 0x0c, 0xd9, 0xc2,
-	0x46, 0x5d, 0x2e, 0x34, 0xf7, 0x96, 0x9a, 0xdf, 0x90, 0x76, 0xf0, 0xdb, 0x83, 0x9e, 0x4a, 0xe9,
-	0x16, 0xdc, 0x3a, 0x15, 0x27, 0x42, 0xbe, 0x14, 0x64, 0x85, 0xee, 0xc0, 0xdd, 0x23, 0x1e, 0xe9,
-	0xf4, 0x29, 0x8f, 0xd2, 0x4c, 0xf3, 0x17, 0xe4, 0x73, 0x3b, 0x5a, 0x82, 0xa8, 0xc8, 0x97, 0x76,
-	0x44, 0xfb, 0xb0, 0xc5, 0xa4, 0x10, 0x9c, 0x4d, 0x7d, 0x5f, 0x97, 0x10, 0x2a, 0xf2, 0x6d, 0xba,
-	0x7a, 0x7d, 0x7b, 0xe7, 0xfb, 0xfe, 0x0f, 0x44, 0x45, 0x7e, 0xb4, 0x23, 0x7a, 0x1f, 0xfa, 0x89,
-	0x8c, 0x0e, 0x33, 0xa5, 0xe5, 0x33, 0xcd, 0x11, 0x9d, 0xfb, 0xe7, 0x7f, 0x07, 0xa8, 0xc8, 0xaf,
-	0x76, 0x74, 0xf0, 0x16, 0xfc, 0xc5, 0xff, 0xda, 0x9d, 0x82, 0xa7, 0x8c, 0x71, 0x44, 0xb2, 0x42,
-	0x29, 0xf8, 0x6e, 0x22, 0x64, 0x9a, 0xf1, 0x57, 0x31, 0xa6, 0xc4, 0xa3, 0xbb, 0x40, 0x54, 0x12,
-	0xbd, 0xe6, 0x7a, 0x8e, 0xf6, 0xe8, 0x0e, 0x6c, 0xa7, 0xf2, 0x84, 0x8b, 0x39, 0xb8, 0x3a, 0xde,
-	0x70, 0x8f, 0xf7, 0xf8, 0x4f, 0x00, 0x00, 0x00, 0xff, 0xff, 0x45, 0xf5, 0xf0, 0x7a, 0x80, 0x02,
-	0x00, 0x00,
+	// 384 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x7c, 0x91, 0xcd, 0x8e, 0xd3, 0x30,
+	0x14, 0x85, 0x27, 0x9d, 0x1f, 0x86, 0xdb, 0x21, 0xe3, 0xf1, 0x8c, 0x20, 0x62, 0x35, 0xca, 0x6a,
+	0x54, 0x41, 0x17, 0x20, 0x65, 0xc3, 0x2a, 0xa4, 0x16, 0x4d, 0x5b, 0x6c, 0x63, 0xa7, 0x2a, 0x48,
+	0x48, 0x51, 0xda, 0x58, 0x08, 0xd1, 0xd6, 0x69, 0x12, 0x09, 0xf1, 0x38, 0xfc, 0xf3, 0x12, 0x3c,
+	0x57, 0xb6, 0x28, 0x6e, 0x29, 0x6d, 0x40, 0xac, 0xac, 0x73, 0xee, 0xf1, 0xd1, 0x77, 0x6d, 0x38,
+	0x5b, 0xaa, 0xf7, 0x53, 0xa5, 0xba, 0x59, 0xae, 0x4b, 0x8d, 0x4f, 0xcd, 0x31, 0xd3, 0x73, 0xd7,
+	0x86, 0xb3, 0xbe, 0x4a, 0xf2, 0x72, 0xaa, 0x92, 0x52, 0xa8, 0xd5, 0xbe, 0x2e, 0x32, 0x77, 0x02,
+	0xed, 0x81, 0x7e, 0xbb, 0x14, 0x5a, 0x2f, 0x84, 0x5a, 0xe1, 0xbb, 0x70, 0x92, 0x6b, 0xbd, 0x08,
+	0x53, 0xc7, 0xba, 0xb6, 0x6e, 0x8e, 0xc4, 0x46, 0xe1, 0xfb, 0x70, 0x9a, 0xcd, 0x93, 0x0f, 0x2a,
+	0x0f, 0x53, 0xa7, 0x65, 0x26, 0x5b, 0x8d, 0xaf, 0xe0, 0xb8, 0xd4, 0xef, 0xd4, 0xd2, 0x39, 0xbc,
+	0xb6, 0x6e, 0x6e, 0x8b, 0xb5, 0x70, 0x9f, 0xec, 0x14, 0x17, 0x19, 0x7e, 0x00, 0x47, 0x33, 0x9d,
+	0x2a, 0x53, 0x6b, 0x3f, 0x72, 0xba, 0xbf, 0x01, 0xbb, 0x03, 0x16, 0xd2, 0x58, 0x30, 0xf6, 0x3c,
+	0x0e, 0x58, 0x8f, 0x08, 0x93, 0x72, 0x1f, 0xc2, 0xf9, 0x48, 0x27, 0x29, 0xcf, 0xf5, 0x9b, 0x5c,
+	0x15, 0x45, 0x4d, 0x56, 0x13, 0x6c, 0xa4, 0x21, 0x38, 0x16, 0x5b, 0xed, 0x86, 0x8d, 0x78, 0x91,
+	0xed, 0x01, 0x5b, 0x0d, 0xe0, 0xff, 0x54, 0x75, 0x7e, 0x5a, 0xd0, 0xe2, 0x11, 0x6e, 0xc3, 0xad,
+	0x31, 0x1d, 0x52, 0x36, 0xa1, 0xe8, 0x00, 0x5f, 0xc2, 0x9d, 0x3e, 0xf1, 0x45, 0xf4, 0x94, 0xf8,
+	0x51, 0x2c, 0xc8, 0x0b, 0xf4, 0xb1, 0xf2, 0x1a, 0xa6, 0xe4, 0xe8, 0x53, 0xe5, 0xe1, 0x0b, 0x68,
+	0x07, 0x8c, 0x52, 0x12, 0xac, 0x73, 0x9f, 0x1b, 0x96, 0xe4, 0xe8, 0xcb, 0xfa, 0xea, 0x9f, 0xad,
+	0xeb, 0xdc, 0xd7, 0xbf, 0x4c, 0xc9, 0xd1, 0xb7, 0xca, 0xc3, 0xf7, 0xe0, 0x62, 0xc4, 0xfc, 0x5e,
+	0xcc, 0x05, 0x7b, 0x26, 0x88, 0x94, 0x26, 0xfd, 0xfd, 0x9f, 0x03, 0xc9, 0xd1, 0x8f, 0xca, 0xeb,
+	0xbc, 0x06, 0x7b, 0xff, 0x45, 0xeb, 0x55, 0xe4, 0x38, 0x08, 0x88, 0x94, 0xe8, 0x00, 0x63, 0xb0,
+	0xcd, 0x84, 0xb2, 0x28, 0x26, 0x2f, 0x43, 0x19, 0x21, 0x0b, 0x5f, 0x01, 0xe2, 0x23, 0xff, 0x15,
+	0x11, 0x3b, 0x6e, 0x0b, 0x5f, 0xc2, 0x79, 0xc4, 0x86, 0x84, 0xee, 0x98, 0x87, 0xd3, 0x13, 0xf3,
+	0x6d, 0x8f, 0x7f, 0x05, 0x00, 0x00, 0xff, 0xff, 0x6d, 0x45, 0xb5, 0x60, 0x6e, 0x02, 0x00, 0x00,
 }

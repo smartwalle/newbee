@@ -25,13 +25,13 @@ func (this *Game) ProcessMessage(playerId uint64, p *protocol.Packet) {
 	case protocol.PT_HEARTBEAT_REQ:
 		this.room.SendMessage(playerId, protocol.NewPacket(protocol.PT_HEARTBEAT_RSP, nil))
 	case protocol.PT_LOAD_PROGRESS_REQ:
-		var req = &protocol.C2SLoadProgressReq{}
+		var req = &protocol.LoadProgressReq{}
 		if err := p.UnmarshalProtoMessage(req); err != nil {
 		}
 		fmt.Println("加入房间进度", playerId, req.Progress)
 
 		for _, player := range this.room.players {
-			player.SendMessage(protocol.NewPacket(protocol.PT_LOAD_PROGRESS_RSP, &protocol.S2CLoadProgressRsp{
+			player.SendMessage(protocol.NewPacket(protocol.PT_LOAD_PROGRESS_RSP, &protocol.LoadProgressRsp{
 				PlayerId: playerId,
 				Progress: req.Progress,
 			}))

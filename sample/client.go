@@ -20,7 +20,7 @@ func main() {
 
 	cc := net4go.NewConn(c, p, h)
 
-	var joinRoomReq = &protocol.C2SJoinRoomReq{}
+	var joinRoomReq = &protocol.JoinRoomReq{}
 	joinRoomReq.RoomId = 5577006791947779410
 	joinRoomReq.PlayerId = 1001
 	joinRoomReq.Token = "token1"
@@ -47,7 +47,7 @@ func (this *ClientHandler) OnMessage(c *net4go.Conn, p net4go.Packet) bool {
 	case *protocol.Packet:
 		switch v.GetType() {
 		case protocol.PT_JOIN_ROOM_RSP:
-			var rsp = &protocol.S2CJoinRoomRsp{}
+			var rsp = &protocol.JoinRoomRsp{}
 			if err := v.UnmarshalProtoMessage(rsp); err != nil {
 				return false
 			}
@@ -56,7 +56,7 @@ func (this *ClientHandler) OnMessage(c *net4go.Conn, p net4go.Packet) bool {
 			go func() {
 				if rsp.Code == protocol.JOIN_ROOM_CODE_SUCCESS {
 					for i := 1; i <= 10; i++ {
-						var req = &protocol.C2SLoadProgressReq{}
+						var req = &protocol.LoadProgressReq{}
 						req.Progress = int32(i) * 10
 						c.WritePacket(protocol.NewPacket(protocol.PT_LOAD_PROGRESS_REQ, req))
 						time.Sleep(time.Second * 2)
@@ -64,7 +64,7 @@ func (this *ClientHandler) OnMessage(c *net4go.Conn, p net4go.Packet) bool {
 				}
 			}()
 		case protocol.PT_LOAD_PROGRESS_RSP:
-			var rsp = &protocol.S2CLoadProgressRsp{}
+			var rsp = &protocol.LoadProgressRsp{}
 			if err := v.UnmarshalProtoMessage(rsp); err != nil {
 				return false
 			}

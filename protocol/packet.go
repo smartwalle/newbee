@@ -20,6 +20,12 @@ func (this *Packet) Marshal() []byte {
 	return data
 }
 
+func (this *Packet) Unmarshal(data []byte) error {
+	this.pType = binary.BigEndian.Uint32(data[:4])
+	this.data = data[4:]
+	return nil
+}
+
 func (this *Packet) GetType() PT {
 	return PT(this.pType)
 }

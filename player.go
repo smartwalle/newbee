@@ -1,7 +1,6 @@
 package newbee
 
 import (
-	"fmt"
 	"github.com/smartwalle/net4go"
 	"sync/atomic"
 )
@@ -54,13 +53,9 @@ func (this *Player) IsReady() bool {
 
 func (this *Player) Close() error {
 	if this.conn != nil {
-		fmt.Println("xxddd")
 		this.conn.Close()
-		fmt.Println("xxddd")
 	}
 	this.conn = nil
-
-	fmt.Println("xxddd")
 
 	atomic.StoreInt32(&this.isOnline, 0)
 	atomic.StoreInt32(&this.isReady, 0)

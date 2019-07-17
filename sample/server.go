@@ -53,7 +53,7 @@ func main() {
 //
 //		switch v.GetType() {
 //		case 1000:
-//			var req = &protocol.C2SJoinRoomReq{}
+//			var req = &protocol.JoinRoomReq{}
 //			if err := v.UnmarshalProtoMessage(req); err != nil {
 //				return false
 //			}
@@ -64,12 +64,12 @@ func main() {
 //			c.Set("player_id", req.PlayerId)
 //
 //			// 返回加入房间结果
-//			var rsp = &protocol.S2CJoinRoomRsp{}
+//			var rsp = &protocol.JoinRoomRsp{}
 //			rsp.Code = 1
 //
 //			c.WritePacket(protocol.NewPacket(1001, rsp))
 //		case 1002:
-//			var req = &protocol.C2SLoadProgressReq{}
+//			var req = &protocol.LoadProgressReq{}
 //			if err := v.UnmarshalProtoMessage(req); err != nil {
 //				return false
 //			}
