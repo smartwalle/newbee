@@ -22,7 +22,7 @@ func (this *Protocol) Unmarshal(r io.Reader) (net4go.Packet, error) {
 	}
 
 	var pType = binary.BigEndian.Uint32(buff[:4])
-	return NewPacket(pType, buff[4:]), nil
+	return NewPacket(PT(pType), buff[4:]), nil
 }
 
 func (this *Protocol) Marshal(p net4go.Packet) []byte {

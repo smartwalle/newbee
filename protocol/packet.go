@@ -20,8 +20,8 @@ func (this *Packet) Marshal() []byte {
 	return data
 }
 
-func (this *Packet) GetType() uint32 {
-	return this.pType
+func (this *Packet) GetType() PT {
+	return PT(this.pType)
 }
 
 func (this *Packet) GetData() []byte {
@@ -32,9 +32,9 @@ func (this *Packet) UnmarshalProtoMessage(obj proto.Message) error {
 	return proto.Unmarshal(this.data, obj)
 }
 
-func NewPacket(pType uint32, obj interface{}) *Packet {
+func NewPacket(pType PT, obj interface{}) *Packet {
 	var p = &Packet{}
-	p.pType = pType
+	p.pType = uint32(pType)
 
 	switch v := obj.(type) {
 	case []byte:

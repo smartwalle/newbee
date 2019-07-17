@@ -20,11 +20,152 @@ var _ = math.Inf
 // proto package needs to be updated.
 const _ = proto.ProtoPackageIsVersion3 // please upgrade the proto package
 
+type PT int32
+
+const (
+	PT_UNKNOWN           PT = 0
+	PT_HEARTBEAT_REQ     PT = 900001
+	PT_HEARTBEAT_RSP     PT = 900002
+	PT_CONNECT_REQ       PT = 900003
+	PT_CONNECT_RSP       PT = 900004
+	PT_JOIN_ROOM_REQ     PT = 900005
+	PT_JOIN_ROOM_RSP     PT = 900006
+	PT_LOAD_PROGRESS_REQ PT = 900007
+	PT_LOAD_PROGRESS_RSP PT = 900008
+)
+
+var PT_name = map[int32]string{
+	0:      "UNKNOWN",
+	900001: "HEARTBEAT_REQ",
+	900002: "HEARTBEAT_RSP",
+	900003: "CONNECT_REQ",
+	900004: "CONNECT_RSP",
+	900005: "JOIN_ROOM_REQ",
+	900006: "JOIN_ROOM_RSP",
+	900007: "LOAD_PROGRESS_REQ",
+	900008: "LOAD_PROGRESS_RSP",
+}
+
+var PT_value = map[string]int32{
+	"UNKNOWN":           0,
+	"HEARTBEAT_REQ":     900001,
+	"HEARTBEAT_RSP":     900002,
+	"CONNECT_REQ":       900003,
+	"CONNECT_RSP":       900004,
+	"JOIN_ROOM_REQ":     900005,
+	"JOIN_ROOM_RSP":     900006,
+	"LOAD_PROGRESS_REQ": 900007,
+	"LOAD_PROGRESS_RSP": 900008,
+}
+
+func (x PT) String() string {
+	return proto.EnumName(PT_name, int32(x))
+}
+
+func (PT) EnumDescriptor() ([]byte, []int) {
+	return fileDescriptor_e7594dbd1bcb6139, []int{0}
+}
+
+type JOIN_ROOM_CODE int32
+
+const (
+	JOIN_ROOM_CODE_SUCCESS          JOIN_ROOM_CODE = 0
+	JOIN_ROOM_CODE_ROOM_NOT_EXIST   JOIN_ROOM_CODE = 1
+	JOIN_ROOM_CODE_PLAYER_NOT_EXIST JOIN_ROOM_CODE = 2
+	JOIN_ROOM_CODE_TOKEN_NOT_EXIST  JOIN_ROOM_CODE = 3
+)
+
+var JOIN_ROOM_CODE_name = map[int32]string{
+	0: "SUCCESS",
+	1: "ROOM_NOT_EXIST",
+	2: "PLAYER_NOT_EXIST",
+	3: "TOKEN_NOT_EXIST",
+}
+
+var JOIN_ROOM_CODE_value = map[string]int32{
+	"SUCCESS":          0,
+	"ROOM_NOT_EXIST":   1,
+	"PLAYER_NOT_EXIST": 2,
+	"TOKEN_NOT_EXIST":  3,
+}
+
+func (x JOIN_ROOM_CODE) String() string {
+	return proto.EnumName(JOIN_ROOM_CODE_name, int32(x))
+}
+
+func (JOIN_ROOM_CODE) EnumDescriptor() ([]byte, []int) {
+	return fileDescriptor_e7594dbd1bcb6139, []int{1}
+}
+
+// --------------------------------------------------------------------------------
+type C2SHeartbeatReq struct {
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
+}
+
+func (m *C2SHeartbeatReq) Reset()         { *m = C2SHeartbeatReq{} }
+func (m *C2SHeartbeatReq) String() string { return proto.CompactTextString(m) }
+func (*C2SHeartbeatReq) ProtoMessage()    {}
+func (*C2SHeartbeatReq) Descriptor() ([]byte, []int) {
+	return fileDescriptor_e7594dbd1bcb6139, []int{0}
+}
+
+func (m *C2SHeartbeatReq) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_C2SHeartbeatReq.Unmarshal(m, b)
+}
+func (m *C2SHeartbeatReq) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_C2SHeartbeatReq.Marshal(b, m, deterministic)
+}
+func (m *C2SHeartbeatReq) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_C2SHeartbeatReq.Merge(m, src)
+}
+func (m *C2SHeartbeatReq) XXX_Size() int {
+	return xxx_messageInfo_C2SHeartbeatReq.Size(m)
+}
+func (m *C2SHeartbeatReq) XXX_DiscardUnknown() {
+	xxx_messageInfo_C2SHeartbeatReq.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_C2SHeartbeatReq proto.InternalMessageInfo
+
+type S2CHeartbeatRsp struct {
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
+}
+
+func (m *S2CHeartbeatRsp) Reset()         { *m = S2CHeartbeatRsp{} }
+func (m *S2CHeartbeatRsp) String() string { return proto.CompactTextString(m) }
+func (*S2CHeartbeatRsp) ProtoMessage()    {}
+func (*S2CHeartbeatRsp) Descriptor() ([]byte, []int) {
+	return fileDescriptor_e7594dbd1bcb6139, []int{1}
+}
+
+func (m *S2CHeartbeatRsp) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_S2CHeartbeatRsp.Unmarshal(m, b)
+}
+func (m *S2CHeartbeatRsp) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_S2CHeartbeatRsp.Marshal(b, m, deterministic)
+}
+func (m *S2CHeartbeatRsp) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_S2CHeartbeatRsp.Merge(m, src)
+}
+func (m *S2CHeartbeatRsp) XXX_Size() int {
+	return xxx_messageInfo_S2CHeartbeatRsp.Size(m)
+}
+func (m *S2CHeartbeatRsp) XXX_DiscardUnknown() {
+	xxx_messageInfo_S2CHeartbeatRsp.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_S2CHeartbeatRsp proto.InternalMessageInfo
+
 // --------------------------------------------------------------------------------
 // 客户端 - 加入房间请求参数
 type C2SJoinRoomReq struct {
-	PlayerId             uint64   `protobuf:"varint,1,opt,name=playerId,proto3" json:"playerId,omitempty"`
-	Token                string   `protobuf:"bytes,2,opt,name=token,proto3" json:"token,omitempty"`
+	RoomId               uint64   `protobuf:"varint,1,opt,name=roomId,proto3" json:"roomId,omitempty"`
+	PlayerId             uint64   `protobuf:"varint,2,opt,name=playerId,proto3" json:"playerId,omitempty"`
+	Token                string   `protobuf:"bytes,3,opt,name=token,proto3" json:"token,omitempty"`
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
 	XXX_unrecognized     []byte   `json:"-"`
 	XXX_sizecache        int32    `json:"-"`
@@ -34,7 +175,7 @@ func (m *C2SJoinRoomReq) Reset()         { *m = C2SJoinRoomReq{} }
 func (m *C2SJoinRoomReq) String() string { return proto.CompactTextString(m) }
 func (*C2SJoinRoomReq) ProtoMessage()    {}
 func (*C2SJoinRoomReq) Descriptor() ([]byte, []int) {
-	return fileDescriptor_e7594dbd1bcb6139, []int{0}
+	return fileDescriptor_e7594dbd1bcb6139, []int{2}
 }
 
 func (m *C2SJoinRoomReq) XXX_Unmarshal(b []byte) error {
@@ -55,6 +196,13 @@ func (m *C2SJoinRoomReq) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_C2SJoinRoomReq proto.InternalMessageInfo
 
+func (m *C2SJoinRoomReq) GetRoomId() uint64 {
+	if m != nil {
+		return m.RoomId
+	}
+	return 0
+}
+
 func (m *C2SJoinRoomReq) GetPlayerId() uint64 {
 	if m != nil {
 		return m.PlayerId
@@ -71,17 +219,17 @@ func (m *C2SJoinRoomReq) GetToken() string {
 
 // 服务器端 - 加入房间请求结果
 type S2CJoinRoomRsp struct {
-	Code                 int32    `protobuf:"varint,1,opt,name=code,proto3" json:"code,omitempty"`
-	XXX_NoUnkeyedLiteral struct{} `json:"-"`
-	XXX_unrecognized     []byte   `json:"-"`
-	XXX_sizecache        int32    `json:"-"`
+	Code                 JOIN_ROOM_CODE `protobuf:"varint,1,opt,name=code,proto3,enum=protocol.JOIN_ROOM_CODE" json:"code,omitempty"`
+	XXX_NoUnkeyedLiteral struct{}       `json:"-"`
+	XXX_unrecognized     []byte         `json:"-"`
+	XXX_sizecache        int32          `json:"-"`
 }
 
 func (m *S2CJoinRoomRsp) Reset()         { *m = S2CJoinRoomRsp{} }
 func (m *S2CJoinRoomRsp) String() string { return proto.CompactTextString(m) }
 func (*S2CJoinRoomRsp) ProtoMessage()    {}
 func (*S2CJoinRoomRsp) Descriptor() ([]byte, []int) {
-	return fileDescriptor_e7594dbd1bcb6139, []int{1}
+	return fileDescriptor_e7594dbd1bcb6139, []int{3}
 }
 
 func (m *S2CJoinRoomRsp) XXX_Unmarshal(b []byte) error {
@@ -102,11 +250,11 @@ func (m *S2CJoinRoomRsp) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_S2CJoinRoomRsp proto.InternalMessageInfo
 
-func (m *S2CJoinRoomRsp) GetCode() int32 {
+func (m *S2CJoinRoomRsp) GetCode() JOIN_ROOM_CODE {
 	if m != nil {
 		return m.Code
 	}
-	return 0
+	return JOIN_ROOM_CODE_SUCCESS
 }
 
 // 客户端 - 载入游戏进度请求参数
@@ -121,7 +269,7 @@ func (m *C2SLoadProgressReq) Reset()         { *m = C2SLoadProgressReq{} }
 func (m *C2SLoadProgressReq) String() string { return proto.CompactTextString(m) }
 func (*C2SLoadProgressReq) ProtoMessage()    {}
 func (*C2SLoadProgressReq) Descriptor() ([]byte, []int) {
-	return fileDescriptor_e7594dbd1bcb6139, []int{2}
+	return fileDescriptor_e7594dbd1bcb6139, []int{4}
 }
 
 func (m *C2SLoadProgressReq) XXX_Unmarshal(b []byte) error {
@@ -162,7 +310,7 @@ func (m *S2CLoadProgressRsp) Reset()         { *m = S2CLoadProgressRsp{} }
 func (m *S2CLoadProgressRsp) String() string { return proto.CompactTextString(m) }
 func (*S2CLoadProgressRsp) ProtoMessage()    {}
 func (*S2CLoadProgressRsp) Descriptor() ([]byte, []int) {
-	return fileDescriptor_e7594dbd1bcb6139, []int{3}
+	return fileDescriptor_e7594dbd1bcb6139, []int{5}
 }
 
 func (m *S2CLoadProgressRsp) XXX_Unmarshal(b []byte) error {
@@ -198,6 +346,10 @@ func (m *S2CLoadProgressRsp) GetProgress() int32 {
 }
 
 func init() {
+	proto.RegisterEnum("protocol.PT", PT_name, PT_value)
+	proto.RegisterEnum("protocol.JOIN_ROOM_CODE", JOIN_ROOM_CODE_name, JOIN_ROOM_CODE_value)
+	proto.RegisterType((*C2SHeartbeatReq)(nil), "protocol.C2SHeartbeatReq")
+	proto.RegisterType((*S2CHeartbeatRsp)(nil), "protocol.S2CHeartbeatRsp")
 	proto.RegisterType((*C2SJoinRoomReq)(nil), "protocol.C2SJoinRoomReq")
 	proto.RegisterType((*S2CJoinRoomRsp)(nil), "protocol.S2CJoinRoomRsp")
 	proto.RegisterType((*C2SLoadProgressReq)(nil), "protocol.C2SLoadProgressReq")
@@ -207,16 +359,31 @@ func init() {
 func init() { proto.RegisterFile("newbee.proto", fileDescriptor_e7594dbd1bcb6139) }
 
 var fileDescriptor_e7594dbd1bcb6139 = []byte{
-	// 176 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xe2, 0xe2, 0xc9, 0x4b, 0x2d, 0x4f,
-	0x4a, 0x4d, 0xd5, 0x2b, 0x28, 0xca, 0x2f, 0xc9, 0x17, 0xe2, 0x00, 0x53, 0xc9, 0xf9, 0x39, 0x4a,
-	0x4e, 0x5c, 0x7c, 0xce, 0x46, 0xc1, 0x5e, 0xf9, 0x99, 0x79, 0x41, 0xf9, 0xf9, 0xb9, 0x41, 0xa9,
-	0x85, 0x42, 0x52, 0x5c, 0x1c, 0x05, 0x39, 0x89, 0x95, 0xa9, 0x45, 0x9e, 0x29, 0x12, 0x8c, 0x0a,
-	0x8c, 0x1a, 0x2c, 0x41, 0x70, 0xbe, 0x90, 0x08, 0x17, 0x6b, 0x49, 0x7e, 0x76, 0x6a, 0x9e, 0x04,
-	0x93, 0x02, 0xa3, 0x06, 0x67, 0x10, 0x84, 0xa3, 0xa4, 0xc2, 0xc5, 0x17, 0x6c, 0xe4, 0x0c, 0x37,
-	0xa3, 0xb8, 0x40, 0x48, 0x88, 0x8b, 0x25, 0x39, 0x3f, 0x25, 0x15, 0xac, 0x9f, 0x35, 0x08, 0xcc,
-	0x56, 0x32, 0xe0, 0x12, 0x72, 0x36, 0x0a, 0xf6, 0xc9, 0x4f, 0x4c, 0x09, 0x28, 0xca, 0x4f, 0x2f,
-	0x4a, 0x2d, 0x2e, 0x86, 0xd9, 0x06, 0xe5, 0x82, 0x0d, 0x65, 0x0d, 0x82, 0xf3, 0x95, 0x7c, 0xb8,
-	0x84, 0x82, 0x8d, 0x9c, 0x51, 0x74, 0x14, 0x17, 0xe0, 0x75, 0x1f, 0x1e, 0xd3, 0x92, 0xd8, 0xc0,
-	0x7e, 0x36, 0x06, 0x04, 0x00, 0x00, 0xff, 0xff, 0xf5, 0xa4, 0x41, 0x4b, 0x0a, 0x01, 0x00, 0x00,
+	// 402 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x7c, 0x91, 0x5f, 0x6b, 0xd4, 0x40,
+	0x14, 0xc5, 0x9b, 0xed, 0x1f, 0xeb, 0xad, 0xa6, 0xb3, 0xd3, 0xa2, 0x8b, 0x4f, 0x25, 0x4f, 0xa5,
+	0xc8, 0x22, 0x11, 0xf6, 0x51, 0x88, 0xd3, 0xc1, 0xa6, 0x8d, 0x33, 0xe3, 0xdc, 0x14, 0xff, 0x20,
+	0x84, 0x6c, 0x33, 0x88, 0xd8, 0xee, 0xa4, 0x49, 0x40, 0xfc, 0x38, 0xfe, 0xf7, 0x4b, 0xf8, 0xb9,
+	0xf2, 0x2a, 0x99, 0xad, 0xdb, 0xdd, 0x55, 0xfa, 0x14, 0xce, 0xef, 0x9e, 0x7b, 0x38, 0x37, 0x03,
+	0x77, 0x26, 0xe6, 0xe3, 0xd8, 0x98, 0x61, 0x59, 0xd9, 0xc6, 0xd2, 0x4d, 0xf7, 0x39, 0xb3, 0xe7,
+	0x41, 0x1f, 0xb6, 0x59, 0x88, 0x47, 0x26, 0xaf, 0x9a, 0xb1, 0xc9, 0x1b, 0x6d, 0x2e, 0x3b, 0x84,
+	0x21, 0xbb, 0x46, 0x75, 0x19, 0xbc, 0x01, 0x9f, 0x85, 0x78, 0x6c, 0xdf, 0x4f, 0xb4, 0xb5, 0x17,
+	0xda, 0x5c, 0xd2, 0x7b, 0xb0, 0x51, 0x59, 0x7b, 0x11, 0x17, 0x03, 0x6f, 0xcf, 0xdb, 0x5f, 0xd3,
+	0x57, 0x8a, 0x3e, 0x80, 0xcd, 0xf2, 0x3c, 0xff, 0x64, 0xaa, 0xb8, 0x18, 0xf4, 0xdc, 0x64, 0xa6,
+	0xe9, 0x2e, 0xac, 0x37, 0xf6, 0x83, 0x99, 0x0c, 0x56, 0xf7, 0xbc, 0xfd, 0xdb, 0x7a, 0x2a, 0x82,
+	0x27, 0xe0, 0x63, 0xc8, 0x66, 0xd9, 0x75, 0x49, 0x1f, 0xc2, 0xda, 0x99, 0x2d, 0x8c, 0x4b, 0xf6,
+	0xc3, 0xc1, 0xf0, 0x6f, 0xd9, 0xe1, 0xb1, 0x8c, 0x45, 0xa6, 0xa5, 0x7c, 0x9e, 0x31, 0x79, 0xc8,
+	0xb5, 0x73, 0x05, 0x8f, 0x80, 0xb2, 0x10, 0x13, 0x9b, 0x17, 0xaa, 0xb2, 0xef, 0x2a, 0x53, 0xd7,
+	0x5d, 0xbf, 0xae, 0xc7, 0x95, 0x74, 0x3d, 0xd6, 0xf5, 0x4c, 0x07, 0x09, 0x50, 0x0c, 0xd9, 0xc2,
+	0x46, 0x5d, 0x2e, 0x34, 0xf7, 0x96, 0x9a, 0xdf, 0x90, 0x76, 0xf0, 0xdb, 0x83, 0x9e, 0x4a, 0xe9,
+	0x16, 0xdc, 0x3a, 0x15, 0x27, 0x42, 0xbe, 0x14, 0x64, 0x85, 0xee, 0xc0, 0xdd, 0x23, 0x1e, 0xe9,
+	0xf4, 0x29, 0x8f, 0xd2, 0x4c, 0xf3, 0x17, 0xe4, 0x73, 0x3b, 0x5a, 0x82, 0xa8, 0xc8, 0x97, 0x76,
+	0x44, 0xfb, 0xb0, 0xc5, 0xa4, 0x10, 0x9c, 0x4d, 0x7d, 0x5f, 0x97, 0x10, 0x2a, 0xf2, 0x6d, 0xba,
+	0x7a, 0x7d, 0x7b, 0xe7, 0xfb, 0xfe, 0x0f, 0x44, 0x45, 0x7e, 0xb4, 0x23, 0x7a, 0x1f, 0xfa, 0x89,
+	0x8c, 0x0e, 0x33, 0xa5, 0xe5, 0x33, 0xcd, 0x11, 0x9d, 0xfb, 0xe7, 0x7f, 0x07, 0xa8, 0xc8, 0xaf,
+	0x76, 0x74, 0xf0, 0x16, 0xfc, 0xc5, 0xff, 0xda, 0x9d, 0x82, 0xa7, 0x8c, 0x71, 0x44, 0xb2, 0x42,
+	0x29, 0xf8, 0x6e, 0x22, 0x64, 0x9a, 0xf1, 0x57, 0x31, 0xa6, 0xc4, 0xa3, 0xbb, 0x40, 0x54, 0x12,
+	0xbd, 0xe6, 0x7a, 0x8e, 0xf6, 0xe8, 0x0e, 0x6c, 0xa7, 0xf2, 0x84, 0x8b, 0x39, 0xb8, 0x3a, 0xde,
+	0x70, 0x8f, 0xf7, 0xf8, 0x4f, 0x00, 0x00, 0x00, 0xff, 0xff, 0x45, 0xf5, 0xf0, 0x7a, 0x80, 0x02,
+	0x00, 0x00,
 }

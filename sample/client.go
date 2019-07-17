@@ -20,11 +20,19 @@ func main() {
 
 	cc := net4go.NewConn(c, p, h)
 
-	var pJoinRoom = &protocol.C2SJoinRoomReq{}
-	pJoinRoom.PlayerId = 1009
-	pJoinRoom.Token = "这是我的 Token"
+	var joinRoomReq = &protocol.C2SJoinRoomReq{}
+	joinRoomReq.RoomId = 5577006791947779410
+	joinRoomReq.PlayerId = 1001
+	joinRoomReq.Token = "token1"
 
-	cc.WritePacket(protocol.NewPacket(1000, pJoinRoom))
+	cc.WritePacket(protocol.NewPacket(protocol.PT_JOIN_ROOM_REQ, joinRoomReq))
+
+	go func() {
+		for {
+			cc.WritePacket(protocol.NewPacket(protocol.PT_HEARTBEAT_REQ, nil))
+			time.Sleep(time.Second * 1)
+		}
+	}()
 
 	select {}
 }
@@ -38,29 +46,32 @@ func (this *ClientHandler) OnMessage(c *net4go.Conn, p net4go.Packet) bool {
 	switch v := p.(type) {
 	case *protocol.Packet:
 		switch v.GetType() {
-		case 1001:
+		case protocol.PT_JOIN_ROOM_RSP:
 			var rsp = &protocol.S2CJoinRoomRsp{}
 			if err := v.UnmarshalProtoMessage(rsp); err != nil {
 				return false
 			}
 			fmt.Println("加入房间返回结果", rsp.Code)
 
-			if rsp.Code == 1 {
-				for i := 1; i <= 10; i++ {
-					var req = &protocol.C2SLoadProgressReq{}
-					req.Progress = int32(i) * 10
-					c.WritePacket(protocol.NewPacket(1002, req))
-					time.Sleep(time.Second * 1)
+			go func() {
+				if rsp.Code == protocol.JOIN_ROOM_CODE_SUCCESS {
+					for i := 1; i <= 10; i++ {
+						var req = &protocol.C2SLoadProgressReq{}
+						req.Progress = int32(i) * 10
+						c.WritePacket(protocol.NewPacket(protocol.PT_LOAD_PROGRESS_REQ, req))
+						time.Sleep(time.Second * 2)
+					}
 				}
-			}
-		case 1003:
+			}()
+		case protocol.PT_LOAD_PROGRESS_RSP:
 			var rsp = &protocol.S2CLoadProgressRsp{}
 			if err := v.UnmarshalProtoMessage(rsp); err != nil {
 				return false
 			}
 			fmt.Println("加入房间进度", rsp.PlayerId, rsp.Progress)
+		case protocol.PT_HEARTBEAT_RSP:
+			fmt.Println("收到心跳请求回应")
 		}
-
 	}
 	return true
 }

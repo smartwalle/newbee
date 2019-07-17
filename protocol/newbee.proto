@@ -4,16 +4,47 @@ syntax = "proto3";
 
 package protocol;
 
+enum PT {
+    UNKNOWN = 0;
+
+    HEARTBEAT_REQ = 900001;
+    HEARTBEAT_RSP = 900002;
+
+    CONNECT_REQ = 900003;
+    CONNECT_RSP = 900004;
+
+    JOIN_ROOM_REQ = 900005;
+    JOIN_ROOM_RSP = 900006;
+
+    LOAD_PROGRESS_REQ = 900007;
+    LOAD_PROGRESS_RSP = 900008;
+}
+
+// --------------------------------------------------------------------------------
+message C2SHeartbeatReq {
+}
+
+message S2CHeartbeatRsp {
+}
+
 // --------------------------------------------------------------------------------
 // 客户端 - 加入房间请求参数
 message C2SJoinRoomReq {
-    uint64 playerId = 1;
-    string token = 2;
+    uint64 roomId = 1;
+    uint64 playerId = 2;
+    string token = 3;
+}
+
+enum JOIN_ROOM_CODE {
+    SUCCESS = 0;
+    ROOM_NOT_EXIST = 1;
+    PLAYER_NOT_EXIST = 2;
+    TOKEN_NOT_EXIST = 3;
 }
 
 // 服务器端 - 加入房间请求结果
 message S2CJoinRoomRsp {
-    int32 code = 1;
+    JOIN_ROOM_CODE code = 1;
 }
 
 // 客户端 - 载入游戏进度请求参数
