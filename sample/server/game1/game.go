@@ -20,8 +20,8 @@ type game struct {
 	maxOfflinePendingTime int64            // 游戏所有玩家掉线最长等待时间
 	offlineTime           int64            // 游戏所有玩家掉线开始时间点
 
-	frameManager     *FrameManager
-	clientFrameCount uint64 // 已经向客户端广播的帧数
+	frameManager     *FrameManager // 游戏帧管理器
+	clientFrameCount uint64        // 已经向客户端广播的帧数
 }
 
 func NewGame(id uint64) newbee.Game {
