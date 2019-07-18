@@ -27,11 +27,11 @@ type Game interface {
 	// OnMessage 处理客户端消息
 	OnMessage(Player, net4go.Packet)
 
-	// OnPlayerIn 有玩家加入
-	OnPlayerIn(Player)
+	// OnJoinGame 有玩家加入
+	OnJoinGame(Player)
 
-	// OnPlayerOut 有玩家离开
-	OnPlayerOut(Player)
+	// OnLeaveGame 有玩家离开
+	OnLeaveGame(Player)
 
 	// OnRoomClose 关闭房间
 	OnRoomClose()

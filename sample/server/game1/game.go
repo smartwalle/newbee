@@ -102,12 +102,12 @@ func (this *game) OnMessage(player newbee.Player, np net4go.Packet) {
 	}
 }
 
-func (this *game) OnPlayerIn(p newbee.Player) {
-	fmt.Println("OnPlayerIn")
+func (this *game) OnJoinGame(p newbee.Player) {
+	fmt.Println("OnJoinGame")
 }
 
-func (this *game) OnPlayerOut(p newbee.Player) {
-	fmt.Println("OnPlayerOut")
+func (this *game) OnLeaveGame(p newbee.Player) {
+	fmt.Println("OnLeaveGame")
 }
 
 func (this *game) OnRoomClose() {
