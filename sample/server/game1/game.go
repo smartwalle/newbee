@@ -102,6 +102,18 @@ func (this *game) OnMessage(player newbee.Player, np net4go.Packet) {
 	}
 }
 
+func (this *game) OnPlayerIn(p newbee.Player) {
+	fmt.Println("OnPlayerIn")
+}
+
+func (this *game) OnPlayerOut(p newbee.Player) {
+	fmt.Println("OnPlayerOut")
+}
+
+func (this *game) OnRoomClose() {
+	fmt.Println("OnRoomClose")
+}
+
 // GameStart 开始游戏
 func (this *game) GameStart() {
 	this.state = newbee.GameStateGaming
@@ -200,7 +212,7 @@ func (this *game) broadcastFrame() {
 	for i := this.clientFrameCount; i < frameCount; i++ {
 		var frame = this.frameManager.GetFrame(i)
 
-		if frame == nil && i != frameCount-1 {
+		if frame == nil /* && i != frameCount-1 */ {
 			continue
 		}
 
@@ -210,4 +222,10 @@ func (this *game) broadcastFrame() {
 	if len(rsp.Frames) > 0 {
 		this.room.Broadcast(protocol.NewPacket(protocol.PT_GAME_FRAME, rsp))
 	}
+}
+
+func (this *game) cleanup() {
+	this.room = nil
+	this.frameManager = nil
+	this.clientFrameCount = 0
 }

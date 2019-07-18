@@ -1,7 +1,6 @@
 package newbee
 
 import (
-	"fmt"
 	"github.com/smartwalle/net4go"
 	"sync"
 	"time"
@@ -55,6 +54,9 @@ type Room interface {
 
 	// GetReadyPlayerCount 获取房间中准备就绪玩家数量
 	GetReadyPlayerCount() int
+
+	// Close 关闭房间
+	Close() error
 }
 
 // --------------------------------------------------------------------------------
@@ -66,6 +68,9 @@ type room struct {
 	messageChan   chan *message
 	playerInChan  chan *net4go.Conn
 	playerOutChan chan *net4go.Conn
+
+	closeChan chan struct{}
+	closeOnce sync.Once
 }
 
 func NewRoom(roomId uint64, players []Player) Room {
@@ -80,6 +85,8 @@ func NewRoom(roomId uint64, players []Player) Room {
 	r.playerInChan = make(chan *net4go.Conn, 10)
 	r.playerOutChan = make(chan *net4go.Conn, 10)
 
+	r.closeChan = make(chan struct{})
+
 	return r
 }
 
@@ -91,6 +98,10 @@ func (this *room) GetId() uint64 {
 func (this *room) GetPlayer(playerId uint64) Player {
 	this.mu.RLock()
 	defer this.mu.RUnlock()
+
+	if playerId == 0 {
+		return nil
+	}
 
 	var p = this.players[playerId]
 	return p
@@ -139,7 +150,8 @@ func (this *room) RunGame(game Game) {
 	}
 
 	defer func() {
-		fmt.Println("游戏停止，房间解散")
+		game.OnRoomClose()
+		this.Close()
 	}()
 
 	game.RunInRoom(this)
@@ -162,13 +174,17 @@ func (this *room) RunGame(game Game) {
 			var player = this.GetPlayer(playerId)
 			if player != nil {
 				player.Online(c)
+				game.OnPlayerIn(player)
 			}
 		case c := <-this.playerOutChan:
 			var playerId = c.Get(kPlayerId).(uint64)
 			var player = this.GetPlayer(playerId)
 			if player != nil {
 				player.Close()
+				game.OnPlayerOut(player)
 			}
+		case <-this.closeChan:
+			return
 		}
 	}
 }
@@ -194,7 +210,6 @@ func (this *room) OnClose(c *net4go.Conn, err error) {
 }
 
 // --------------------------------------------------------------------------------
-// SendMessage 向指定玩家发送消息
 func (this *room) SendMessage(playerId uint64, p net4go.Packet) {
 	var player = this.GetPlayer(playerId)
 	if player != nil {
@@ -202,7 +217,6 @@ func (this *room) SendMessage(playerId uint64, p net4go.Packet) {
 	}
 }
 
-// Broadcast 向所有玩家发送消息
 func (this *room) Broadcast(p net4go.Packet) {
 	this.mu.RLock()
 	defer this.mu.RUnlock()
@@ -213,8 +227,6 @@ func (this *room) Broadcast(p net4go.Packet) {
 }
 
 // --------------------------------------------------------------------------------
-
-// CheckAllPlayerOnline 检测所有玩家是否在线
 func (this *room) CheckAllPlayerOnline() bool {
 	this.mu.RLock()
 	defer this.mu.RUnlock()
@@ -231,7 +243,6 @@ func (this *room) CheckAllPlayerOnline() bool {
 	return true
 }
 
-// CheckAllReady 检测所有玩家是否准备就绪
 func (this *room) CheckAllPlayerReady() bool {
 	this.mu.RLock()
 	defer this.mu.RUnlock()
@@ -254,7 +265,6 @@ func (this *room) GetPlayerCount() int {
 	return len(this.players)
 }
 
-// GetOnlinePlayerCount 获取在线玩家数量
 func (this *room) GetOnlinePlayerCount() int {
 	this.mu.RLock()
 	defer this.mu.RUnlock()
@@ -268,7 +278,6 @@ func (this *room) GetOnlinePlayerCount() int {
 	return i
 }
 
-// GetReadyPlayerCount 获取准备就绪玩家数量
 func (this *room) GetReadyPlayerCount() int {
 	this.mu.RLock()
 	defer this.mu.RUnlock()
@@ -280,4 +289,20 @@ func (this *room) GetReadyPlayerCount() int {
 		}
 	}
 	return i
+}
+
+func (this *room) Close() error {
+	this.closeOnce.Do(func() {
+		close(this.messageChan)
+		close(this.playerInChan)
+		close(this.playerOutChan)
+
+		close(this.closeChan)
+
+		for _, p := range this.players {
+			p.Close()
+		}
+		this.players = make(map[uint64]Player)
+	})
+	return nil
 }

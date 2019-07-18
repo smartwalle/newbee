@@ -1,8 +1,6 @@
 package newbee
 
-import (
-	"github.com/smartwalle/net4go"
-)
+import "github.com/smartwalle/net4go"
 
 type GameState uint16
 
@@ -29,6 +27,15 @@ type Game interface {
 	// OnMessage 处理客户端消息
 	OnMessage(Player, net4go.Packet)
 
-	// Tick 定时器，Room 会定时调用
+	// OnPlayerIn 有玩家加入
+	OnPlayerIn(Player)
+
+	// OnPlayerOut 有玩家离开
+	OnPlayerOut(Player)
+
+	// OnRoomClose 关闭房间
+	OnRoomClose()
+
+	// Tick 定时器，Room 会定时调用，如果此方法返回 false，Room 将关闭
 	Tick(now int64) bool
 }
