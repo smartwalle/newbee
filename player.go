@@ -15,7 +15,7 @@ type Player struct {
 
 	conn *net4go.Conn
 
-	loadProgress      int32
+	loadingProgress   int32
 	lastHeartbeatTime int64
 }
 
@@ -24,7 +24,6 @@ func NewPlayer(id uint64, token string, index uint16) *Player {
 	p.id = id
 	p.token = token
 	p.index = index
-
 	return p
 }
 
@@ -41,11 +40,11 @@ func (this *Player) GetIndex() uint16 {
 }
 
 func (this *Player) UpdateLoadProgress(p int32) {
-	this.loadProgress = p
+	this.loadingProgress = p
 }
 
-func (this *Player) GetLoadProgress() int32 {
-	return this.loadProgress
+func (this *Player) GetLoadingProgress() int32 {
+	return this.loadingProgress
 }
 
 func (this *Player) RefreshHeartbeatTime() {
@@ -98,7 +97,7 @@ func (this *Player) IsReady() bool {
 // Cleanup 清理玩家的游戏信息，但是不断开连接
 func (this *Player) Cleanup() {
 	this.isReady = false
-	this.loadProgress = 0
+	this.loadingProgress = 0
 	this.lastHeartbeatTime = 0
 }
 

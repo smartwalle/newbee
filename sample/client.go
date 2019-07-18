@@ -20,12 +20,12 @@ func main() {
 
 	cc := net4go.NewConn(c, p, h)
 
-	var C2SJoinRoom = &protocol.C2SJoinRoom{}
-	C2SJoinRoom.RoomId = 9999
-	C2SJoinRoom.PlayerId = 1002
-	C2SJoinRoom.Token = "token2"
+	var req = &protocol.C2SJoinRoom{}
+	req.RoomId = 9999
+	req.PlayerId = 1001
+	req.Token = "token1"
 
-	cc.WritePacket(protocol.NewPacket(protocol.PT_JOIN_ROOM, C2SJoinRoom))
+	cc.WritePacket(protocol.NewPacket(protocol.PT_JOIN_ROOM, req))
 
 	go func() {
 		for {
@@ -56,9 +56,9 @@ func (this *ClientHandler) OnMessage(c *net4go.Conn, p net4go.Packet) bool {
 			go func() {
 				if rsp.Code == protocol.JOIN_ROOM_CODE_SUCCESS {
 					for i := 1; i <= 10; i++ {
-						var req = &protocol.C2SLoadProgress{}
+						var req = &protocol.C2SLoadingProgress{}
 						req.Progress = int32(i) * 10
-						c.WritePacket(protocol.NewPacket(protocol.PT_LOAD_PROGRESS, req))
+						c.WritePacket(protocol.NewPacket(protocol.PT_LOADING_PROGRESS, req))
 						//time.Sleep(time.Second * 1)
 					}
 
@@ -66,8 +66,8 @@ func (this *ClientHandler) OnMessage(c *net4go.Conn, p net4go.Packet) bool {
 					c.WritePacket(protocol.NewPacket(protocol.PT_GAME_READY, req))
 				}
 			}()
-		case protocol.PT_LOAD_PROGRESS:
-			var rsp = &protocol.S2CLoadProgress{}
+		case protocol.PT_LOADING_PROGRESS:
+			var rsp = &protocol.S2CLoadingProgress{}
 			if err := v.UnmarshalProtoMessage(rsp); err != nil {
 				return false
 			}
@@ -91,7 +91,7 @@ func (this *ClientHandler) OnMessage(c *net4go.Conn, p net4go.Packet) bool {
 			fmt.Println("============ frame")
 			for _, frame := range rsp.Frames {
 				fmt.Println("frame id", frame.FrameId)
-				for _, data := range frame.FrameData {
+				for _, data := range frame.Commands {
 					fmt.Println(data.PlayerId, data.PlayerMove, data.PlayerSkill)
 				}
 			}

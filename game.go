@@ -2,6 +2,7 @@ package newbee
 
 import (
 	"fmt"
+	"github.com/smartwalle/net4go"
 	"github.com/smartwalle/newbee/protocol"
 	"time"
 )
@@ -29,7 +30,7 @@ type Game struct {
 	clientFrameCount uint64 // 已经向客户端广播的帧数
 }
 
-func newGame(room *Room) *Game {
+func NewGame(room *Room) *Game {
 	var g = &Game{}
 	g.room = room
 	g.state = GameStatePending
@@ -38,7 +39,7 @@ func newGame(room *Room) *Game {
 	g.maxOfflinePendingTime = 20
 	g.offlineTime = 0
 
-	g.frameManager = NewLockStep()
+	g.frameManager = NewFrameManager()
 	return g
 }
 
@@ -51,49 +52,51 @@ func (this *Game) State() GameState {
 	return this.state
 }
 
-func (this *Game) ProcessMessage(player *Player, p *protocol.Packet) {
-	switch p.GetType() {
-	case protocol.PT_HEARTBEAT:
-		this.room.SendMessage(player.GetId(), protocol.NewPacket(protocol.PT_HEARTBEAT, nil))
-		player.RefreshHeartbeatTime()
-	case protocol.PT_LOAD_PROGRESS:
-		if this.state != GameStatePending {
-			return
-		}
+func (this *Game) ProcessMessage(player *Player, np net4go.Packet) {
+	if p := np.(*protocol.Packet); p != nil {
+		switch p.GetType() {
+		case protocol.PT_HEARTBEAT:
+			this.room.SendMessage(player.GetId(), protocol.NewPacket(protocol.PT_HEARTBEAT, nil))
+			player.RefreshHeartbeatTime()
+		case protocol.PT_LOADING_PROGRESS:
+			if this.state != GameStatePending {
+				return
+			}
 
-		var req = &protocol.C2SLoadProgress{}
-		if err := p.UnmarshalProtoMessage(req); err != nil {
-			return
-		}
+			var req = &protocol.C2SLoadingProgress{}
+			if err := p.UnmarshalProtoMessage(req); err != nil {
+				return
+			}
 
-		// 更新玩家的加载进度
-		player.UpdateLoadProgress(req.Progress)
+			// 更新玩家的加载进度
+			player.UpdateLoadProgress(req.Progress)
 
-		// 向所有玩家广播加载进度
-		var rsp = &protocol.S2CLoadProgress{}
-		for _, player := range this.room.GetPlayers() {
-			rsp.Infos = append(rsp.Infos, &protocol.LoadProgressInfo{PlayerId: player.GetId(), Progress: player.GetLoadProgress()})
-		}
-		this.room.Broadcast(protocol.NewPacket(protocol.PT_LOAD_PROGRESS, rsp))
-	case protocol.PT_GAME_READY:
-		if this.state != GameStatePending {
-			return
-		}
-		player.Ready()
-	case protocol.PT_GAME_FRAME:
-		if this.state != GameStateGaming {
-			return
-		}
-		var req = &protocol.C2SGameFrame{}
-		if err := p.UnmarshalProtoMessage(req); err != nil {
-			return
-		}
+			// 向所有玩家广播加载进度
+			var rsp = &protocol.S2CLoadingProgress{}
+			for _, player := range this.room.GetPlayers() {
+				rsp.Infos = append(rsp.Infos, &protocol.LoadingProgressInfo{PlayerId: player.GetId(), Progress: player.GetLoadingProgress()})
+			}
+			this.room.Broadcast(protocol.NewPacket(protocol.PT_LOADING_PROGRESS, rsp))
+		case protocol.PT_GAME_READY:
+			if this.state != GameStatePending {
+				return
+			}
+			player.Ready()
+		case protocol.PT_GAME_FRAME:
+			if this.state != GameStateGaming {
+				return
+			}
+			var req = &protocol.C2SGameFrame{}
+			if err := p.UnmarshalProtoMessage(req); err != nil {
+				return
+			}
 
-		var frameData = &protocol.FrameData{}
-		frameData.PlayerId = player.GetId()
-		frameData.PlayerMove = req.PlayerMove
+			var cmd = &protocol.FrameCommand{}
+			cmd.PlayerId = player.GetId()
+			cmd.PlayerMove = req.PlayerMove
 
-		this.frameManager.Push(req.FrameId, frameData)
+			this.frameManager.PushFrame(req.FrameId, cmd)
+		}
 	}
 }
 
@@ -171,9 +174,7 @@ func (this *Game) Tick(now int64) bool {
 
 		this.frameManager.Tick()
 
-		this.broadcastFrameData()
-
-		// TODO 处理游戏逻辑
+		this.broadcastFrame()
 		return true
 	case GameStateOver:
 		// 游戏结束 - 现在结束之后直接停止
@@ -186,7 +187,7 @@ func (this *Game) Tick(now int64) bool {
 	return false
 }
 
-func (this *Game) broadcastFrameData() {
+func (this *Game) broadcastFrame() {
 	var frameCount = this.frameManager.GetFrameCount()
 
 	defer func() {
@@ -201,12 +202,7 @@ func (this *Game) broadcastFrameData() {
 			continue
 		}
 
-		var gFrame = &protocol.GameFrame{}
-		gFrame.FrameId = uint64(i)
-		if frame != nil {
-			gFrame.FrameData = frame.Data
-		}
-		rsp.Frames = append(rsp.Frames, gFrame)
+		rsp.Frames = append(rsp.Frames, frame)
 	}
 
 	if len(rsp.Frames) > 0 {

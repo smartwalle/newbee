@@ -3,7 +3,6 @@ package newbee
 import (
 	"fmt"
 	"github.com/smartwalle/net4go"
-	"github.com/smartwalle/newbee/protocol"
 	"sync"
 	"time"
 )
@@ -14,7 +13,7 @@ const (
 
 type message struct {
 	PlayerId uint64
-	Packet   *protocol.Packet
+	Packet   net4go.Packet
 }
 
 // --------------------------------------------------------------------------------
@@ -30,7 +29,7 @@ type Room struct {
 	playerOutChan chan *net4go.Conn
 }
 
-func newRoom(players []*Player) *Room {
+func NewRoom(players []*Player) *Room {
 	var r = &Room{}
 	r.id = 9999 // TODO 房间 id 生成规则
 	r.players = make(map[uint64]*Player)
@@ -39,13 +38,19 @@ func newRoom(players []*Player) *Room {
 	}
 	r.messageChan = make(chan *message, 1024)
 
-	r.playerInChan = make(chan *net4go.Conn, 32)
-	r.playerOutChan = make(chan *net4go.Conn, 32)
-
-	r.game = newGame(r) // TODO 游戏信息从外部传进来
-	go r.run()
+	r.playerInChan = make(chan *net4go.Conn, 10)
+	r.playerOutChan = make(chan *net4go.Conn, 10)
 
 	return r
+}
+
+func (this *Room) RunGame(game *Game) {
+	if this.game != nil || game == nil {
+		return
+	}
+
+	this.game = game
+	go this.run()
 }
 
 // --------------------------------------------------------------------------------
@@ -103,6 +108,7 @@ func (this *Room) Join(player *Player, c *net4go.Conn) {
 func (this *Room) run() {
 	defer func() {
 		fmt.Println("游戏停止，房间解散")
+		this.game = nil
 	}()
 
 	if this.game == nil {
@@ -140,22 +146,18 @@ func (this *Room) run() {
 
 // --------------------------------------------------------------------------------
 func (this *Room) OnMessage(c *net4go.Conn, p net4go.Packet) bool {
-	switch v := p.(type) {
-	case *protocol.Packet:
-		var playerId = c.Get(kPlayerId).(uint64)
-		if playerId == 0 {
-			return false
-		}
-
-		var msg = &message{}
-		msg.PlayerId = playerId
-		msg.Packet = v
-
-		this.messageChan <- msg
-
-		return true
+	var playerId = c.Get(kPlayerId).(uint64)
+	if playerId == 0 {
+		return false
 	}
-	return false
+
+	var msg = &message{}
+	msg.PlayerId = playerId
+	msg.Packet = p
+
+	this.messageChan <- msg
+
+	return true
 }
 
 func (this *Room) OnClose(c *net4go.Conn, err error) {

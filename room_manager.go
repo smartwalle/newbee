@@ -22,8 +22,12 @@ func (this *RoomManager) CreateRoom(players []*Player) *Room {
 	this.mu.Lock()
 	defer this.mu.Unlock()
 
-	var r = newRoom(players)
+	var r = NewRoom(players)
 	this.rooms[r.GetId()] = r
+
+	var g = NewGame(r)
+	r.RunGame(g)
+
 	return r
 }
 
