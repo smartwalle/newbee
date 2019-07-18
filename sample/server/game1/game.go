@@ -29,7 +29,7 @@ func NewGame(id uint64) newbee.Game {
 	g.id = id
 	g.state = newbee.GameStatePending
 	g.createTime = time.Now().Unix()
-	g.maxPendingTime = 20
+	g.maxPendingTime = 5
 	g.maxOfflinePendingTime = 20
 	g.offlineTime = 0
 
@@ -212,8 +212,14 @@ func (this *game) broadcastFrame() {
 	for i := this.clientFrameCount; i < frameCount; i++ {
 		var frame = this.frameManager.GetFrame(i)
 
-		if frame == nil /* && i != frameCount-1 */ {
-			continue
+		//if frame == nil && i != frameCount-1 {
+		//	continue
+		//}
+
+		// 如果该帧没有数据，则构造一帧空数据
+		if frame == nil {
+			frame = &protocol.GameFrame{}
+			frame.FrameId = i
 		}
 
 		rsp.Frames = append(rsp.Frames, frame)
