@@ -4,15 +4,24 @@ import (
 	"fmt"
 	"github.com/smartwalle/net4go"
 	"github.com/smartwalle/newbee/sample/protocol"
-	"net"
+	"github.com/xtaci/kcp-go"
 	"time"
 )
 
 func main() {
-	c, err := net.Dial("tcp", ":6655")
+	c, err := kcp.Dial("192.168.1.99:6655")
 	if err != nil {
 		fmt.Println(err)
 		return
+	}
+
+	if kcpConn := c.(*kcp.UDPSession); kcpConn != nil {
+		kcpConn.SetNoDelay(1, 10, 2, 1)
+		kcpConn.SetStreamMode(true)
+		kcpConn.SetWindowSize(4096, 4096)
+		kcpConn.SetReadBuffer(4 * 1024 * 1024)
+		kcpConn.SetWriteBuffer(4 * 1024 * 1024)
+		kcpConn.SetACKNoDelay(true)
 	}
 
 	var p = &protocol.Protocol{}
