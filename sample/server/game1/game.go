@@ -9,6 +9,8 @@ import (
 )
 
 type game struct {
+	id uint64
+
 	room newbee.Room
 
 	state                 newbee.GameState // 游戏状态
@@ -22,8 +24,9 @@ type game struct {
 	clientFrameCount uint64 // 已经向客户端广播的帧数
 }
 
-func NewGame() newbee.Game {
+func NewGame(id uint64) newbee.Game {
 	var g = &game{}
+	g.id = id
 	g.state = newbee.GameStatePending
 	g.createTime = time.Now().Unix()
 	g.maxPendingTime = 20
@@ -32,6 +35,10 @@ func NewGame() newbee.Game {
 
 	g.frameManager = NewFrameManager()
 	return g
+}
+
+func (this *game) GetId() uint64 {
+	return this.id
 }
 
 func (this *game) RunInRoom(room newbee.Room) {

@@ -14,6 +14,9 @@ const (
 )
 
 type Game interface {
+	// GetId 获取游戏 id
+	GetId() uint64
+
 	// RunInRoom Room 的 RunGame 方法会调用此方法
 	RunInRoom(room Room)
 

@@ -27,7 +27,7 @@ func main() {
 	ps = append(ps, p1, p2)
 
 	// 创建游戏信息
-	var game = game1.NewGame()
+	var game = game1.NewGame(123)
 
 	// 默认创建一个房间
 	var rm = room.NewRoomManager()
