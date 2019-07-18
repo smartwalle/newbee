@@ -1,37 +1,44 @@
-package newbee
+package room
 
 import (
 	"fmt"
 	"github.com/smartwalle/net4go"
-	"github.com/smartwalle/newbee/protocol"
+	"github.com/smartwalle/newbee"
+	"github.com/smartwalle/newbee/sample/protocol"
 	"sync"
 )
 
 type RoomManager struct {
 	mu    sync.RWMutex
-	rooms map[uint64]*Room
+	rooms map[uint64]newbee.Room
 }
 
 func NewRoomManager() *RoomManager {
 	var rm = &RoomManager{}
-	rm.rooms = make(map[uint64]*Room)
+	rm.rooms = make(map[uint64]newbee.Room)
 	return rm
 }
 
-func (this *RoomManager) CreateRoom(players []*Player) *Room {
+func (this *RoomManager) CreateRoom(players []newbee.Player, game newbee.Game) newbee.Room {
 	this.mu.Lock()
 	defer this.mu.Unlock()
 
-	var r = NewRoom(players)
+	var r = newbee.NewRoom(9999, players)
 	this.rooms[r.GetId()] = r
 
-	var g = NewGame(r)
-	r.RunGame(g)
+	go func(r newbee.Room, g newbee.Game) {
+		r.RunGame(g)
+		fmt.Println("end.........")
+
+		this.mu.Lock()
+		defer this.mu.Unlock()
+		delete(this.rooms, r.GetId())
+	}(r, game)
 
 	return r
 }
 
-func (this *RoomManager) GetRoom(roomId uint64) *Room {
+func (this *RoomManager) GetRoom(roomId uint64) newbee.Room {
 	this.mu.RLock()
 	defer this.mu.RUnlock()
 

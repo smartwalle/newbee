@@ -1,7 +1,7 @@
-package newbee
+package game1
 
 import (
-	"github.com/smartwalle/newbee/protocol"
+	"github.com/smartwalle/newbee/sample/protocol"
 )
 
 type FrameManager struct {
