@@ -174,14 +174,14 @@ func (this *room) RunGame(game Game) {
 			var player = this.GetPlayer(playerId)
 			if player != nil {
 				player.Online(c)
-				game.OnPlayerIn(player)
+				game.OnJoinGame(player)
 			}
 		case c := <-this.playerOutChan:
 			var playerId = c.Get(kPlayerId).(uint64)
 			var player = this.GetPlayer(playerId)
 			if player != nil {
 				player.Close()
-				game.OnPlayerOut(player)
+				game.OnLeaveGame(player)
 			}
 		case <-this.closeChan:
 			return
