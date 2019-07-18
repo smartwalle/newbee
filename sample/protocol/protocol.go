@@ -9,6 +9,14 @@ import (
 type Protocol struct {
 }
 
+func (this *Protocol) Marshal(p net4go.Packet) []byte {
+	var pData = p.Marshal()
+	var data = make([]byte, 2+len(pData))
+	binary.BigEndian.PutUint16(data[:2], uint16(len(pData)))
+	copy(data[2:], pData)
+	return data
+}
+
 func (this *Protocol) Unmarshal(r io.Reader) (net4go.Packet, error) {
 	var lengthBytes = make([]byte, 2)
 	if _, err := io.ReadFull(r, lengthBytes); err != nil {
@@ -26,12 +34,4 @@ func (this *Protocol) Unmarshal(r io.Reader) (net4go.Packet, error) {
 		return nil, err
 	}
 	return p, nil
-}
-
-func (this *Protocol) Marshal(p net4go.Packet) []byte {
-	var pData = p.Marshal()
-	var data = make([]byte, 2+len(pData))
-	binary.BigEndian.PutUint16(data[:2], uint16(len(pData)))
-	copy(data[2:], pData)
-	return data
 }
