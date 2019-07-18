@@ -17,30 +17,43 @@ type message struct {
 }
 
 type Room interface {
+	// GetId 获取房间 id
 	GetId() uint64
 
+	// GetPlayer 获取玩家信息
 	GetPlayer(playerId uint64) Player
 
+	// GetPlayers 获取所有的玩家信息
 	GetPlayers() []Player
 
+	// Connect 将玩家和连接进行绑定
 	Connect(playerId uint64, c *net4go.Conn)
 
-	Join(player Player, c *net4go.Conn)
+	// JoinPlayer 加入新的玩家，如果连接不为空，则将该玩家和连接进行绑定
+	JoinPlayer(player Player, c *net4go.Conn)
 
+	// RunGame 启动游戏
 	RunGame(game Game)
 
+	// SendMessage 向指定玩家发送消息
 	SendMessage(playerId uint64, p net4go.Packet)
 
+	// Broadcast 向房间中的所有玩家广播消息
 	Broadcast(p net4go.Packet)
 
+	// CheckAllPlayerOnline 检测房间中的所有玩家是否都在线
 	CheckAllPlayerOnline() bool
 
+	// CheckAllPlayerReady 检测房间中的所有玩家是否都准备就绪
 	CheckAllPlayerReady() bool
 
+	// GetPlayerCount 获取房间中的玩家数量
 	GetPlayerCount() int
 
+	// GetOnlinePlayerCount 获取房间中在线玩家数量
 	GetOnlinePlayerCount() int
 
+	// GetReadyPlayerCount 获取房间中准备就绪玩家数量
 	GetReadyPlayerCount() int
 }
 
@@ -95,7 +108,6 @@ func (this *room) GetPlayers() []Player {
 }
 
 // --------------------------------------------------------------------------------
-// Connect 将玩家和连接进行绑定
 func (this *room) Connect(playerId uint64, c *net4go.Conn) {
 	if c != nil {
 		c.Set(kPlayerId, playerId)
@@ -104,8 +116,7 @@ func (this *room) Connect(playerId uint64, c *net4go.Conn) {
 	}
 }
 
-// Join 加入新的玩家，如果连接不为空，则将该玩家和连接进行绑定
-func (this *room) Join(player Player, c *net4go.Conn) {
+func (this *room) JoinPlayer(player Player, c *net4go.Conn) {
 	if player != nil {
 		this.mu.Lock()
 		defer this.mu.Unlock()
@@ -140,7 +151,7 @@ func (this *room) RunGame(game Game) {
 		case msg := <-this.messageChan:
 			var player = this.GetPlayer(msg.PlayerId)
 			if player != nil {
-				game.ProcessMessage(player, msg.Packet)
+				game.OnMessage(player, msg.Packet)
 			}
 		case <-ticker.C:
 			if game.Tick(time.Now().Unix()) == false {

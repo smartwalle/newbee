@@ -47,7 +47,7 @@ func (this *game) State() newbee.GameState {
 	return this.state
 }
 
-func (this *game) ProcessMessage(player newbee.Player, np net4go.Packet) {
+func (this *game) OnMessage(player newbee.Player, np net4go.Packet) {
 	if p := np.(*protocol.Packet); p != nil {
 		switch p.GetType() {
 		case protocol.PT_HEARTBEAT:
