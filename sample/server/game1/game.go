@@ -29,7 +29,7 @@ func NewGame(id uint64) newbee.Game {
 	g.id = id
 	g.state = newbee.GameStatePending
 	g.createTime = time.Now().Unix()
-	g.maxPendingTime = 5
+	g.maxPendingTime = 20
 	g.maxOfflinePendingTime = 20
 	g.offlineTime = 0
 
