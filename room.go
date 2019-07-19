@@ -29,6 +29,51 @@ const (
 	kRoomStateClose          // 房间已关闭
 )
 
+const (
+	kDefaultMessageBuffer = 1024
+	kDefaultPlayerBuffer  = 10
+)
+
+type roomOptions struct {
+	MessageBuffer int
+	PlayerBuffer  int
+}
+
+func newRoomOptions() *roomOptions {
+	var o = &roomOptions{}
+	o.MessageBuffer = kDefaultMessageBuffer
+	o.PlayerBuffer = kDefaultPlayerBuffer
+	return o
+}
+
+type RoomOption interface {
+	Apply(*roomOptions)
+}
+
+type roomOptionFun func(options *roomOptions)
+
+func (f roomOptionFun) Apply(o *roomOptions) {
+	f(o)
+}
+
+func WithMessageBuffer(buffer int) RoomOption {
+	return roomOptionFun(func(o *roomOptions) {
+		if buffer <= 0 {
+			buffer = kDefaultMessageBuffer
+		}
+		o.MessageBuffer = buffer
+	})
+}
+
+func WithPlayerBuffer(buffer int) RoomOption {
+	return roomOptionFun(func(o *roomOptions) {
+		if buffer <= 0 {
+			buffer = kDefaultPlayerBuffer
+		}
+		o.PlayerBuffer = buffer
+	})
+}
+
 type Room interface {
 	// GetId 获取房间 id
 	GetId() uint64
@@ -46,7 +91,7 @@ type Room interface {
 	JoinPlayer(player Player, c *net4go.Conn)
 
 	// RunGame 启动游戏
-	RunGame(game Game) error
+	RunGame(game Game, opts ...RoomOption) error
 
 	// SendMessage 向指定玩家发送消息
 	SendMessage(playerId uint64, p net4go.Packet)
@@ -85,23 +130,16 @@ type room struct {
 	playerOutChan chan *net4go.Conn
 
 	closeChan chan struct{}
-	closeOnce sync.Once
 }
 
 func NewRoom(roomId uint64, players []Player) Room {
 	var r = &room{}
 	r.id = roomId
+	r.state = kRoomStatePending
 	r.players = make(map[uint64]Player)
 	for _, player := range players {
 		r.players[player.GetId()] = player
 	}
-	r.messageChan = make(chan *message, 1024)
-
-	r.playerInChan = make(chan *net4go.Conn, 10)
-	r.playerOutChan = make(chan *net4go.Conn, 10)
-
-	r.closeChan = make(chan struct{})
-
 	return r
 }
 
@@ -138,7 +176,11 @@ func (this *room) Connect(playerId uint64, c *net4go.Conn) {
 	if c != nil {
 		c.Set(kPlayerId, playerId)
 		c.SetHandler(this)
-		this.playerInChan <- c
+
+		select {
+		case this.playerInChan <- c:
+		default:
+		}
 	}
 }
 
@@ -159,7 +201,7 @@ func (this *room) JoinPlayer(player Player, c *net4go.Conn) {
 }
 
 // --------------------------------------------------------------------------------
-func (this *room) RunGame(game Game) error {
+func (this *room) RunGame(game Game, opts ...RoomOption) error {
 	if game == nil {
 		return ErrNilGame
 	}
@@ -172,12 +214,21 @@ func (this *room) RunGame(game Game) error {
 		return ErrRoomRunning
 	}
 
+	atomic.StoreUint32(&this.state, kRoomStateRunning)
+
 	defer func() {
 		game.OnCloseRoom()
 		this.Close()
 	}()
 
-	atomic.StoreUint32(&this.state, 1)
+	var options = newRoomOptions()
+	for _, o := range opts {
+		o.Apply(options)
+	}
+	this.messageChan = make(chan *message, options.MessageBuffer)
+	this.playerInChan = make(chan *net4go.Conn, options.PlayerBuffer)
+	this.playerOutChan = make(chan *net4go.Conn, options.PlayerBuffer)
+	this.closeChan = make(chan struct{})
 
 	game.RunInRoom(this)
 
@@ -185,7 +236,10 @@ func (this *room) RunGame(game Game) error {
 
 	for {
 		select {
-		case msg := <-this.messageChan:
+		case msg, ok := <-this.messageChan:
+			if ok == false {
+				return nil
+			}
 			var player = this.GetPlayer(msg.PlayerId)
 			if player != nil {
 				game.OnMessage(player, msg.Packet)
@@ -194,14 +248,20 @@ func (this *room) RunGame(game Game) error {
 			if game.OnTick(time.Now().Unix()) == false {
 				return nil
 			}
-		case c := <-this.playerInChan:
+		case c, ok := <-this.playerInChan:
+			if ok == false {
+				return nil
+			}
 			var playerId = c.Get(kPlayerId).(uint64)
 			var player = this.GetPlayer(playerId)
 			if player != nil {
 				player.Online(c)
 				game.OnJoinGame(player)
 			}
-		case c := <-this.playerOutChan:
+		case c, ok := <-this.playerOutChan:
+			if ok == false {
+				return nil
+			}
 			var playerId = c.Get(kPlayerId).(uint64)
 			var player = this.GetPlayer(playerId)
 			if player != nil {
@@ -225,13 +285,19 @@ func (this *room) OnMessage(c *net4go.Conn, p net4go.Packet) bool {
 	msg.PlayerId = playerId
 	msg.Packet = p
 
-	this.messageChan <- msg
+	select {
+	case this.messageChan <- msg:
+	default:
+	}
 
 	return true
 }
 
 func (this *room) OnClose(c *net4go.Conn, err error) {
-	this.playerOutChan <- c
+	select {
+	case this.playerOutChan <- c:
+	default:
+	}
 }
 
 // --------------------------------------------------------------------------------
@@ -317,19 +383,25 @@ func (this *room) GetReadyPlayerCount() int {
 }
 
 func (this *room) Close() error {
-	this.closeOnce.Do(func() {
-		atomic.StoreUint32(&this.state, kRoomStateClose)
-
+	if atomic.LoadUint32(&this.state) == kRoomStateClose {
+		return nil
+	}
+	if atomic.LoadUint32(&this.state) == kRoomStateRunning {
 		close(this.messageChan)
 		close(this.playerInChan)
 		close(this.playerOutChan)
-
 		close(this.closeChan)
 
-		for _, p := range this.players {
-			p.Close()
-		}
-		this.players = make(map[uint64]Player)
-	})
+		this.messageChan = nil
+		this.playerInChan = nil
+		this.playerOutChan = nil
+	}
+	atomic.StoreUint32(&this.state, kRoomStateClose)
+
+	for _, p := range this.players {
+		p.Close()
+	}
+	this.players = make(map[uint64]Player)
+
 	return nil
 }

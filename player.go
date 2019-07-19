@@ -162,6 +162,7 @@ func (this *player) Cleanup() {
 
 func (this *player) Close() error {
 	if this.conn != nil {
+		this.conn.SetHandler(nil)
 		this.conn.Close()
 	}
 	this.conn = nil

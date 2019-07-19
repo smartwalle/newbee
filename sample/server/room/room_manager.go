@@ -67,7 +67,7 @@ func (this *RoomManager) OnMessage(c *net4go.Conn, p net4go.Packet) bool {
 }
 
 func (this *RoomManager) OnClose(c *net4go.Conn, err error) {
-	fmt.Println("OnClose", err)
+	fmt.Println("RoomManager OnClose", err)
 }
 
 // --------------------------------------------------------------------------------
