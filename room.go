@@ -1,8 +1,10 @@
 package newbee
 
 import (
+	"errors"
 	"github.com/smartwalle/net4go"
 	"sync"
+	"sync/atomic"
 	"time"
 )
 
@@ -14,6 +16,18 @@ type message struct {
 	PlayerId uint64
 	Packet   net4go.Packet
 }
+
+var (
+	ErrRoomClosed  = errors.New("newbee: room is closed")
+	ErrRoomRunning = errors.New("newbee: room is running")
+	ErrNilGame     = errors.New("newbee: game is nil")
+)
+
+const (
+	kRoomStatePending = iota // 等待游戏运行
+	kRoomStateRunning        // 有游戏在运行
+	kRoomStateClose          // 房间已关闭
+)
 
 type Room interface {
 	// GetId 获取房间 id
@@ -32,7 +46,7 @@ type Room interface {
 	JoinPlayer(player Player, c *net4go.Conn)
 
 	// RunGame 启动游戏
-	RunGame(game Game)
+	RunGame(game Game) error
 
 	// SendMessage 向指定玩家发送消息
 	SendMessage(playerId uint64, p net4go.Packet)
@@ -62,6 +76,7 @@ type Room interface {
 // --------------------------------------------------------------------------------
 type room struct {
 	id      uint64
+	state   uint32
 	mu      sync.RWMutex
 	players map[uint64]Player
 
@@ -144,15 +159,25 @@ func (this *room) JoinPlayer(player Player, c *net4go.Conn) {
 }
 
 // --------------------------------------------------------------------------------
-func (this *room) RunGame(game Game) {
+func (this *room) RunGame(game Game) error {
 	if game == nil {
-		return
+		return ErrNilGame
+	}
+
+	if atomic.LoadUint32(&this.state) == kRoomStateClose {
+		return ErrRoomClosed
+	}
+
+	if atomic.LoadUint32(&this.state) == kRoomStateRunning {
+		return ErrRoomRunning
 	}
 
 	defer func() {
-		game.OnRoomClose()
+		game.OnCloseRoom()
 		this.Close()
 	}()
+
+	atomic.StoreUint32(&this.state, 1)
 
 	game.RunInRoom(this)
 
@@ -166,8 +191,8 @@ func (this *room) RunGame(game Game) {
 				game.OnMessage(player, msg.Packet)
 			}
 		case <-ticker.C:
-			if game.Tick(time.Now().Unix()) == false {
-				return
+			if game.OnTick(time.Now().Unix()) == false {
+				return nil
 			}
 		case c := <-this.playerInChan:
 			var playerId = c.Get(kPlayerId).(uint64)
@@ -184,7 +209,7 @@ func (this *room) RunGame(game Game) {
 				game.OnLeaveGame(player)
 			}
 		case <-this.closeChan:
-			return
+			return nil
 		}
 	}
 }
@@ -293,6 +318,8 @@ func (this *room) GetReadyPlayerCount() int {
 
 func (this *room) Close() error {
 	this.closeOnce.Do(func() {
+		atomic.StoreUint32(&this.state, kRoomStateClose)
+
 		close(this.messageChan)
 		close(this.playerInChan)
 		close(this.playerOutChan)

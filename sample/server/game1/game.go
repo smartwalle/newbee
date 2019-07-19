@@ -29,7 +29,7 @@ func NewGame(id uint64) newbee.Game {
 	g.id = id
 	g.state = newbee.GameStatePending
 	g.createTime = time.Now().Unix()
-	g.maxPendingTime = 20
+	g.maxPendingTime = 10
 	g.maxOfflinePendingTime = 20
 	g.offlineTime = 0
 
@@ -54,11 +54,23 @@ func (this *game) State() newbee.GameState {
 	return this.state
 }
 
+func (this *game) OnJoinGame(p newbee.Player) {
+	fmt.Println("OnJoinGame")
+}
+
+func (this *game) OnLeaveGame(p newbee.Player) {
+	fmt.Println("OnLeaveGame")
+}
+
+func (this *game) OnCloseRoom() {
+	fmt.Println("OnCloseRoom")
+}
+
 func (this *game) OnMessage(player newbee.Player, np net4go.Packet) {
 	if p := np.(*protocol.Packet); p != nil {
 		switch p.GetType() {
 		case protocol.PT_HEARTBEAT:
-			this.room.SendMessage(player.GetId(), protocol.NewPacket(protocol.PT_HEARTBEAT, nil))
+			this.SendMessage(player.GetId(), protocol.NewPacket(protocol.PT_HEARTBEAT, nil))
 			player.RefreshHeartbeatTime()
 		case protocol.PT_LOADING_PROGRESS:
 			if this.state != newbee.GameStatePending {
@@ -78,7 +90,7 @@ func (this *game) OnMessage(player newbee.Player, np net4go.Packet) {
 			for _, player := range this.room.GetPlayers() {
 				rsp.Infos = append(rsp.Infos, &protocol.LoadingProgressInfo{PlayerId: player.GetId(), Progress: player.GetLoadingProgress()})
 			}
-			this.room.Broadcast(protocol.NewPacket(protocol.PT_LOADING_PROGRESS, rsp))
+			this.Broadcast(protocol.NewPacket(protocol.PT_LOADING_PROGRESS, rsp))
 		case protocol.PT_GAME_READY:
 			if this.state != newbee.GameStatePending {
 				return
@@ -102,24 +114,12 @@ func (this *game) OnMessage(player newbee.Player, np net4go.Packet) {
 	}
 }
 
-func (this *game) OnJoinGame(p newbee.Player) {
-	fmt.Println("OnJoinGame")
-}
-
-func (this *game) OnLeaveGame(p newbee.Player) {
-	fmt.Println("OnLeaveGame")
-}
-
-func (this *game) OnRoomClose() {
-	fmt.Println("OnRoomClose")
-}
-
 // GameStart 开始游戏
 func (this *game) GameStart() {
 	this.state = newbee.GameStateGaming
 
 	var rsp = &protocol.S2CGameReady{}
-	this.room.Broadcast(protocol.NewPacket(protocol.PT_GAME_READY, rsp))
+	this.Broadcast(protocol.NewPacket(protocol.PT_GAME_READY, rsp))
 }
 
 // GameOver 结束游戏
@@ -145,7 +145,7 @@ func (this *game) CheckOver() bool {
 	return true
 }
 
-func (this *game) Tick(now int64) bool {
+func (this *game) OnTick(now int64) bool {
 	switch this.state {
 	case newbee.GameStatePending:
 		// 游戏等待开始
@@ -226,7 +226,19 @@ func (this *game) broadcastFrame() {
 	}
 
 	if len(rsp.Frames) > 0 {
-		this.room.Broadcast(protocol.NewPacket(protocol.PT_GAME_FRAME, rsp))
+		this.Broadcast(protocol.NewPacket(protocol.PT_GAME_FRAME, rsp))
+	}
+}
+
+func (this *game) SendMessage(playerId uint64, p *protocol.Packet) {
+	if p != nil {
+		this.room.SendMessage(playerId, p)
+	}
+}
+
+func (this *game) Broadcast(p *protocol.Packet) {
+	if p != nil {
+		this.room.Broadcast(p)
 	}
 }
 

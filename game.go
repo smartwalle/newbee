@@ -24,18 +24,18 @@ type Game interface {
 	// State 游戏状态
 	State() GameState
 
+	// OnJoinGame 有玩家加入会调用此方法
+	OnJoinGame(Player)
+
+	// OnLeaveGame 有玩家离开会调用此方法
+	OnLeaveGame(Player)
+
+	// OnCloseRoom 房间关闭的时候会调用此方法
+	OnCloseRoom()
+
 	// OnMessage 处理客户端消息
 	OnMessage(Player, net4go.Packet)
 
-	// OnJoinGame 有玩家加入
-	OnJoinGame(Player)
-
-	// OnLeaveGame 有玩家离开
-	OnLeaveGame(Player)
-
-	// OnRoomClose 关闭房间
-	OnRoomClose()
-
-	// Tick 定时器，Room 会定时调用，如果此方法返回 false，Room 将关闭
-	Tick(now int64) bool
+	// OnTick 定时器，Room 会定时调用，如果此方法返回 false，Room 将关闭
+	OnTick(now int64) bool
 }
