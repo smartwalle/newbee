@@ -2,10 +2,20 @@ package newbee
 
 import (
 	"github.com/smartwalle/net4go"
+	"sync"
 	"time"
 )
 
 type Player interface {
+	// Set
+	Set(key string, value interface{})
+
+	// Get
+	Get(key string) interface{}
+
+	// Del
+	Del(key string)
+
 	// GetId 获取玩家 id
 	GetId() uint64
 
@@ -67,6 +77,9 @@ type player struct {
 
 	loadingProgress   int32
 	lastHeartbeatTime int64
+
+	mu   sync.Mutex
+	data map[string]interface{}
 }
 
 func NewPlayer(id uint64, token string, index uint16) Player {
@@ -75,6 +88,38 @@ func NewPlayer(id uint64, token string, index uint16) Player {
 	p.token = token
 	p.index = index
 	return p
+}
+
+func (this *player) Set(key string, value interface{}) {
+	this.mu.Lock()
+	defer this.mu.Unlock()
+
+	if value != nil {
+		if this.data == nil {
+			this.data = make(map[string]interface{})
+		}
+		this.data[key] = value
+	}
+}
+
+func (this *player) Get(key string) interface{} {
+	this.mu.Lock()
+	defer this.mu.Unlock()
+
+	if this.data == nil {
+		return nil
+	}
+	return this.data[key]
+}
+
+func (this *player) Del(key string) {
+	this.mu.Lock()
+	defer this.mu.Unlock()
+
+	if this.data == nil {
+		return
+	}
+	delete(this.data, key)
 }
 
 func (this *player) GetId() uint64 {
@@ -166,6 +211,7 @@ func (this *player) Close() error {
 		this.conn.Close()
 	}
 	this.conn = nil
+	this.data = nil
 
 	this.isOnline = false
 
