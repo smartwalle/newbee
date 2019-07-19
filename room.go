@@ -85,19 +85,19 @@ type Room interface {
 	GetPlayers() []Player
 
 	// Connect 将玩家和连接进行绑定
-	Connect(playerId uint64, c *net4go.Conn)
+	Connect(playerId uint64, conn *net4go.Conn)
 
 	// JoinPlayer 加入新的玩家，如果连接不为空，则将该玩家和连接进行绑定
-	JoinPlayer(player Player, c *net4go.Conn)
+	JoinPlayer(player Player, conn *net4go.Conn)
 
 	// RunGame 启动游戏
 	RunGame(game Game, opts ...RoomOption) error
 
 	// SendMessage 向指定玩家发送消息
-	SendMessage(playerId uint64, p net4go.Packet)
+	SendMessage(playerId uint64, packet net4go.Packet)
 
 	// Broadcast 向房间中的所有玩家广播消息
-	Broadcast(p net4go.Packet)
+	Broadcast(packet net4go.Packet)
 
 	// CheckAllPlayerOnline 检测房间中的所有玩家是否都在线
 	CheckAllPlayerOnline() bool

@@ -16,7 +16,7 @@ type Player interface {
 	GetIndex() uint16
 
 	// UpdateLoadProgress 更新加载进度
-	UpdateLoadProgress(int32)
+	UpdateLoadProgress(p int32)
 
 	// GetLoadingProgress 获取加载进度
 	GetLoadingProgress() int32
@@ -28,7 +28,7 @@ type Player interface {
 	GetHeartbeatTime() int64
 
 	// Online 将连接和玩家进行绑定
-	Online(*net4go.Conn)
+	Online(conn *net4go.Conn)
 
 	// Offline 断开玩家连接
 	Offline()
@@ -46,7 +46,7 @@ type Player interface {
 	IsReady() bool
 
 	// SendMessage 发送消息
-	SendMessage(net4go.Packet)
+	SendMessage(packet net4go.Packet)
 
 	// Cleanup 清理玩家的游戏信息，但是不断开连接
 	Cleanup()
