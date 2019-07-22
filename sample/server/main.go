@@ -7,12 +7,11 @@ import (
 	"github.com/smartwalle/newbee/sample/protocol"
 	"github.com/smartwalle/newbee/sample/server/game1"
 	"github.com/smartwalle/newbee/sample/server/room"
-
-	"github.com/xtaci/kcp-go"
+	"net"
 )
 
 func main() {
-	l, err := kcp.Listen("192.168.1.99:6655")
+	l, err := net.Listen("tcp", "192.168.1.99:6666")
 	if err != nil {
 		fmt.Println(err)
 		return
@@ -41,15 +40,6 @@ func main() {
 		if err != nil {
 			fmt.Println(err)
 			continue
-		}
-
-		if kcpConn := c.(*kcp.UDPSession); kcpConn != nil {
-			kcpConn.SetNoDelay(1, 10, 2, 1)
-			kcpConn.SetStreamMode(true)
-			kcpConn.SetWindowSize(4096, 4096)
-			kcpConn.SetReadBuffer(4 * 1024 * 1024)
-			kcpConn.SetWriteBuffer(4 * 1024 * 1024)
-			kcpConn.SetACKNoDelay(true)
 		}
 
 		net4go.NewConn(c, p, rm)
