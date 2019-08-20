@@ -56,7 +56,10 @@ type Player interface {
 	IsReady() bool
 
 	// SendMessage 发送消息
-	SendMessage(packet net4go.Packet)
+	SendMessage([]byte)
+
+	// SendPacket 发送消息
+	SendPacket(net4go.Packet)
 
 	// Cleanup 清理玩家的游戏信息，但是不断开连接
 	Cleanup()
@@ -189,7 +192,17 @@ func (this *player) IsReady() bool {
 	return this.conn != nil && this.isReady
 }
 
-func (this *player) SendMessage(p net4go.Packet) {
+func (this *player) SendMessage(b []byte) {
+	if this.IsOnline() == false {
+		return
+	}
+
+	if _, err := this.conn.Write(b); err != nil {
+		this.Close()
+	}
+}
+
+func (this *player) SendPacket(p net4go.Packet) {
 	if this.IsOnline() == false {
 		return
 	}

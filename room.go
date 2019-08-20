@@ -94,10 +94,16 @@ type Room interface {
 	RunGame(game Game, opts ...RoomOption) error
 
 	// SendMessage 向指定玩家发送消息
-	SendMessage(playerId uint64, packet net4go.Packet)
+	SendMessage(playerId uint64, b []byte)
 
-	// Broadcast 向房间中的所有玩家广播消息
-	Broadcast(packet net4go.Packet)
+	// SendPacket 向指定玩家发送消息
+	SendPacket(playerId uint64, packet net4go.Packet)
+
+	// BroadcastMessage 向房间中的所有玩家广播消息
+	BroadcastMessage(b []byte)
+
+	// BroadcastPacket 向房间中的所有玩家广播消息
+	BroadcastPacket(packet net4go.Packet)
 
 	// CheckAllPlayerOnline 检测房间中的所有玩家是否都在线
 	CheckAllPlayerOnline() bool
@@ -301,19 +307,35 @@ func (this *room) OnClose(c *net4go.Conn, err error) {
 }
 
 // --------------------------------------------------------------------------------
-func (this *room) SendMessage(playerId uint64, p net4go.Packet) {
+func (this *room) SendMessage(playerId uint64, b []byte) {
 	var player = this.GetPlayer(playerId)
 	if player != nil {
-		player.SendMessage(p)
+		player.SendMessage(b)
 	}
 }
 
-func (this *room) Broadcast(p net4go.Packet) {
+func (this *room) SendPacket(playerId uint64, p net4go.Packet) {
+	var player = this.GetPlayer(playerId)
+	if player != nil {
+		player.SendPacket(p)
+	}
+}
+
+func (this *room) BroadcastMessage(b []byte) {
 	this.mu.RLock()
 	defer this.mu.RUnlock()
 
 	for _, player := range this.players {
-		player.SendMessage(p)
+		player.SendMessage(b)
+	}
+}
+
+func (this *room) BroadcastPacket(p net4go.Packet) {
+	this.mu.RLock()
+	defer this.mu.RUnlock()
+
+	for _, player := range this.players {
+		player.SendPacket(p)
 	}
 }
 

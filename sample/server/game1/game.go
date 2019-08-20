@@ -70,7 +70,7 @@ func (this *game) OnMessage(player newbee.Player, np net4go.Packet) {
 	if p := np.(*protocol.Packet); p != nil {
 		switch p.GetType() {
 		case protocol.PT_HEARTBEAT:
-			this.SendMessage(player.GetId(), protocol.NewPacket(protocol.PT_HEARTBEAT, nil))
+			this.SendPacket(player.GetId(), protocol.NewPacket(protocol.PT_HEARTBEAT, nil))
 			player.RefreshHeartbeatTime()
 		case protocol.PT_LOADING_PROGRESS:
 			if this.state != newbee.GameStatePending {
@@ -90,7 +90,7 @@ func (this *game) OnMessage(player newbee.Player, np net4go.Packet) {
 			for _, player := range this.room.GetPlayers() {
 				rsp.Infos = append(rsp.Infos, &protocol.LoadingProgressInfo{PlayerId: player.GetId(), Progress: player.GetLoadingProgress()})
 			}
-			this.Broadcast(protocol.NewPacket(protocol.PT_LOADING_PROGRESS, rsp))
+			this.BroadcastPacket(protocol.NewPacket(protocol.PT_LOADING_PROGRESS, rsp))
 		case protocol.PT_GAME_READY:
 			if this.state != newbee.GameStatePending {
 				return
@@ -119,7 +119,7 @@ func (this *game) GameStart() {
 	this.state = newbee.GameStateGaming
 
 	var rsp = &protocol.S2CGameReady{}
-	this.Broadcast(protocol.NewPacket(protocol.PT_GAME_READY, rsp))
+	this.BroadcastPacket(protocol.NewPacket(protocol.PT_GAME_READY, rsp))
 }
 
 // GameOver 结束游戏
@@ -226,19 +226,19 @@ func (this *game) broadcastFrame() {
 	}
 
 	if len(rsp.Frames) > 0 {
-		this.Broadcast(protocol.NewPacket(protocol.PT_GAME_FRAME, rsp))
+		this.BroadcastPacket(protocol.NewPacket(protocol.PT_GAME_FRAME, rsp))
 	}
 }
 
-func (this *game) SendMessage(playerId uint64, p *protocol.Packet) {
+func (this *game) SendPacket(playerId uint64, p *protocol.Packet) {
 	if p != nil {
-		this.room.SendMessage(playerId, p)
+		this.room.SendPacket(playerId, p)
 	}
 }
 
-func (this *game) Broadcast(p *protocol.Packet) {
+func (this *game) BroadcastPacket(p *protocol.Packet) {
 	if p != nil {
-		this.room.Broadcast(p)
+		this.room.BroadcastPacket(p)
 	}
 }
 
