@@ -10,14 +10,14 @@ type Packet struct {
 	data  []byte
 }
 
-func (this *Packet) Marshal() []byte {
+func (this *Packet) Marshal() ([]byte, error) {
 	var dataLen = len(this.data)
 	var data = make([]byte, 4+dataLen)
 	binary.BigEndian.PutUint32(data[:4], this.pType)
 	if dataLen > 0 {
 		copy(data[4:], this.data)
 	}
-	return data
+	return data, nil
 }
 
 func (this *Packet) Unmarshal(data []byte) error {
