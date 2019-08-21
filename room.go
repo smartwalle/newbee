@@ -155,25 +155,23 @@ func (this *room) GetId() uint64 {
 }
 
 func (this *room) GetPlayer(playerId uint64) Player {
-	this.mu.RLock()
-	defer this.mu.RUnlock()
-
 	if playerId == 0 {
 		return nil
 	}
 
+	this.mu.RLock()
 	var p = this.players[playerId]
+	this.mu.RUnlock()
 	return p
 }
 
 func (this *room) GetPlayers() []Player {
 	this.mu.RLock()
-	defer this.mu.RUnlock()
-
 	var ps = make([]Player, 0, len(this.players))
 	for _, player := range this.players {
 		ps = append(ps, player)
 	}
+	this.mu.RUnlock()
 	return ps
 }
 
@@ -193,12 +191,11 @@ func (this *room) Connect(playerId uint64, c *net4go.Conn) {
 func (this *room) JoinPlayer(player Player, c *net4go.Conn) {
 	if player != nil {
 		this.mu.Lock()
-		defer this.mu.Unlock()
-
 		// 玩家不存在则添加该玩家
 		if _, ok := this.players[player.GetId()]; ok == false {
 			this.players[player.GetId()] = player
 		}
+		this.mu.Unlock()
 
 		if c != nil {
 			this.Connect(player.GetId(), c)
@@ -222,11 +219,6 @@ func (this *room) RunGame(game Game, opts ...RoomOption) error {
 
 	atomic.StoreUint32(&this.state, kRoomStateRunning)
 
-	defer func() {
-		game.OnCloseRoom()
-		this.Close()
-	}()
-
 	var options = newRoomOptions()
 	for _, o := range opts {
 		o.Apply(options)
@@ -240,11 +232,12 @@ func (this *room) RunGame(game Game, opts ...RoomOption) error {
 
 	var ticker = time.NewTicker(time.Second / time.Duration(game.Frequency()))
 
+RunFor:
 	for {
 		select {
 		case m, ok := <-this.messageChan:
 			if ok == false {
-				return nil
+				break RunFor
 			}
 			var player = this.GetPlayer(m.PlayerId)
 			if player != nil {
@@ -252,11 +245,11 @@ func (this *room) RunGame(game Game, opts ...RoomOption) error {
 			}
 		case <-ticker.C:
 			if game.OnTick(time.Now().Unix()) == false {
-				return nil
+				break RunFor
 			}
 		case c, ok := <-this.playerInChan:
 			if ok == false {
-				return nil
+				break RunFor
 			}
 			var playerId = c.Get(kPlayerId).(uint64)
 			var player = this.GetPlayer(playerId)
@@ -266,7 +259,7 @@ func (this *room) RunGame(game Game, opts ...RoomOption) error {
 			}
 		case m, ok := <-this.playerOutChan:
 			if ok == false {
-				return nil
+				break RunFor
 			}
 			var player = this.GetPlayer(m.PlayerId)
 			if player != nil {
@@ -274,9 +267,12 @@ func (this *room) RunGame(game Game, opts ...RoomOption) error {
 				game.OnLeaveGame(player)
 			}
 		case <-this.closeChan:
-			return nil
+			break RunFor
 		}
 	}
+	game.OnCloseRoom()
+	this.Close()
+	return nil
 }
 
 // --------------------------------------------------------------------------------
@@ -324,84 +320,85 @@ func (this *room) SendPacket(playerId uint64, p net4go.Packet) {
 
 func (this *room) BroadcastMessage(b []byte) {
 	this.mu.RLock()
-	defer this.mu.RUnlock()
-
 	for _, player := range this.players {
 		player.SendMessage(b)
 	}
+	this.mu.RUnlock()
 }
 
 func (this *room) BroadcastPacket(p net4go.Packet) {
 	this.mu.RLock()
-	defer this.mu.RUnlock()
-
 	for _, player := range this.players {
 		player.SendPacket(p)
 	}
+	this.mu.RUnlock()
 }
 
 // --------------------------------------------------------------------------------
 func (this *room) CheckAllPlayerOnline() bool {
 	this.mu.RLock()
-	defer this.mu.RUnlock()
 
 	if len(this.players) == 0 {
+		this.mu.RUnlock()
 		return false
 	}
 
 	for _, p := range this.players {
 		if p.IsOnline() == false {
+			this.mu.RUnlock()
 			return false
 		}
 	}
+	this.mu.RUnlock()
 	return true
 }
 
 func (this *room) CheckAllPlayerReady() bool {
 	this.mu.RLock()
-	defer this.mu.RUnlock()
 
 	if len(this.players) == 0 {
+		this.mu.RUnlock()
 		return false
 	}
 
 	for _, p := range this.players {
 		if p.IsReady() == false {
+			this.mu.RUnlock()
 			return false
 		}
 	}
+	this.mu.RUnlock()
 	return true
 }
 
 func (this *room) GetPlayerCount() int {
 	this.mu.RLock()
-	defer this.mu.RUnlock()
-	return len(this.players)
+	var c = len(this.players)
+	this.mu.RUnlock()
+	return c
 }
 
 func (this *room) GetOnlinePlayerCount() int {
 	this.mu.RLock()
-	defer this.mu.RUnlock()
-
 	var i = 0
 	for _, p := range this.players {
 		if p.IsOnline() {
 			i++
 		}
 	}
+	this.mu.RUnlock()
 	return i
 }
 
 func (this *room) GetReadyPlayerCount() int {
 	this.mu.RLock()
-	defer this.mu.RUnlock()
-
 	var i = 0
 	for _, p := range this.players {
 		if p.IsReady() {
 			i++
 		}
 	}
+	this.mu.RUnlock()
 	return i
 }
 

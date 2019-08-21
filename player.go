@@ -102,32 +102,36 @@ func (this *player) Conn() *net4go.Conn {
 
 func (this *player) Set(key string, value interface{}) {
 	this.mu.Lock()
-	defer this.mu.Unlock()
 
 	if this.data == nil {
 		this.data = make(map[string]interface{})
 	}
 	this.data[key] = value
+
+	this.mu.Unlock()
 }
 
 func (this *player) Get(key string) interface{} {
 	this.mu.RLock()
-	defer this.mu.RUnlock()
 
 	if this.data == nil {
+		this.mu.RUnlock()
 		return nil
 	}
-	return this.data[key]
+	var value = this.data[key]
+	this.mu.RUnlock()
+	return value
 }
 
 func (this *player) Del(key string) {
 	this.mu.Lock()
-	defer this.mu.Unlock()
 
 	if this.data == nil {
+		this.mu.Unlock()
 		return
 	}
 	delete(this.data, key)
+	this.mu.Unlock()
 }
 
 func (this *player) GetId() uint64 {
