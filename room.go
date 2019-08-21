@@ -133,7 +133,7 @@ type room struct {
 
 	messageChan   chan *message
 	playerInChan  chan *net4go.Conn
-	playerOutChan chan *net4go.Conn
+	playerOutChan chan *message
 
 	closeChan chan struct{}
 }
@@ -233,7 +233,7 @@ func (this *room) RunGame(game Game, opts ...RoomOption) error {
 	}
 	this.messageChan = make(chan *message, options.MessageBuffer)
 	this.playerInChan = make(chan *net4go.Conn, options.PlayerBuffer)
-	this.playerOutChan = make(chan *net4go.Conn, options.PlayerBuffer)
+	this.playerOutChan = make(chan *message, options.PlayerBuffer)
 	this.closeChan = make(chan struct{})
 
 	game.RunInRoom(this)
@@ -242,13 +242,13 @@ func (this *room) RunGame(game Game, opts ...RoomOption) error {
 
 	for {
 		select {
-		case msg, ok := <-this.messageChan:
+		case m, ok := <-this.messageChan:
 			if ok == false {
 				return nil
 			}
-			var player = this.GetPlayer(msg.PlayerId)
+			var player = this.GetPlayer(m.PlayerId)
 			if player != nil {
-				game.OnMessage(player, msg.Packet)
+				game.OnMessage(player, m.Packet)
 			}
 		case <-ticker.C:
 			if game.OnTick(time.Now().Unix()) == false {
@@ -264,12 +264,11 @@ func (this *room) RunGame(game Game, opts ...RoomOption) error {
 				player.Online(c)
 				game.OnJoinGame(player)
 			}
-		case c, ok := <-this.playerOutChan:
+		case m, ok := <-this.playerOutChan:
 			if ok == false {
 				return nil
 			}
-			var playerId = c.Get(kPlayerId).(uint64)
-			var player = this.GetPlayer(playerId)
+			var player = this.GetPlayer(m.PlayerId)
 			if player != nil {
 				player.Close()
 				game.OnLeaveGame(player)
@@ -300,8 +299,10 @@ func (this *room) OnMessage(c *net4go.Conn, p net4go.Packet) bool {
 }
 
 func (this *room) OnClose(c *net4go.Conn, err error) {
+	var m = &message{}
+	m.PlayerId = c.Get(kPlayerId).(uint64)
 	select {
-	case this.playerOutChan <- c:
+	case this.playerOutChan <- m:
 	default:
 	}
 }
