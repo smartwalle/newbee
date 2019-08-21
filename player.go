@@ -7,6 +7,9 @@ import (
 )
 
 type Player interface {
+	// Conn
+	Conn() *net4go.Conn
+
 	// Set
 	Set(key string, value interface{})
 
@@ -81,7 +84,7 @@ type player struct {
 	loadingProgress   int32
 	lastHeartbeatTime int64
 
-	mu   sync.Mutex
+	mu   sync.RWMutex
 	data map[string]interface{}
 }
 
@@ -93,21 +96,23 @@ func NewPlayer(id uint64, token string, index uint16) Player {
 	return p
 }
 
+func (this *player) Conn() *net4go.Conn {
+	return this.conn
+}
+
 func (this *player) Set(key string, value interface{}) {
 	this.mu.Lock()
 	defer this.mu.Unlock()
 
-	if value != nil {
-		if this.data == nil {
-			this.data = make(map[string]interface{})
-		}
-		this.data[key] = value
+	if this.data == nil {
+		this.data = make(map[string]interface{})
 	}
+	this.data[key] = value
 }
 
 func (this *player) Get(key string) interface{} {
-	this.mu.Lock()
-	defer this.mu.Unlock()
+	this.mu.RLock()
+	defer this.mu.RUnlock()
 
 	if this.data == nil {
 		return nil
@@ -220,7 +225,6 @@ func (this *player) Cleanup() {
 
 func (this *player) Close() error {
 	if this.conn != nil {
-		this.conn.SetHandler(nil)
 		this.conn.Close()
 	}
 	this.conn = nil

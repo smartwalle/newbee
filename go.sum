@@ -16,6 +16,8 @@ github.com/smartwalle/net4go v0.0.9 h1:Mw8KhfmBiJ+65UY7IW49kTJKvDq3x3UY9feNC9/sn
 github.com/smartwalle/net4go v0.0.9/go.mod h1:6R+zGr2Ugz/voywQsiCAUWkb3ul9cvYjI+0potuaLNU=
 github.com/smartwalle/net4go v0.0.13 h1:I2uEC3F5QgT8Dh0pW5m4caWCWow4DOc3wP8pkOB/PV4=
 github.com/smartwalle/net4go v0.0.13/go.mod h1:6R+zGr2Ugz/voywQsiCAUWkb3ul9cvYjI+0potuaLNU=
+github.com/smartwalle/net4go v0.0.15 h1:AZgmf3z7lJuYnQPFg5GGY7GXk3f6gNopKpzfLD4eYsw=
+github.com/smartwalle/net4go v0.0.15/go.mod h1:6R+zGr2Ugz/voywQsiCAUWkb3ul9cvYjI+0potuaLNU=
 github.com/templexxx/cpufeat v0.0.0-20180724012125-cef66df7f161 h1:89CEmDvlq/F7SJEOqkIdNDGJXrQIhuIx9D2DBXjavSU=
 github.com/templexxx/cpufeat v0.0.0-20180724012125-cef66df7f161/go.mod h1:wM7WEvslTq+iOEAMDLSzhVuOt5BRZ05WirO+b09GHQU=
 github.com/templexxx/xor v0.0.0-20181023030647-4e92f724b73b h1:mnG1fcsIB1d/3vbkBak2MM0u+vhGhlQwpeimUi7QncM=
