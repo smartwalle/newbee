@@ -34,6 +34,7 @@ const (
 	kDefaultPlayerBuffer  = 10
 )
 
+// --------------------------------------------------------------------------------
 type roomOptions struct {
 	MessageBuffer int
 	PlayerBuffer  int
@@ -243,6 +244,7 @@ RunFor:
 			if player != nil {
 				game.OnMessage(player, m.Packet)
 			}
+			releaseMessage(m)
 		case <-ticker.C:
 			if game.OnTick(time.Now().Unix()) == false {
 				break RunFor
@@ -266,6 +268,7 @@ RunFor:
 				player.Close()
 				game.OnLeaveGame(player)
 			}
+			releaseMessage(m)
 		case <-this.closeChan:
 			break RunFor
 		}
@@ -282,12 +285,9 @@ func (this *room) OnMessage(c *net4go.Conn, p net4go.Packet) bool {
 		return false
 	}
 
-	var msg = &message{}
-	msg.PlayerId = playerId
-	msg.Packet = p
-
+	var m = newMessage(playerId, p)
 	select {
-	case this.messageChan <- msg:
+	case this.messageChan <- m:
 	default:
 	}
 
@@ -295,8 +295,12 @@ func (this *room) OnMessage(c *net4go.Conn, p net4go.Packet) bool {
 }
 
 func (this *room) OnClose(c *net4go.Conn, err error) {
-	var m = &message{}
-	m.PlayerId = c.Get(kPlayerId).(uint64)
+	var playerId = c.Get(kPlayerId).(uint64)
+	if playerId == 0 {
+		return
+	}
+
+	var m = newMessage(playerId, nil)
 	select {
 	case this.playerOutChan <- m:
 	default:
@@ -424,4 +428,24 @@ func (this *room) Close() error {
 	this.players = make(map[uint64]Player)
 
 	return nil
+}
+
+// --------------------------------------------------------------------------------
+var messagePool = &sync.Pool{
+	New: func() interface{} {
+		return &message{}
+	},
+}
+
+func newMessage(playerId uint64, packet net4go.Packet) *message {
+	var msg = messagePool.Get().(*message)
+	msg.PlayerId = playerId
+	msg.Packet = packet
+	return msg
+}
+
+func releaseMessage(m *message) {
+	m.PlayerId = 0
+	m.Packet = nil
+	messagePool.Put(m)
 }

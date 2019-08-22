@@ -28,8 +28,8 @@ type Player interface {
 	// GetIndex 获取玩家索引
 	GetIndex() uint16
 
-	// UpdateLoadProgress 更新加载进度
-	UpdateLoadProgress(p int32)
+	// UpdateLoadingProgress 更新加载进度
+	UpdateLoadingProgress(p int32)
 
 	// GetLoadingProgress 获取加载进度
 	GetLoadingProgress() int32
@@ -146,7 +146,7 @@ func (this *player) GetIndex() uint16 {
 	return this.index
 }
 
-func (this *player) UpdateLoadProgress(p int32) {
+func (this *player) UpdateLoadingProgress(p int32) {
 	this.loadingProgress = p
 }
 

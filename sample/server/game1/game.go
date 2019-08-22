@@ -83,7 +83,7 @@ func (this *game) OnMessage(player newbee.Player, np net4go.Packet) {
 			}
 
 			// 更新玩家的加载进度
-			player.UpdateLoadProgress(req.Progress)
+			player.UpdateLoadingProgress(req.Progress)
 
 			// 向所有玩家广播加载进度
 			var rsp = &protocol.S2CLoadingProgress{}
