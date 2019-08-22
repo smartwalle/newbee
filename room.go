@@ -438,14 +438,16 @@ var messagePool = &sync.Pool{
 }
 
 func newMessage(playerId uint64, packet net4go.Packet) *message {
-	var msg = messagePool.Get().(*message)
-	msg.PlayerId = playerId
-	msg.Packet = packet
-	return msg
+	var m = messagePool.Get().(*message)
+	m.PlayerId = playerId
+	m.Packet = packet
+	return m
 }
 
 func releaseMessage(m *message) {
-	m.PlayerId = 0
-	m.Packet = nil
-	messagePool.Put(m)
+	if m != nil {
+		m.PlayerId = 0
+		m.Packet = nil
+		messagePool.Put(m)
+	}
 }
