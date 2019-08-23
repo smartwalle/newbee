@@ -180,7 +180,7 @@ func (this *room) GetPlayers() []Player {
 func (this *room) Connect(playerId uint64, c *net4go.Conn) {
 	if c != nil {
 		c.Set(kPlayerId, playerId)
-		c.SetHandler(this)
+		c.UpdateHandler(this)
 
 		select {
 		case this.playerInChan <- c:
