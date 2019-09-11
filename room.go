@@ -75,6 +75,7 @@ func WithPlayerBuffer(buffer int) RoomOption {
 	})
 }
 
+// --------------------------------------------------------------------------------
 type Room interface {
 	// GetId 获取房间 id
 	GetId() uint64
@@ -84,6 +85,9 @@ type Room interface {
 
 	// GetPlayers 获取所有的玩家信息
 	GetPlayers() []Player
+
+	// GetPlayersWithType 获取指定类型的所有玩家信息
+	GetPlayersWithType(pType uint32) []Player
 
 	// Connect 将玩家和连接进行绑定
 	Connect(playerId uint64, conn *net4go.Conn)
@@ -103,23 +107,50 @@ type Room interface {
 	// BroadcastMessage 向房间中的所有玩家广播消息
 	BroadcastMessage(b []byte)
 
+	// BroadcastMessageWithType 向房间中的指定类型玩家广播消息
+	BroadcastMessageWithType(pType uint32, b []byte)
+
 	// BroadcastPacket 向房间中的所有玩家广播消息
 	BroadcastPacket(packet net4go.Packet)
 
-	// CheckAllPlayerOnline 检测房间中的所有玩家是否都在线
-	CheckAllPlayerOnline() bool
+	// BroadcastPacketWithType 向房间中的指定类型玩家广播消息
+	BroadcastPacketWithType(pType uint32, p net4go.Packet)
 
-	// CheckAllPlayerReady 检测房间中的所有玩家是否都准备就绪
-	CheckAllPlayerReady() bool
+	// CheckPlayerOnline 检测房间中指定玩家是否在线
+	CheckPlayerOnline(playerId uint64) bool
 
-	// GetPlayerCount 获取房间中的玩家数量
-	GetPlayerCount() int
+	// CheckPlayersOnline 检测房间中的所有玩家是否都在线
+	CheckPlayersOnline() bool
 
-	// GetOnlinePlayerCount 获取房间中在线玩家数量
-	GetOnlinePlayerCount() int
+	// CheckPlayersOnlineWithType 检测房间中的指定类型玩家是否都在线
+	CheckPlayersOnlineWithType(pType uint32) bool
 
-	// GetReadyPlayerCount 获取房间中准备就绪玩家数量
-	GetReadyPlayerCount() int
+	// CheckPlayerReady 检测房间中指定玩家是否准备就绪
+	CheckPlayerReady(playerId uint64) bool
+
+	// CheckPlayersReady 检测房间中的所有玩家是否都准备就绪
+	CheckPlayersReady() bool
+
+	// CheckPlayersReadyWithType 检测房间中的指定类型玩家是否都准备就绪
+	CheckPlayersReadyWithType(pType uint32) bool
+
+	// GetPlayersCount 获取房间中的玩家数量
+	GetPlayersCount() int
+
+	// GetPlayersCountWithType 获取房间中指定类型玩家的数量
+	GetPlayersCountWithType(pType uint32) int
+
+	// GetOnlinePlayersCount 获取房间中在线玩家数量
+	GetOnlinePlayersCount() int
+
+	// GetOnlinePlayersCountWithType 获取房间中在线玩家数量(指定玩家类型)
+	GetOnlinePlayersCountWithType(pType uint32) int
+
+	// GetReadyPlayersCount 获取房间中准备就绪玩家的数量
+	GetReadyPlayersCount() int
+
+	// GetReadyPlayersCountWithType 获取房间中准备就绪玩家的数量(指定玩家类型)
+	GetReadyPlayersCountWithType(pType uint32) int
 
 	// Close 关闭房间
 	Close() error
@@ -127,10 +158,11 @@ type Room interface {
 
 // --------------------------------------------------------------------------------
 type room struct {
-	id      uint64
-	state   uint32
-	mu      sync.RWMutex
-	players map[uint64]Player
+	id       uint64
+	state    uint32
+	mu       sync.RWMutex
+	players  map[uint64]Player
+	watchers map[uint64]Player
 
 	messageChan   chan *message
 	playerInChan  chan *net4go.Conn
@@ -144,6 +176,7 @@ func NewRoom(roomId uint64, players []Player) Room {
 	r.id = roomId
 	r.state = kRoomStatePending
 	r.players = make(map[uint64]Player)
+	r.watchers = make(map[uint64]Player)
 	for _, player := range players {
 		r.players[player.GetId()] = player
 	}
@@ -171,6 +204,18 @@ func (this *room) GetPlayers() []Player {
 	var ps = make([]Player, 0, len(this.players))
 	for _, player := range this.players {
 		ps = append(ps, player)
+	}
+	this.mu.RUnlock()
+	return ps
+}
+
+func (this *room) GetPlayersWithType(pType uint32) []Player {
+	this.mu.RLock()
+	var ps = make([]Player, 0, len(this.players))
+	for _, player := range this.players {
+		if player.GetType() == pType {
+			ps = append(ps, player)
+		}
 	}
 	this.mu.RUnlock()
 	return ps
@@ -330,6 +375,16 @@ func (this *room) BroadcastMessage(b []byte) {
 	this.mu.RUnlock()
 }
 
+func (this *room) BroadcastMessageWithType(pType uint32, b []byte) {
+	this.mu.RLock()
+	for _, player := range this.players {
+		if player.GetType() == pType {
+			player.SendMessage(b)
+		}
+	}
+	this.mu.RUnlock()
+}
+
 func (this *room) BroadcastPacket(p net4go.Packet) {
 	this.mu.RLock()
 	for _, player := range this.players {
@@ -338,8 +393,29 @@ func (this *room) BroadcastPacket(p net4go.Packet) {
 	this.mu.RUnlock()
 }
 
+func (this *room) BroadcastPacketWithType(pType uint32, p net4go.Packet) {
+	this.mu.RLock()
+	for _, player := range this.players {
+		if player.GetType() == pType {
+			player.SendPacket(p)
+		}
+	}
+	this.mu.RUnlock()
+}
+
 // --------------------------------------------------------------------------------
-func (this *room) CheckAllPlayerOnline() bool {
+func (this *room) CheckPlayerOnline(playerId uint64) bool {
+	this.mu.RLock()
+	player, ok := this.players[playerId]
+	this.mu.RUnlock()
+
+	if ok == false {
+		return false
+	}
+	return player.IsOnline()
+}
+
+func (this *room) CheckPlayersOnline() bool {
 	this.mu.RLock()
 
 	if len(this.players) == 0 {
@@ -357,7 +433,36 @@ func (this *room) CheckAllPlayerOnline() bool {
 	return true
 }
 
-func (this *room) CheckAllPlayerReady() bool {
+func (this *room) CheckPlayersOnlineWithType(pType uint32) bool {
+	this.mu.RLock()
+
+	if len(this.players) == 0 {
+		this.mu.RUnlock()
+		return false
+	}
+
+	for _, p := range this.players {
+		if p.GetType() == pType && p.IsOnline() == false {
+			this.mu.RUnlock()
+			return false
+		}
+	}
+	this.mu.RUnlock()
+	return true
+}
+
+func (this *room) CheckPlayerReady(playerId uint64) bool {
+	this.mu.RLock()
+	player, ok := this.players[playerId]
+	this.mu.RUnlock()
+
+	if ok == false {
+		return false
+	}
+	return player.IsReady()
+}
+
+func (this *room) CheckPlayersReady() bool {
 	this.mu.RLock()
 
 	if len(this.players) == 0 {
@@ -375,14 +480,44 @@ func (this *room) CheckAllPlayerReady() bool {
 	return true
 }
 
-func (this *room) GetPlayerCount() int {
+func (this *room) CheckPlayersReadyWithType(pType uint32) bool {
+	this.mu.RLock()
+
+	if len(this.players) == 0 {
+		this.mu.RUnlock()
+		return false
+	}
+
+	for _, p := range this.players {
+		if p.GetType() == pType && p.IsReady() == false {
+			this.mu.RUnlock()
+			return false
+		}
+	}
+	this.mu.RUnlock()
+	return true
+}
+
+func (this *room) GetPlayersCount() int {
 	this.mu.RLock()
 	var c = len(this.players)
 	this.mu.RUnlock()
 	return c
 }
 
-func (this *room) GetOnlinePlayerCount() int {
+func (this *room) GetPlayersCountWithType(pType uint32) int {
+	this.mu.RLock()
+	var i = 0
+	for _, p := range this.players {
+		if p.GetType() == pType {
+			i++
+		}
+	}
+	this.mu.RUnlock()
+	return i
+}
+
+func (this *room) GetOnlinePlayersCount() int {
 	this.mu.RLock()
 	var i = 0
 	for _, p := range this.players {
@@ -394,11 +529,35 @@ func (this *room) GetOnlinePlayerCount() int {
 	return i
 }
 
-func (this *room) GetReadyPlayerCount() int {
+func (this *room) GetOnlinePlayersCountWithType(pType uint32) int {
+	this.mu.RLock()
+	var i = 0
+	for _, p := range this.players {
+		if p.GetType() == pType && p.IsOnline() {
+			i++
+		}
+	}
+	this.mu.RUnlock()
+	return i
+}
+
+func (this *room) GetReadyPlayersCount() int {
 	this.mu.RLock()
 	var i = 0
 	for _, p := range this.players {
 		if p.IsReady() {
+			i++
+		}
+	}
+	this.mu.RUnlock()
+	return i
+}
+
+func (this *room) GetReadyPlayersCountWithType(pType uint32) int {
+	this.mu.RLock()
+	var i = 0
+	for _, p := range this.players {
+		if p.GetType() == pType && p.IsReady() {
 			i++
 		}
 	}

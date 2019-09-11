@@ -22,8 +22,9 @@ func main() {
 
 	// 创建玩家信息
 	var ps []newbee.Player
-	var p1 = newbee.NewPlayer(1001, "token1", 1)
-	var p2 = newbee.NewPlayer(1002, "token2", 2)
+	var p1 = newbee.NewPlayer(1001, newbee.WithPlayerToken("token1"), newbee.WithPlayerGroup(1), newbee.WithPlayerIndex(1))
+	var p2 = newbee.NewPlayer(1002, newbee.WithPlayerToken("token2"), newbee.WithPlayerGroup(2), newbee.WithPlayerIndex(2))
+
 	ps = append(ps, p1, p2)
 
 	// 创建游戏信息

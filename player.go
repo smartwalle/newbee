@@ -6,7 +6,58 @@ import (
 	"time"
 )
 
+// --------------------------------------------------------------------------------
+type PlayerOption interface {
+	Apply(*player)
+}
+
+type playerOptionFun func(*player)
+
+func (f playerOptionFun) Apply(p *player) {
+	f(p)
+}
+
+func WithPlayerToken(token string) PlayerOption {
+	return playerOptionFun(func(p *player) {
+		p.token = token
+	})
+}
+
+func WithPlayerType(pType uint32) PlayerOption {
+	return playerOptionFun(func(p *player) {
+		p.pType = pType
+	})
+}
+
+func WithPlayerGroup(group uint32) PlayerOption {
+	return playerOptionFun(func(p *player) {
+		p.group = group
+	})
+}
+
+func WithPlayerIndex(index uint32) PlayerOption {
+	return playerOptionFun(func(p *player) {
+		p.index = index
+	})
+}
+
+// --------------------------------------------------------------------------------
 type Player interface {
+	// GetId 获取玩家 id
+	GetId() uint64
+
+	// GetToken 获取玩家 token
+	GetToken() string
+
+	// GetType 获取玩家所属的类型, 比如用于区分是可以正常进行游戏操作的玩家还是只能观战的观察者
+	GetType() uint32
+
+	// GetGroup 获取玩家所属的组, 比如用于 pvp 中的分组(蓝队或者红队)
+	GetGroup() uint32
+
+	// GetIndex 获取玩家索引
+	GetIndex() uint32
+
 	// Conn
 	Conn() *net4go.Conn
 
@@ -18,15 +69,6 @@ type Player interface {
 
 	// Del
 	Del(key string)
-
-	// GetId 获取玩家 id
-	GetId() uint64
-
-	// GetToken 获取玩家 token
-	GetToken() string
-
-	// GetIndex 获取玩家索引
-	GetIndex() uint16
 
 	// UpdateLoadingProgress 更新加载进度
 	UpdateLoadingProgress(p int32)
@@ -64,16 +106,19 @@ type Player interface {
 	// SendPacket 发送消息
 	SendPacket(net4go.Packet)
 
-	// Cleanup 清理玩家的游戏信息，但是不断开连接
-	Cleanup()
+	// Clean 清理玩家的游戏信息，但是不断开连接
+	Clean()
 
 	// Close 关闭该玩家的所有信息，同时会断开连接
 	Close() error
 }
 
+// --------------------------------------------------------------------------------
 type player struct {
 	id    uint64
-	index uint16
+	pType uint32
+	group uint32
+	index uint32
 	token string
 
 	isOnline bool
@@ -88,12 +133,37 @@ type player struct {
 	data map[string]interface{}
 }
 
-func NewPlayer(id uint64, token string, index uint16) Player {
+func NewPlayer(id uint64, opts ...PlayerOption) Player {
 	var p = &player{}
 	p.id = id
-	p.token = token
-	p.index = index
+	for _, opt := range opts {
+		opt.Apply(p)
+	}
+	//p.token = token
+	//p.pType = pType
+	//p.group = group
+	//p.index = index
 	return p
+}
+
+func (this *player) GetId() uint64 {
+	return this.id
+}
+
+func (this *player) GetToken() string {
+	return this.token
+}
+
+func (this *player) GetType() uint32 {
+	return this.pType
+}
+
+func (this *player) GetGroup() uint32 {
+	return this.group
+}
+
+func (this *player) GetIndex() uint32 {
+	return this.index
 }
 
 func (this *player) Conn() *net4go.Conn {
@@ -132,18 +202,6 @@ func (this *player) Del(key string) {
 	}
 	delete(this.data, key)
 	this.mu.Unlock()
-}
-
-func (this *player) GetId() uint64 {
-	return this.id
-}
-
-func (this *player) GetToken() string {
-	return this.token
-}
-
-func (this *player) GetIndex() uint16 {
-	return this.index
 }
 
 func (this *player) UpdateLoadingProgress(p int32) {
@@ -221,7 +279,7 @@ func (this *player) SendPacket(p net4go.Packet) {
 	}
 }
 
-func (this *player) Cleanup() {
+func (this *player) Clean() {
 	this.isReady = false
 	this.loadingProgress = 0
 	this.lastHeartbeatTime = 0
@@ -236,7 +294,7 @@ func (this *player) Close() error {
 
 	this.isOnline = false
 
-	this.Cleanup()
+	this.Clean()
 
 	return nil
 }

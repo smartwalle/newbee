@@ -153,12 +153,12 @@ func (this *game) OnTick(now int64) bool {
 		if pendingTime < this.maxPendingTime {
 			// 如果等待时间小于最大等待时间，则检查所有的玩家是否都已准备就绪
 			// 如果所有的玩家都已准备就绪，则开始游戏
-			if this.room.CheckAllPlayerReady() {
+			if this.room.CheckPlayersReady() {
 				this.GameStart()
 			}
 		} else {
 			// 如果等待时间大于等于最大等待时间
-			if this.room.GetReadyPlayerCount() > 0 {
+			if this.room.GetReadyPlayersCount() > 0 {
 				// 如果已准备就绪玩家数量大于 0，则直接开始游戏
 				this.GameStart()
 			} else {
@@ -171,7 +171,7 @@ func (this *game) OnTick(now int64) bool {
 		// 游戏进行中
 
 		// 所有玩家都掉线超时一定时间就判断游戏停止
-		var online = this.room.GetOnlinePlayerCount()
+		var online = this.room.GetOnlinePlayersCount()
 		if online <= 0 {
 			if this.offlineTime <= 0 {
 				this.offlineTime = now
