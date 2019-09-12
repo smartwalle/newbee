@@ -59,7 +59,7 @@ type Player interface {
 	GetIndex() uint32
 
 	// Conn
-	Conn() *net4go.Conn
+	Conn() net4go.Conn
 
 	// Set
 	Set(key string, value interface{})
@@ -83,7 +83,7 @@ type Player interface {
 	GetHeartbeatTime() int64
 
 	// Online 将连接和玩家进行绑定
-	Online(conn *net4go.Conn)
+	Online(conn net4go.Conn)
 
 	// Offline 断开玩家连接
 	Offline()
@@ -106,7 +106,7 @@ type Player interface {
 	// SendPacket 发送消息
 	SendPacket(net4go.Packet)
 
-	// Clean 清理玩家的游戏信息，但是不断开连接
+	// Clean 清理玩家的基本信息，但是不断开连接
 	Clean()
 
 	// Close 关闭该玩家的所有信息，同时会断开连接
@@ -124,7 +124,7 @@ type player struct {
 	isOnline bool
 	isReady  bool
 
-	conn *net4go.Conn
+	conn net4go.Conn
 
 	loadingProgress   int32
 	lastHeartbeatTime int64
@@ -166,7 +166,7 @@ func (this *player) GetIndex() uint32 {
 	return this.index
 }
 
-func (this *player) Conn() *net4go.Conn {
+func (this *player) Conn() net4go.Conn {
 	return this.conn
 }
 
@@ -220,7 +220,7 @@ func (this *player) GetHeartbeatTime() int64 {
 	return this.lastHeartbeatTime
 }
 
-func (this *player) Online(c *net4go.Conn) {
+func (this *player) Online(c net4go.Conn) {
 	if this.conn != nil && this.conn != c {
 		this.conn.Close()
 	}

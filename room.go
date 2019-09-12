@@ -102,10 +102,10 @@ type Room interface {
 	GetReadyPlayersWithType(pType uint32) []Player
 
 	// Connect 将玩家和连接进行绑定
-	Connect(playerId uint64, conn *net4go.Conn)
+	Connect(playerId uint64, conn net4go.Conn)
 
 	// JoinPlayer 加入新的玩家，如果连接不为空，则将该玩家和连接进行绑定
-	JoinPlayer(player Player, conn *net4go.Conn)
+	JoinPlayer(player Player, conn net4go.Conn)
 
 	// RunGame 启动游戏
 	RunGame(game Game, opts ...RoomOption) error
@@ -177,7 +177,7 @@ type room struct {
 	watchers map[uint64]Player
 
 	messageChan   chan *message
-	playerInChan  chan *net4go.Conn
+	playerInChan  chan net4go.Conn
 	playerOutChan chan *message
 
 	closeChan chan struct{}
@@ -282,7 +282,7 @@ func (this *room) GetReadyPlayersWithType(pType uint32) []Player {
 }
 
 // --------------------------------------------------------------------------------
-func (this *room) Connect(playerId uint64, c *net4go.Conn) {
+func (this *room) Connect(playerId uint64, c net4go.Conn) {
 	if c != nil {
 		c.Set(kPlayerId, playerId)
 		c.UpdateHandler(this)
@@ -294,7 +294,7 @@ func (this *room) Connect(playerId uint64, c *net4go.Conn) {
 	}
 }
 
-func (this *room) JoinPlayer(player Player, c *net4go.Conn) {
+func (this *room) JoinPlayer(player Player, c net4go.Conn) {
 	if player != nil {
 		this.mu.Lock()
 		// 玩家不存在则添加该玩家
@@ -330,7 +330,7 @@ func (this *room) RunGame(game Game, opts ...RoomOption) error {
 		o.Apply(options)
 	}
 	this.messageChan = make(chan *message, options.MessageBuffer)
-	this.playerInChan = make(chan *net4go.Conn, options.PlayerBuffer)
+	this.playerInChan = make(chan net4go.Conn, options.PlayerBuffer)
 	this.playerOutChan = make(chan *message, options.PlayerBuffer)
 	this.closeChan = make(chan struct{})
 
@@ -384,7 +384,7 @@ RunFor:
 }
 
 // --------------------------------------------------------------------------------
-func (this *room) OnMessage(c *net4go.Conn, p net4go.Packet) bool {
+func (this *room) OnMessage(c net4go.Conn, p net4go.Packet) bool {
 	var playerId = c.Get(kPlayerId).(uint64)
 	if playerId == 0 {
 		return false
@@ -399,7 +399,7 @@ func (this *room) OnMessage(c *net4go.Conn, p net4go.Packet) bool {
 	return true
 }
 
-func (this *room) OnClose(c *net4go.Conn, err error) {
+func (this *room) OnClose(c net4go.Conn, err error) {
 	var playerId = c.Get(kPlayerId).(uint64)
 	if playerId == 0 {
 		return
