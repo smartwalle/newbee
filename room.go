@@ -83,11 +83,23 @@ type Room interface {
 	// GetPlayer 获取玩家信息
 	GetPlayer(playerId uint64) Player
 
-	// GetPlayers 获取所有的玩家信息
+	// GetPlayers 获取所有玩家信息
 	GetPlayers() []Player
 
 	// GetPlayersWithType 获取指定类型的所有玩家信息
 	GetPlayersWithType(pType uint32) []Player
+
+	// GetOnlinePlayers 获取在线的玩家信息
+	GetOnlinePlayers() []Player
+
+	// GetOnlinePlayersWithType 获取在线的玩家信息(指定玩家类型)
+	GetOnlinePlayersWithType(pType uint32) []Player
+
+	// GetReadyPlayers 获取准备就绪的玩家信息
+	GetReadyPlayers() []Player
+
+	// GetReadyPlayersWithType 获取准备就绪的玩家信息(指定玩家类型)
+	GetReadyPlayersWithType(pType uint32) []Player
 
 	// Connect 将玩家和连接进行绑定
 	Connect(playerId uint64, conn *net4go.Conn)
@@ -104,52 +116,52 @@ type Room interface {
 	// SendPacket 向指定玩家发送消息
 	SendPacket(playerId uint64, packet net4go.Packet)
 
-	// BroadcastMessage 向房间中的所有玩家广播消息
+	// BroadcastMessage 向所有玩家广播消息
 	BroadcastMessage(b []byte)
 
-	// BroadcastMessageWithType 向房间中的指定类型玩家广播消息
+	// BroadcastMessageWithType 向指定类型的玩家广播消息
 	BroadcastMessageWithType(pType uint32, b []byte)
 
-	// BroadcastPacket 向房间中的所有玩家广播消息
+	// BroadcastPacket 向所有玩家广播消息
 	BroadcastPacket(packet net4go.Packet)
 
-	// BroadcastPacketWithType 向房间中的指定类型玩家广播消息
+	// BroadcastPacketWithType 向指定类型的玩家广播消息
 	BroadcastPacketWithType(pType uint32, p net4go.Packet)
 
-	// CheckPlayerOnline 检测房间中指定玩家是否在线
+	// CheckPlayerOnline 检测指定玩家是否在线
 	CheckPlayerOnline(playerId uint64) bool
 
-	// CheckPlayersOnline 检测房间中的所有玩家是否都在线
+	// CheckPlayersOnline 检测所有的玩家是否在线
 	CheckPlayersOnline() bool
 
-	// CheckPlayersOnlineWithType 检测房间中的指定类型玩家是否都在线
+	// CheckPlayersOnlineWithType 检测所有的玩家是否在线(指定玩家类型)
 	CheckPlayersOnlineWithType(pType uint32) bool
 
-	// CheckPlayerReady 检测房间中指定玩家是否准备就绪
+	// CheckPlayerReady 检测指定玩家是否准备就绪
 	CheckPlayerReady(playerId uint64) bool
 
-	// CheckPlayersReady 检测房间中的所有玩家是否都准备就绪
+	// CheckPlayersReady 检测所有的玩家是否准备就绪
 	CheckPlayersReady() bool
 
-	// CheckPlayersReadyWithType 检测房间中的指定类型玩家是否都准备就绪
+	// CheckPlayersReadyWithType 检测所有的玩家是否准备就绪(指定玩家类型)
 	CheckPlayersReadyWithType(pType uint32) bool
 
-	// GetPlayersCount 获取房间中的玩家数量
+	// GetPlayersCount 获取玩家数量
 	GetPlayersCount() int
 
-	// GetPlayersCountWithType 获取房间中指定类型玩家的数量
+	// GetPlayersCountWithType 获取玩家数量(指定玩家类型)
 	GetPlayersCountWithType(pType uint32) int
 
-	// GetOnlinePlayersCount 获取房间中在线玩家数量
+	// GetOnlinePlayersCount 获取在线的玩家数量
 	GetOnlinePlayersCount() int
 
-	// GetOnlinePlayersCountWithType 获取房间中在线玩家数量(指定玩家类型)
+	// GetOnlinePlayersCountWithType 获取在线的玩家数量(指定玩家类型)
 	GetOnlinePlayersCountWithType(pType uint32) int
 
-	// GetReadyPlayersCount 获取房间中准备就绪玩家的数量
+	// GetReadyPlayersCount 获取准备就绪的玩家数量
 	GetReadyPlayersCount() int
 
-	// GetReadyPlayersCountWithType 获取房间中准备就绪玩家的数量(指定玩家类型)
+	// GetReadyPlayersCountWithType 获取准备就绪的玩家数量(指定玩家类型)
 	GetReadyPlayersCountWithType(pType uint32) int
 
 	// Close 关闭房间
@@ -215,6 +227,54 @@ func (this *room) GetPlayersWithType(pType uint32) []Player {
 	for _, player := range this.players {
 		if player.GetType() == pType {
 			ps = append(ps, player)
+		}
+	}
+	this.mu.RUnlock()
+	return ps
+}
+
+func (this *room) GetOnlinePlayers() []Player {
+	this.mu.RLock()
+	var ps = make([]Player, 0, len(this.players))
+	for _, p := range this.players {
+		if p.IsOnline() {
+			ps = append(ps, p)
+		}
+	}
+	this.mu.RUnlock()
+	return ps
+}
+
+func (this *room) GetOnlinePlayersWithType(pType uint32) []Player {
+	this.mu.RLock()
+	var ps = make([]Player, 0, len(this.players))
+	for _, p := range this.players {
+		if p.GetType() == pType && p.IsOnline() {
+			ps = append(ps, p)
+		}
+	}
+	this.mu.RUnlock()
+	return ps
+}
+
+func (this *room) GetReadyPlayers() []Player {
+	this.mu.RLock()
+	var ps = make([]Player, 0, len(this.players))
+	for _, p := range this.players {
+		if p.IsReady() {
+			ps = append(ps, p)
+		}
+	}
+	this.mu.RUnlock()
+	return ps
+}
+
+func (this *room) GetReadyPlayersWithType(pType uint32) []Player {
+	this.mu.RLock()
+	var ps = make([]Player, 0, len(this.players))
+	for _, p := range this.players {
+		if p.GetType() == pType && p.IsReady() {
+			ps = append(ps, p)
 		}
 	}
 	this.mu.RUnlock()
