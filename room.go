@@ -170,11 +170,10 @@ type Room interface {
 
 // --------------------------------------------------------------------------------
 type room struct {
-	id       uint64
-	state    uint32
-	mu       sync.RWMutex
-	players  map[uint64]Player
-	watchers map[uint64]Player
+	id      uint64
+	state   uint32
+	mu      sync.RWMutex
+	players map[uint64]Player
 
 	messageChan   chan *message
 	playerInChan  chan net4go.Conn
@@ -188,7 +187,6 @@ func NewRoom(roomId uint64, players []Player) Room {
 	r.id = roomId
 	r.state = kRoomStatePending
 	r.players = make(map[uint64]Player)
-	r.watchers = make(map[uint64]Player)
 	for _, player := range players {
 		r.players[player.GetId()] = player
 	}
