@@ -4,7 +4,6 @@ import (
 	"errors"
 	"github.com/smartwalle/net4go"
 	"sync"
-	"sync/atomic"
 	"time"
 )
 
@@ -23,10 +22,12 @@ var (
 	ErrNilGame     = errors.New("newbee: game is nil")
 )
 
+type RoomState uint16
+
 const (
-	kRoomStatePending = iota // 等待游戏运行
-	kRoomStateRunning        // 有游戏在运行
-	kRoomStateClose          // 房间已关闭
+	RoomStateClose   RoomState = iota // 房间已关闭
+	RoomStatePending                  // 等待游戏运行
+	RoomStateRunning                  // 有游戏在运行(和游戏的状态无关，调用 Room 的 RunGame() 方法成功之后，就会将 Room 的状态调整为此状态)
 )
 
 const (
@@ -79,6 +80,9 @@ func WithPlayerBuffer(buffer int) RoomOption {
 type Room interface {
 	// GetId 获取房间 id
 	GetId() uint64
+
+	// GetState 获取房间状态
+	GetState() RoomState
 
 	// GetPlayer 获取玩家信息
 	GetPlayer(playerId uint64) Player
@@ -171,7 +175,7 @@ type Room interface {
 // --------------------------------------------------------------------------------
 type room struct {
 	id      uint64
-	state   uint32
+	state   RoomState
 	mu      sync.RWMutex
 	players map[uint64]Player
 
@@ -185,7 +189,7 @@ type room struct {
 func NewRoom(roomId uint64, players []Player) Room {
 	var r = &room{}
 	r.id = roomId
-	r.state = kRoomStatePending
+	r.state = RoomStatePending
 	r.players = make(map[uint64]Player)
 	for _, player := range players {
 		r.players[player.GetId()] = player
@@ -196,6 +200,13 @@ func NewRoom(roomId uint64, players []Player) Room {
 // --------------------------------------------------------------------------------
 func (this *room) GetId() uint64 {
 	return this.id
+}
+
+func (this *room) GetState() RoomState {
+	this.mu.Lock()
+	var s = this.state
+	this.mu.Unlock()
+	return s
 }
 
 func (this *room) GetPlayer(playerId uint64) Player {
@@ -309,19 +320,24 @@ func (this *room) JoinPlayer(player Player, c net4go.Conn) {
 
 // --------------------------------------------------------------------------------
 func (this *room) RunGame(game Game, opts ...RoomOption) error {
+	this.mu.Lock()
+
 	if game == nil {
+		this.mu.Unlock()
 		return ErrNilGame
 	}
 
-	if atomic.LoadUint32(&this.state) == kRoomStateClose {
+	if this.state == RoomStateClose {
+		this.mu.Unlock()
 		return ErrRoomClosed
 	}
 
-	if atomic.LoadUint32(&this.state) == kRoomStateRunning {
+	if this.state == RoomStateRunning {
+		this.mu.Unlock()
 		return ErrRoomRunning
 	}
 
-	atomic.StoreUint32(&this.state, kRoomStateRunning)
+	this.state = RoomStateRunning
 
 	var options = newRoomOptions()
 	for _, o := range opts {
@@ -331,6 +347,7 @@ func (this *room) RunGame(game Game, opts ...RoomOption) error {
 	this.playerInChan = make(chan net4go.Conn, options.PlayerBuffer)
 	this.playerOutChan = make(chan *message, options.PlayerBuffer)
 	this.closeChan = make(chan struct{})
+	this.mu.Unlock()
 
 	game.RunInRoom(this)
 
@@ -624,10 +641,13 @@ func (this *room) GetReadyPlayersCountWithType(pType uint32) int {
 }
 
 func (this *room) Close() error {
-	if atomic.LoadUint32(&this.state) == kRoomStateClose {
+	this.mu.Lock()
+
+	if this.state == RoomStateClose {
+		this.mu.Unlock()
 		return nil
 	}
-	if atomic.LoadUint32(&this.state) == kRoomStateRunning {
+	if this.state == RoomStateRunning {
 		close(this.messageChan)
 		close(this.playerInChan)
 		close(this.playerOutChan)
@@ -637,12 +657,13 @@ func (this *room) Close() error {
 		this.playerInChan = nil
 		this.playerOutChan = nil
 	}
-	atomic.StoreUint32(&this.state, kRoomStateClose)
+	this.state = RoomStateClose
 
 	for _, p := range this.players {
 		p.Close()
 	}
 	this.players = make(map[uint64]Player)
+	this.mu.Unlock()
 
 	return nil
 }
