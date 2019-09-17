@@ -23,6 +23,7 @@ var (
 	ErrNilGame      = errors.New("newbee: game is nil")
 	ErrPlayerExists = errors.New("newbee: player already exists")
 	ErrNilPlayer    = errors.New("newbee: player is nil")
+	ErrFailedToRun  = errors.New("newbee: failed to run")
 )
 
 type RoomState uint32
@@ -366,63 +367,65 @@ func (this *room) RunGame(game Game, opts ...RoomOption) error {
 		return ErrRoomRunning
 	}
 
-	if atomic.CompareAndSwapUint32(&this.state, uint32(RoomStatePending), uint32(RoomStateRunning)) {
-		var options = newRoomOptions()
-		for _, o := range opts {
-			o.Apply(options)
-		}
-		this.messageChan = make(chan *message, options.MessageBuffer)
-		this.playerInChan = make(chan net4go.Conn, options.PlayerBuffer)
-		this.playerOutChan = make(chan *message, options.PlayerBuffer)
-		this.closeChan = make(chan struct{})
+	if atomic.CompareAndSwapUint32(&this.state, uint32(RoomStatePending), uint32(RoomStateRunning)) == false {
+		return ErrFailedToRun
+	}
 
-		game.RunInRoom(this)
+	var options = newRoomOptions()
+	for _, o := range opts {
+		o.Apply(options)
+	}
+	this.messageChan = make(chan *message, options.MessageBuffer)
+	this.playerInChan = make(chan net4go.Conn, options.PlayerBuffer)
+	this.playerOutChan = make(chan *message, options.PlayerBuffer)
+	this.closeChan = make(chan struct{})
 
-		var ticker = time.NewTicker(time.Second / time.Duration(game.Frequency()))
+	game.RunInRoom(this)
 
-	RunFor:
-		for {
-			select {
-			case m, ok := <-this.messageChan:
-				if ok == false {
-					break RunFor
-				}
-				var player = this.GetPlayer(m.PlayerId)
-				if player != nil {
-					game.OnMessage(player, m.Packet)
-				}
-				releaseMessage(m)
-			case <-ticker.C:
-				if game.OnTick(time.Now().Unix()) == false {
-					break RunFor
-				}
-			case c, ok := <-this.playerInChan:
-				if ok == false {
-					break RunFor
-				}
-				var playerId = c.Get(kPlayerId).(uint64)
-				var player = this.GetPlayer(playerId)
-				if player != nil {
-					player.Online(c)
-					game.OnJoinGame(player)
-				}
-			case m, ok := <-this.playerOutChan:
-				if ok == false {
-					break RunFor
-				}
-				var player = this.GetPlayer(m.PlayerId)
-				if player != nil {
-					game.OnLeaveGame(player)
-					player.Close()
-				}
-				releaseMessage(m)
-			case <-this.closeChan:
+	var ticker = time.NewTicker(time.Second / time.Duration(game.Frequency()))
+
+RunFor:
+	for {
+		select {
+		case m, ok := <-this.messageChan:
+			if ok == false {
 				break RunFor
 			}
+			var player = this.GetPlayer(m.PlayerId)
+			if player != nil {
+				game.OnMessage(player, m.Packet)
+			}
+			releaseMessage(m)
+		case <-ticker.C:
+			if game.OnTick(time.Now().Unix()) == false {
+				break RunFor
+			}
+		case c, ok := <-this.playerInChan:
+			if ok == false {
+				break RunFor
+			}
+			var playerId = c.Get(kPlayerId).(uint64)
+			var player = this.GetPlayer(playerId)
+			if player != nil {
+				player.Online(c)
+				game.OnJoinGame(player)
+			}
+		case m, ok := <-this.playerOutChan:
+			if ok == false {
+				break RunFor
+			}
+			var player = this.GetPlayer(m.PlayerId)
+			if player != nil {
+				game.OnLeaveGame(player)
+				player.Close()
+			}
+			releaseMessage(m)
+		case <-this.closeChan:
+			break RunFor
 		}
-		game.OnCloseRoom()
-		this.Close()
 	}
+	game.OnCloseRoom()
+	this.Close()
 	return nil
 }
 
