@@ -257,12 +257,18 @@ func (this *player) IsReady() bool {
 }
 
 func (this *player) SendMessage(b []byte) {
+	if this.conn == nil {
+		return
+	}
 	if err := this.conn.AsyncWrite(b, 0); err != nil {
 		this.Close()
 	}
 }
 
 func (this *player) SendPacket(p net4go.Packet) {
+	if this.conn == nil {
+		return
+	}
 	if err := this.conn.AsyncWritePacket(p, 0); err != nil {
 		this.Close()
 	}
