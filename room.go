@@ -382,7 +382,7 @@ func (this *room) RunGame(game Game, opts ...RoomOption) error {
 
 	game.RunInRoom(this)
 
-	var ticker = time.NewTicker(time.Second / time.Duration(game.Frequency()))
+	go this.tick(game)
 
 RunFor:
 	for {
@@ -396,10 +396,6 @@ RunFor:
 				game.OnMessage(player, m.Packet)
 			}
 			releaseMessage(m)
-		case <-ticker.C:
-			if game.OnTick(time.Now().Unix()) == false {
-				break RunFor
-			}
 		case c, ok := <-this.playerInChan:
 			if ok == false {
 				break RunFor
@@ -430,6 +426,23 @@ RunFor:
 	game.OnCloseRoom()
 	this.Close()
 	return nil
+}
+
+func (this *room) tick(game Game) {
+	var ticker = time.NewTicker(time.Second / time.Duration(game.Frequency()))
+TickFor:
+	for {
+		select {
+		case <-ticker.C:
+			if game.OnTick(time.Now().Unix()) == false {
+				this.Close()
+				break TickFor
+			}
+		case <-this.closeChan:
+			break TickFor
+		}
+	}
+	ticker.Stop()
 }
 
 // --------------------------------------------------------------------------------
