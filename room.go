@@ -4,6 +4,7 @@ import (
 	"errors"
 	"github.com/smartwalle/net4go"
 	"sync"
+	"sync/atomic"
 	"time"
 )
 
@@ -24,7 +25,7 @@ var (
 	ErrNilPlayer    = errors.New("newbee: player is nil")
 )
 
-type RoomState uint16
+type RoomState uint32
 
 const (
 	RoomStateClose   RoomState = iota // 房间已关闭
@@ -183,7 +184,7 @@ type Room interface {
 // --------------------------------------------------------------------------------
 type room struct {
 	id      uint64
-	state   RoomState
+	state   uint32
 	mu      sync.RWMutex
 	players map[uint64]Player
 
@@ -197,7 +198,7 @@ type room struct {
 func NewRoom(roomId uint64, players []Player) Room {
 	var r = &room{}
 	r.id = roomId
-	r.state = RoomStatePending
+	r.state = uint32(RoomStatePending)
 	r.players = make(map[uint64]Player)
 	for _, player := range players {
 		r.players[player.GetId()] = player
@@ -211,10 +212,8 @@ func (this *room) GetId() uint64 {
 }
 
 func (this *room) GetState() RoomState {
-	this.mu.Lock()
-	var s = this.state
-	this.mu.Unlock()
-	return s
+	var s = atomic.LoadUint32(&this.state)
+	return RoomState(s)
 }
 
 func (this *room) GetPlayer(playerId uint64) Player {
@@ -355,81 +354,77 @@ func (this *room) RemovePlayer(playerId uint64) {
 
 // --------------------------------------------------------------------------------
 func (this *room) RunGame(game Game, opts ...RoomOption) error {
-	this.mu.Lock()
-
 	if game == nil {
-		this.mu.Unlock()
 		return ErrNilGame
 	}
 
-	if this.state == RoomStateClose {
-		this.mu.Unlock()
+	var state = RoomState(atomic.LoadUint32(&this.state))
+
+	if state == RoomStateClose {
 		return ErrRoomClosed
 	}
 
-	if this.state == RoomStateRunning {
-		this.mu.Unlock()
+	if state == RoomStateRunning {
 		return ErrRoomRunning
 	}
 
-	this.state = RoomStateRunning
-
-	var options = newRoomOptions()
-	for _, o := range opts {
-		o.Apply(options)
-	}
-	this.messageChan = make(chan *message, options.MessageBuffer)
-	this.playerInChan = make(chan net4go.Conn, options.PlayerBuffer)
-	this.playerOutChan = make(chan *message, options.PlayerBuffer)
-	this.closeChan = make(chan struct{})
-	this.mu.Unlock()
-
-	game.RunInRoom(this)
-
-	var ticker = time.NewTicker(time.Second / time.Duration(game.Frequency()))
-
-RunFor:
-	for {
-		select {
-		case m, ok := <-this.messageChan:
-			if ok == false {
-				break RunFor
-			}
-			var player = this.GetPlayer(m.PlayerId)
-			if player != nil {
-				game.OnMessage(player, m.Packet)
-			}
-			releaseMessage(m)
-		case <-ticker.C:
-			if game.OnTick(time.Now().Unix()) == false {
-				break RunFor
-			}
-		case c, ok := <-this.playerInChan:
-			if ok == false {
-				break RunFor
-			}
-			var playerId = c.Get(kPlayerId).(uint64)
-			var player = this.GetPlayer(playerId)
-			if player != nil {
-				player.Online(c)
-				game.OnJoinGame(player)
-			}
-		case m, ok := <-this.playerOutChan:
-			if ok == false {
-				break RunFor
-			}
-			var player = this.GetPlayer(m.PlayerId)
-			if player != nil {
-				game.OnLeaveGame(player)
-				player.Close()
-			}
-			releaseMessage(m)
-		case <-this.closeChan:
-			break RunFor
+	if atomic.CompareAndSwapUint32(&this.state, uint32(RoomStatePending), uint32(RoomStateRunning)) {
+		var options = newRoomOptions()
+		for _, o := range opts {
+			o.Apply(options)
 		}
+		this.messageChan = make(chan *message, options.MessageBuffer)
+		this.playerInChan = make(chan net4go.Conn, options.PlayerBuffer)
+		this.playerOutChan = make(chan *message, options.PlayerBuffer)
+		this.closeChan = make(chan struct{})
+
+		game.RunInRoom(this)
+
+		var ticker = time.NewTicker(time.Second / time.Duration(game.Frequency()))
+
+	RunFor:
+		for {
+			select {
+			case m, ok := <-this.messageChan:
+				if ok == false {
+					break RunFor
+				}
+				var player = this.GetPlayer(m.PlayerId)
+				if player != nil {
+					game.OnMessage(player, m.Packet)
+				}
+				releaseMessage(m)
+			case <-ticker.C:
+				if game.OnTick(time.Now().Unix()) == false {
+					break RunFor
+				}
+			case c, ok := <-this.playerInChan:
+				if ok == false {
+					break RunFor
+				}
+				var playerId = c.Get(kPlayerId).(uint64)
+				var player = this.GetPlayer(playerId)
+				if player != nil {
+					player.Online(c)
+					game.OnJoinGame(player)
+				}
+			case m, ok := <-this.playerOutChan:
+				if ok == false {
+					break RunFor
+				}
+				var player = this.GetPlayer(m.PlayerId)
+				if player != nil {
+					game.OnLeaveGame(player)
+					player.Close()
+				}
+				releaseMessage(m)
+			case <-this.closeChan:
+				break RunFor
+			}
+		}
+		game.OnCloseRoom()
+		this.Close()
 	}
-	game.OnCloseRoom()
-	this.Close()
 	return nil
 }
 
@@ -676,13 +671,13 @@ func (this *room) GetReadyPlayersCountWithType(pType uint32) int {
 }
 
 func (this *room) Close() error {
-	this.mu.Lock()
+	var state = RoomState(atomic.LoadUint32(&this.state))
 
-	if this.state == RoomStateClose {
-		this.mu.Unlock()
+	if state == RoomStateClose {
 		return nil
 	}
-	if this.state == RoomStateRunning {
+
+	if atomic.CompareAndSwapUint32(&this.state, uint32(RoomStateRunning), uint32(RoomStateClose)) {
 		close(this.messageChan)
 		close(this.playerInChan)
 		close(this.playerOutChan)
@@ -692,13 +687,11 @@ func (this *room) Close() error {
 		this.playerInChan = nil
 		this.playerOutChan = nil
 	}
-	this.state = RoomStateClose
 
 	for _, p := range this.players {
 		p.Close()
 	}
 	this.players = make(map[uint64]Player)
-	this.mu.Unlock()
 
 	return nil
 }
