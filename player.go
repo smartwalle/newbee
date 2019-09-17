@@ -257,20 +257,12 @@ func (this *player) IsReady() bool {
 }
 
 func (this *player) SendMessage(b []byte) {
-	if this.IsOnline() == false {
-		return
-	}
-
-	if _, err := this.conn.Write(b); err != nil {
+	if err := this.conn.AsyncWrite(b, 0); err != nil {
 		this.Close()
 	}
 }
 
 func (this *player) SendPacket(p net4go.Packet) {
-	if this.IsOnline() == false {
-		return
-	}
-
 	if err := this.conn.AsyncWritePacket(p, 0); err != nil {
 		this.Close()
 	}
