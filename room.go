@@ -358,13 +358,11 @@ func (this *room) RunGame(game Game, opts ...RoomOption) error {
 		return ErrNilGame
 	}
 
-	var state = RoomState(atomic.LoadUint32(&this.state))
-
-	if state == RoomStateClose {
+	if RoomState(atomic.LoadUint32(&this.state)) == RoomStateClose {
 		return ErrRoomClosed
 	}
 
-	if state == RoomStateRunning {
+	if RoomState(atomic.LoadUint32(&this.state)) == RoomStateRunning {
 		return ErrRoomRunning
 	}
 
