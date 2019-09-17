@@ -2,7 +2,6 @@ package newbee
 
 import (
 	"errors"
-	"fmt"
 	"github.com/smartwalle/net4go"
 	"sync"
 	"sync/atomic"
@@ -692,8 +691,6 @@ func (this *room) Close() error {
 		this.playerInChan = nil
 		this.playerOutChan = nil
 	}
-
-	fmt.Println("=======room close----")
 
 	for _, p := range this.players {
 		p.Close()
