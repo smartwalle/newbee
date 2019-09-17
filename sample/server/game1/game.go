@@ -59,7 +59,7 @@ func (this *game) OnJoinGame(p newbee.Player) {
 }
 
 func (this *game) OnLeaveGame(p newbee.Player) {
-	fmt.Println("OnLeaveGame")
+	fmt.Println("OnLeaveGame", p.IsOnline())
 }
 
 func (this *game) OnCloseRoom() {

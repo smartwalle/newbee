@@ -121,8 +121,7 @@ type player struct {
 	index uint32
 	token string
 
-	isOnline bool
-	isReady  bool
+	isReady bool
 
 	conn net4go.Conn
 
@@ -230,19 +229,17 @@ func (this *player) Online(c net4go.Conn) {
 	}
 
 	this.conn = c
-	this.isOnline = true
 
 	this.RefreshHeartbeatTime()
 }
 
 func (this *player) Offline() {
 	this.conn = nil
-	this.isOnline = false
 	this.isReady = false
 }
 
 func (this *player) Ready() {
-	if this.conn != nil && this.isOnline {
+	if this.IsOnline() {
 		this.isReady = true
 	}
 }
@@ -252,11 +249,11 @@ func (this *player) UnReady() {
 }
 
 func (this *player) IsOnline() bool {
-	return this.conn != nil && this.isOnline
+	return this.conn != nil && this.conn.IsClosed() == false
 }
 
 func (this *player) IsReady() bool {
-	return this.conn != nil && this.isReady
+	return this.isReady && this.IsOnline()
 }
 
 func (this *player) SendMessage(b []byte) {
@@ -291,8 +288,6 @@ func (this *player) Close() error {
 	}
 	this.conn = nil
 	this.data = nil
-
-	this.isOnline = false
 
 	this.Clean()
 

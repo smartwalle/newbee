@@ -17,9 +17,11 @@ type message struct {
 }
 
 var (
-	ErrRoomClosed  = errors.New("newbee: room is closed")
-	ErrRoomRunning = errors.New("newbee: room is running")
-	ErrNilGame     = errors.New("newbee: game is nil")
+	ErrRoomClosed   = errors.New("newbee: room is closed")
+	ErrRoomRunning  = errors.New("newbee: room is running")
+	ErrNilGame      = errors.New("newbee: game is nil")
+	ErrPlayerExists = errors.New("newbee: player already exists")
+	ErrNilPlayer    = errors.New("newbee: player is nil")
 )
 
 type RoomState uint16
@@ -108,8 +110,14 @@ type Room interface {
 	// Connect 将玩家和连接进行绑定
 	Connect(playerId uint64, conn net4go.Conn)
 
-	// JoinPlayer 加入新的玩家，如果连接不为空，则将该玩家和连接进行绑定
-	JoinPlayer(player Player, conn net4go.Conn)
+	// Disconnect 断开玩家的网络连接，但是不会主动将玩家的信息从房间中清除
+	Disconnect(playerId uint64)
+
+	// JoinPlayer 加入新的玩家，如果玩家已经存在或者 player 参数为空，会返回相应的错误，如果连接不为空，则将该玩家和连接进行绑定
+	JoinPlayer(player Player, conn net4go.Conn) error
+
+	// RemovePlayer 将玩家从房间中移除，只会清除玩家信息，不会断开玩家的网络连接
+	RemovePlayer(playerId uint64)
 
 	// RunGame 启动游戏
 	RunGame(game Game, opts ...RoomOption) error
@@ -303,18 +311,45 @@ func (this *room) Connect(playerId uint64, c net4go.Conn) {
 	}
 }
 
-func (this *room) JoinPlayer(player Player, c net4go.Conn) {
+func (this *room) Disconnect(playerId uint64) {
+	this.mu.Lock()
+	var player = this.players[playerId]
+	this.mu.Unlock()
+
+	if player != nil {
+		player.Conn().Close()
+	}
+}
+
+func (this *room) JoinPlayer(player Player, c net4go.Conn) error {
+	if player == nil {
+		return ErrNilPlayer
+	}
+
+	this.mu.Lock()
+
+	// 如果玩家已经存在，则返回错误信息
+	if _, ok := this.players[player.GetId()]; ok {
+		this.mu.Unlock()
+		return ErrPlayerExists
+	}
+
+	this.players[player.GetId()] = player
+
+	this.mu.Unlock()
+
+	if c != nil {
+		this.Connect(player.GetId(), c)
+	}
+	return nil
+}
+
+func (this *room) RemovePlayer(playerId uint64) {
+	var player = this.GetPlayer(playerId)
 	if player != nil {
 		this.mu.Lock()
-		// 玩家不存在则添加该玩家
-		if _, ok := this.players[player.GetId()]; ok == false {
-			this.players[player.GetId()] = player
-		}
+		delete(this.players, player.GetId())
 		this.mu.Unlock()
-
-		if c != nil {
-			this.Connect(player.GetId(), c)
-		}
 	}
 }
 
@@ -385,8 +420,8 @@ RunFor:
 			}
 			var player = this.GetPlayer(m.PlayerId)
 			if player != nil {
-				player.Close()
 				game.OnLeaveGame(player)
+				player.Close()
 			}
 			releaseMessage(m)
 		case <-this.closeChan:
