@@ -271,7 +271,7 @@ func (this *player) SendPacket(p net4go.Packet) {
 		return
 	}
 
-	if this.conn.AsyncWritePacket(p, 0) != nil {
+	if err := this.conn.AsyncWritePacket(p, 0); err != nil {
 		this.Close()
 	}
 }

@@ -2,6 +2,7 @@ package newbee
 
 import (
 	"errors"
+	"fmt"
 	"github.com/smartwalle/net4go"
 	"sync"
 	"sync/atomic"
@@ -404,11 +405,14 @@ RunFor:
 			if ok == false {
 				break RunFor
 			}
-			var playerId = c.Get(kPlayerId).(uint64)
-			var player = this.GetPlayer(playerId)
-			if player != nil {
-				player.Online(c)
-				game.OnJoinGame(player)
+			var value = c.Get(kPlayerId)
+			if value != nil {
+				var playerId = value.(uint64)
+				var player = this.GetPlayer(playerId)
+				if player != nil {
+					player.Online(c)
+					game.OnJoinGame(player)
+				}
 			}
 		case m, ok := <-this.playerOutChan:
 			if ok == false {
@@ -688,6 +692,8 @@ func (this *room) Close() error {
 		this.playerInChan = nil
 		this.playerOutChan = nil
 	}
+
+	fmt.Println("=======room close----")
 
 	for _, p := range this.players {
 		p.Close()
