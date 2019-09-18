@@ -423,7 +423,7 @@ RunFor:
 			break RunFor
 		}
 	}
-	game.OnCloseRoom()
+	game.OnCloseRoom(this)
 	this.Close()
 	return nil
 }

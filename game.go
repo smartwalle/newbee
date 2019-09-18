@@ -31,7 +31,7 @@ type Game interface {
 	OnLeaveGame(player Player)
 
 	// OnCloseRoom 房间关闭的时候会调用此方法
-	OnCloseRoom()
+	OnCloseRoom(room Room)
 
 	// OnMessage 处理客户端消息
 	OnMessage(player Player, packet net4go.Packet)
