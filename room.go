@@ -202,7 +202,9 @@ func NewRoom(roomId uint64, players []Player) Room {
 	r.state = uint32(RoomStatePending)
 	r.players = make(map[uint64]Player)
 	for _, player := range players {
-		r.players[player.GetId()] = player
+		if player.GetId() != 0 {
+			r.players[player.GetId()] = player
+		}
 	}
 	return r
 }
@@ -323,6 +325,10 @@ func (this *room) Disconnect(playerId uint64) {
 
 func (this *room) JoinPlayer(player Player, c net4go.Conn) error {
 	if player == nil {
+		return ErrNilPlayer
+	}
+
+	if player.GetId() == 0 {
 		return ErrNilPlayer
 	}
 
@@ -447,7 +453,12 @@ TickFor:
 
 // --------------------------------------------------------------------------------
 func (this *room) OnMessage(c net4go.Conn, p net4go.Packet) bool {
-	var playerId = c.Get(kPlayerId).(uint64)
+	var value = c.Get(kPlayerId)
+	if value == nil {
+		return false
+	}
+
+	var playerId = value.(uint64)
 	if playerId == 0 {
 		return false
 	}
@@ -462,7 +473,12 @@ func (this *room) OnMessage(c net4go.Conn, p net4go.Packet) bool {
 }
 
 func (this *room) OnClose(c net4go.Conn, err error) {
-	var playerId = c.Get(kPlayerId).(uint64)
+	var value = c.Get(kPlayerId)
+	if value == nil {
+		return
+	}
+
+	var playerId = value.(uint64)
 	if playerId == 0 {
 		return
 	}
