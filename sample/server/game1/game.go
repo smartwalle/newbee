@@ -5,6 +5,7 @@ import (
 	"github.com/smartwalle/net4go"
 	"github.com/smartwalle/newbee"
 	"github.com/smartwalle/newbee/sample/protocol"
+	"os"
 	"time"
 )
 
@@ -29,7 +30,7 @@ func NewGame(id uint64) newbee.Game {
 	g.id = id
 	g.state = newbee.GameStatePending
 	g.createTime = time.Now().Unix()
-	g.maxPendingTime = 10
+	g.maxPendingTime = 20
 	g.maxOfflinePendingTime = 20
 	g.offlineTime = 0
 
@@ -47,7 +48,7 @@ func (this *game) RunInRoom(room newbee.Room) {
 
 // Frequency 帧率，每秒钟发多少数据帧
 func (this *game) Frequency() uint8 {
-	return 30
+	return 10
 }
 
 func (this *game) State() newbee.GameState {
@@ -55,15 +56,16 @@ func (this *game) State() newbee.GameState {
 }
 
 func (this *game) OnJoinGame(p newbee.Player) {
-	fmt.Println("OnJoinGame")
+	fmt.Println("OnJoinGame", p.GetId())
 }
 
 func (this *game) OnLeaveGame(p newbee.Player) {
-	fmt.Println("OnLeaveGame", p.IsOnline())
+	fmt.Println("OnLeaveGame", p.GetId())
+	os.Exit(-1)
 }
 
-func (this *game) OnCloseRoom() {
-	fmt.Println("OnCloseRoom")
+func (this *game) OnCloseRoom(room newbee.Room) {
+	fmt.Println("OnCloseRoom", room.GetId())
 }
 
 func (this *game) OnMessage(player newbee.Player, np net4go.Packet) {

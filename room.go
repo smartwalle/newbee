@@ -85,6 +85,9 @@ type Room interface {
 	// GetId 获取房间 id
 	GetId() uint64
 
+	// GetToken 房间 token
+	GetToken() string
+
 	// GetState 获取房间状态
 	GetState() RoomState
 
@@ -185,6 +188,7 @@ type Room interface {
 // --------------------------------------------------------------------------------
 type room struct {
 	id      uint64
+	token   string
 	state   uint32
 	mu      sync.RWMutex
 	players map[uint64]Player
@@ -196,9 +200,10 @@ type room struct {
 	closeChan chan struct{}
 }
 
-func NewRoom(roomId uint64, players []Player) Room {
+func NewRoom(roomId uint64, token string, players []Player) Room {
 	var r = &room{}
 	r.id = roomId
+	r.token = token
 	r.state = uint32(RoomStatePending)
 	r.players = make(map[uint64]Player)
 	for _, player := range players {
@@ -212,6 +217,10 @@ func NewRoom(roomId uint64, players []Player) Room {
 // --------------------------------------------------------------------------------
 func (this *room) GetId() uint64 {
 	return this.id
+}
+
+func (this *room) GetToken() string {
+	return this.token
 }
 
 func (this *room) GetState() RoomState {

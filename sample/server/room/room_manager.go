@@ -19,11 +19,11 @@ func NewRoomManager() *RoomManager {
 	return rm
 }
 
-func (this *RoomManager) CreateRoom(players []newbee.Player, game newbee.Game) newbee.Room {
+func (this *RoomManager) CreateRoom(roomId uint64, players []newbee.Player, game newbee.Game) newbee.Room {
 	this.mu.Lock()
 	defer this.mu.Unlock()
 
-	var r = newbee.NewRoom(9999, players)
+	var r = newbee.NewRoom(roomId, "wtf", players)
 	this.rooms[r.GetId()] = r
 
 	go func(r newbee.Room, g newbee.Game) {

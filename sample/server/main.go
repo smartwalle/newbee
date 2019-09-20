@@ -8,6 +8,8 @@ import (
 	"github.com/smartwalle/newbee/sample/server/game1"
 	"github.com/smartwalle/newbee/sample/server/room"
 	"net"
+	"net/http"
+	_ "net/http/pprof"
 )
 
 func main() {
@@ -17,24 +19,31 @@ func main() {
 		return
 	}
 
+	go func() {
+		http.ListenAndServe(":6661", nil)
+	}()
+
 	var p = &protocol.Protocol{}
-	//var h = &ServerHandler{}
-
-	// 创建玩家信息
-	var ps []newbee.Player
-	var p1 = newbee.NewPlayer(1001, newbee.WithPlayerToken("token1"), newbee.WithPlayerGroup(1), newbee.WithPlayerIndex(1))
-	var p2 = newbee.NewPlayer(1002, newbee.WithPlayerToken("token2"), newbee.WithPlayerGroup(2), newbee.WithPlayerIndex(2))
-
-	ps = append(ps, p1, p2)
-
-	// 创建游戏信息
-	var game = game1.NewGame(123)
-
-	// 默认创建一个房间
 	var rm = room.NewRoomManager()
-	var r = rm.CreateRoom(ps, game)
 
-	fmt.Println("房间创建成功，Id 为", r.GetId())
+	var numberOfRoom = 200
+
+	for roomId := 0; roomId < numberOfRoom; roomId++ {
+
+		var playerList = make([]newbee.Player, 0, 10)
+		var game = game1.NewGame(uint64(roomId))
+
+		for playerIndex := 0; playerIndex < 10; playerIndex++ {
+			var playerId = uint64(roomId*10+playerIndex) + 1
+
+			var player = newbee.NewPlayer(playerId, newbee.WithPlayerToken("token"), newbee.WithPlayerGroup(1), newbee.WithPlayerIndex(uint32(playerIndex)))
+			playerList = append(playerList, player)
+
+			fmt.Println(playerId)
+		}
+		var room = rm.CreateRoom(uint64(roomId), playerList, game)
+		fmt.Println("房间创建成功，Id 为", room.GetId())
+	}
 
 	for {
 		c, err := l.Accept()

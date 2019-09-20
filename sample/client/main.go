@@ -5,34 +5,43 @@ import (
 	"github.com/smartwalle/net4go"
 	"github.com/smartwalle/newbee/sample/protocol"
 	"net"
+	"os"
 	"time"
 )
 
 func main() {
-	c, err := net.Dial("tcp", "192.168.1.99:6666")
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
+	var numberOfRoom = 200
 
-	var p = &protocol.Protocol{}
-	var h = &ClientHandler{}
+	for playerIndex := 0; playerIndex < 10; playerIndex++ {
+		for roomId := 0; roomId < numberOfRoom; roomId++ {
+			var playerId = uint64(roomId*10+playerIndex) + 1
 
-	cc := net4go.NewConn(c, p, h)
+			c, err := net.Dial("tcp", "192.168.1.99:6666")
+			if err != nil {
+				fmt.Println(err)
+				return
+			}
 
-	var req = &protocol.C2SJoinRoom{}
-	req.RoomId = 9999
-	req.PlayerId = 1001
-	req.Token = "token1"
+			var p = &protocol.Protocol{}
+			var h = &ClientHandler{}
 
-	cc.WritePacket(protocol.NewPacket(protocol.PT_JOIN_ROOM, req))
+			cc := net4go.NewConn(c, p, h)
 
-	go func() {
-		for {
-			cc.WritePacket(protocol.NewPacket(protocol.PT_HEARTBEAT, nil))
-			time.Sleep(time.Second * 1)
+			var req = &protocol.C2SJoinRoom{}
+			req.RoomId = uint64(roomId)
+			req.PlayerId = playerId
+			req.Token = "token"
+
+			cc.WritePacket(protocol.NewPacket(protocol.PT_JOIN_ROOM, req))
+
+			go func() {
+				for {
+					cc.WritePacket(protocol.NewPacket(protocol.PT_HEARTBEAT, nil))
+					time.Sleep(time.Second * 1)
+				}
+			}()
 		}
-	}()
+	}
 
 	select {}
 }
@@ -52,6 +61,9 @@ func (this *ClientHandler) OnMessage(c net4go.Conn, p net4go.Packet) bool {
 				return false
 			}
 			fmt.Println("加入房间返回结果", rsp.Code)
+			if rsp.Code != protocol.JOIN_ROOM_CODE_SUCCESS {
+				os.Exit(-1)
+			}
 
 			go func() {
 				if rsp.Code == protocol.JOIN_ROOM_CODE_SUCCESS {
@@ -72,10 +84,10 @@ func (this *ClientHandler) OnMessage(c net4go.Conn, p net4go.Packet) bool {
 				return false
 			}
 
-			fmt.Println("================")
-			for _, info := range rsp.Infos {
-				fmt.Println("加入房间进度", info.PlayerId, info.Progress)
-			}
+			//fmt.Println("================")
+			//for _, info := range rsp.Infos {
+			//	fmt.Println("加入房间进度", info.PlayerId, info.Progress)
+			//}
 		case protocol.PT_GAME_READY:
 			var req = &protocol.C2SGameFrame{}
 			req.FrameId = 0
@@ -88,18 +100,22 @@ func (this *ClientHandler) OnMessage(c net4go.Conn, p net4go.Packet) bool {
 				return false
 			}
 
-			fmt.Println("============ frame")
-			for _, frame := range rsp.Frames {
-				fmt.Println("frame id", frame.FrameId)
-				for _, data := range frame.Commands {
-					fmt.Println(data.PlayerId, data.PlayerMove, data.PlayerSkill)
-				}
-			}
+			//fmt.Println("============ frame")
+			//for _, frame := range rsp.Frames {
+			//	fmt.Println("frame id", frame.FrameId)
+			//	for _, data := range frame.Commands {
+			//		fmt.Println(data.PlayerId, data.PlayerMove, data.PlayerSkill)
+			//	}
+			//}
 
-			var req = &protocol.C2SGameFrame{}
-			req.FrameId = rsp.Frames[len(rsp.Frames)-1].FrameId + 1
-			req.PlayerMove = &protocol.PlayerMove{X: 10, Y: 11}
-			c.WritePacket(protocol.NewPacket(protocol.PT_GAME_FRAME, req))
+			//var req = &protocol.C2SGameFrame{}
+			//req.FrameId = rsp.Frames[len(rsp.Frames)-1].FrameId + 1
+			//req.PlayerMove = &protocol.PlayerMove{X: 10, Y: 11}
+			//c.WritePacket(protocol.NewPacket(protocol.PT_GAME_FRAME, req))
+			//
+			//if len(rsp.Frames[0].Commands) != 10 {
+			//	fmt.Println(time.Now(), len(rsp.Frames[0].Commands))
+			//}
 
 		case protocol.PT_HEARTBEAT:
 		}
