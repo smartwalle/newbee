@@ -100,6 +100,9 @@ type Room interface {
 	// GetPlayersWithType 获取指定类型的所有玩家信息
 	GetPlayersWithType(pType uint32) []Player
 
+	// GetPlayersWithGroup 获取指定组的所有玩家信息
+	GetPlayersWithGroup(group uint32) []Player
+
 	// GetOnlinePlayers 获取在线的玩家信息
 	GetOnlinePlayers() []Player
 
@@ -254,6 +257,18 @@ func (this *room) GetPlayersWithType(pType uint32) []Player {
 	var ps = make([]Player, 0, len(this.players))
 	for _, player := range this.players {
 		if player.GetType() == pType {
+			ps = append(ps, player)
+		}
+	}
+	this.mu.RUnlock()
+	return ps
+}
+
+func (this *room) GetPlayersWithGroup(group uint32) []Player {
+	this.mu.RLock()
+	var ps = make([]Player, 0, len(this.players))
+	for _, player := range this.players {
+		if player.GetGroup() == group {
 			ps = append(ps, player)
 		}
 	}
