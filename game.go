@@ -1,6 +1,9 @@
 package newbee
 
-import "github.com/smartwalle/net4go"
+import (
+	"github.com/smartwalle/net4go"
+	"time"
+)
 
 type GameState uint16
 
@@ -18,11 +21,17 @@ type Game interface {
 	// RunInRoom Room 的 RunGame 方法会调用此方法
 	RunInRoom(room Room)
 
-	// Frequency 返回游戏的帧率
-	Frequency() uint8
-
 	// State 游戏状态
 	State() GameState
+
+	// TickInterval 返回刷新时间间隔
+	TickInterval() time.Duration
+
+	// OnTick 定时器，Room 会定时调用，如果此方法返回 false，Room 将关闭
+	OnTick(now int64) bool
+
+	// OnMessage 处理客户端消息
+	OnMessage(player Player, packet net4go.Packet)
 
 	// OnJoinGame 有玩家加入会调用此方法
 	OnJoinGame(player Player)
@@ -32,10 +41,4 @@ type Game interface {
 
 	// OnCloseRoom 房间关闭的时候会调用此方法
 	OnCloseRoom(room Room)
-
-	// OnMessage 处理客户端消息
-	OnMessage(player Player, packet net4go.Packet)
-
-	// OnTick 定时器，Room 会定时调用，如果此方法返回 false，Room 将关闭
-	OnTick(now int64) bool
 }

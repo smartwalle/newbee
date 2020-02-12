@@ -471,12 +471,12 @@ RunFor:
 }
 
 func (this *room) tick(game Game) {
-	var f = game.Frequency()
-	if f == 0 {
+	var t = game.TickInterval()
+	if t == 0 {
 		return
 	}
 
-	var ticker = time.NewTicker(time.Second / time.Duration(f))
+	var ticker = time.NewTicker(t)
 TickFor:
 	for {
 		select {
