@@ -41,7 +41,6 @@ const (
 	kDefaultPlayerBuffer  = 10
 )
 
-// --------------------------------------------------------------------------------
 type roomOptions struct {
 	MessageBuffer int
 	PlayerBuffer  int
@@ -82,7 +81,6 @@ func WithPlayerBuffer(buffer int) RoomOption {
 	})
 }
 
-// --------------------------------------------------------------------------------
 type Room interface {
 	// GetId 获取房间 id
 	GetId() uint64
@@ -190,7 +188,6 @@ type Room interface {
 	Close() error
 }
 
-// --------------------------------------------------------------------------------
 type room struct {
 	id      uint64
 	token   string
@@ -219,7 +216,6 @@ func NewRoom(roomId uint64, token string, players []Player) Room {
 	return r
 }
 
-// --------------------------------------------------------------------------------
 func (this *room) GetId() uint64 {
 	return this.id
 }
@@ -326,7 +322,6 @@ func (this *room) GetReadyPlayersWithType(pType uint32) []Player {
 	return ps
 }
 
-// --------------------------------------------------------------------------------
 func (this *room) Connect(playerId uint64, c net4go.Conn) error {
 	if playerId == 0 {
 		return ErrPlayerNotExist
@@ -401,7 +396,6 @@ func (this *room) RemovePlayer(playerId uint64) {
 	}
 }
 
-// --------------------------------------------------------------------------------
 func (this *room) RunGame(game Game, opts ...RoomOption) error {
 	if game == nil {
 		return ErrNilGame
@@ -498,7 +492,6 @@ TickFor:
 	ticker.Stop()
 }
 
-// --------------------------------------------------------------------------------
 func (this *room) OnMessage(c net4go.Conn, p net4go.Packet) bool {
 	var value = c.Get(kPlayerId)
 	if value == nil {
@@ -537,7 +530,6 @@ func (this *room) OnClose(c net4go.Conn, err error) {
 	}
 }
 
-// --------------------------------------------------------------------------------
 func (this *room) SendMessage(playerId uint64, b []byte) {
 	var player = this.GetPlayer(playerId)
 	if player != nil {
@@ -588,7 +580,6 @@ func (this *room) BroadcastPacketWithType(pType uint32, p net4go.Packet) {
 	this.mu.RUnlock()
 }
 
-// --------------------------------------------------------------------------------
 func (this *room) CheckPlayerOnline(playerId uint64) bool {
 	this.mu.RLock()
 	player, ok := this.players[playerId]
@@ -776,7 +767,6 @@ func (this *room) Close() error {
 	return nil
 }
 
-// --------------------------------------------------------------------------------
 var messagePool = &sync.Pool{
 	New: func() interface{} {
 		return &message{}

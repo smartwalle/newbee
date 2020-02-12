@@ -46,7 +46,6 @@ func (this *RoomManager) GetRoom(roomId uint64) newbee.Room {
 	return r
 }
 
-// --------------------------------------------------------------------------------
 func (this *RoomManager) OnMessage(c net4go.Conn, p net4go.Packet) bool {
 	switch v := p.(type) {
 	case *protocol.Packet:
@@ -70,7 +69,6 @@ func (this *RoomManager) OnClose(c net4go.Conn, err error) {
 	fmt.Println("RoomManager OnClose", err)
 }
 
-// --------------------------------------------------------------------------------
 func (this *RoomManager) joinRoom(c net4go.Conn, req *protocol.C2SJoinRoom) bool {
 	fmt.Println(req.RoomId, req.PlayerId, req.Token)
 

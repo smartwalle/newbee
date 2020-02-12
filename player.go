@@ -6,7 +6,6 @@ import (
 	"time"
 )
 
-// --------------------------------------------------------------------------------
 type PlayerOption interface {
 	Apply(*player)
 }
@@ -41,7 +40,6 @@ func WithPlayerIndex(index uint32) PlayerOption {
 	})
 }
 
-// --------------------------------------------------------------------------------
 type Player interface {
 	// GetId 获取玩家 id
 	GetId() uint64
@@ -113,7 +111,6 @@ type Player interface {
 	Close() error
 }
 
-// --------------------------------------------------------------------------------
 type player struct {
 	id    uint64
 	pType uint32

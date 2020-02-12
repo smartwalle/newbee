@@ -88,7 +88,6 @@ func (JOIN_ROOM_CODE) EnumDescriptor() ([]byte, []int) {
 	return fileDescriptor_e7594dbd1bcb6139, []int{1}
 }
 
-// --------------------------------------------------------------------------------
 // 客户端 - 心跳请求参数
 type C2SHeartbeat struct {
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
@@ -153,7 +152,6 @@ func (m *S2CHeartbeat) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_S2CHeartbeat proto.InternalMessageInfo
 
-// --------------------------------------------------------------------------------
 // 客户端 - 加入房间请求参数
 type C2SJoinRoom struct {
 	RoomId               uint64   `protobuf:"varint,1,opt,name=roomId,proto3" json:"roomId,omitempty"`
@@ -377,7 +375,6 @@ func (m *LoadingProgressInfo) GetProgress() int32 {
 	return 0
 }
 
-// --------------------------------------------------------------------------------
 // 客户端 - 游戏加载完成，可以开始游戏
 type C2SGameReady struct {
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
@@ -442,7 +439,6 @@ func (m *S2CGameReady) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_S2CGameReady proto.InternalMessageInfo
 
-// --------------------------------------------------------------------------------
 // 客户端 - 游戏帧请求参数
 type C2SGameFrame struct {
 	FrameId              uint64       `protobuf:"varint,1,opt,name=FrameId,proto3" json:"FrameId,omitempty"`
