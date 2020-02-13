@@ -4,7 +4,6 @@ import (
 	"errors"
 	"github.com/smartwalle/net4go"
 	"sync"
-	"sync/atomic"
 	"time"
 )
 
@@ -191,7 +190,7 @@ type Room interface {
 type room struct {
 	id      uint64
 	token   string
-	state   uint32
+	state   RoomState
 	mu      sync.RWMutex
 	players map[uint64]Player
 
@@ -206,7 +205,7 @@ func NewRoom(roomId uint64, token string, players []Player) Room {
 	var r = &room{}
 	r.id = roomId
 	r.token = token
-	r.state = uint32(RoomStatePending)
+	r.state = RoomStatePending
 	r.players = make(map[uint64]Player)
 	for _, player := range players {
 		if player.GetId() != 0 {
@@ -225,8 +224,9 @@ func (this *room) GetToken() string {
 }
 
 func (this *room) GetState() RoomState {
-	var s = atomic.LoadUint32(&this.state)
-	return RoomState(s)
+	this.mu.Lock()
+	defer this.mu.Unlock()
+	return this.state
 }
 
 func (this *room) GetPlayer(playerId uint64) Player {
@@ -369,6 +369,10 @@ func (this *room) AddPlayer(player Player, c net4go.Conn) error {
 		return ErrPlayerNotExist
 	}
 
+	if this.GetState() == RoomStateClose {
+		return ErrRoomClosed
+	}
+
 	this.mu.Lock()
 
 	// 如果玩家已经存在，则返回错误信息
@@ -400,17 +404,14 @@ func (this *room) RunGame(game Game, opts ...RoomOption) error {
 	if game == nil {
 		return ErrNilGame
 	}
+	this.mu.Lock()
 
-	if RoomState(atomic.LoadUint32(&this.state)) == RoomStateClose {
+	if this.state == RoomStateClose {
 		return ErrRoomClosed
 	}
 
-	if RoomState(atomic.LoadUint32(&this.state)) == RoomStateRunning {
+	if this.state == RoomStateRunning {
 		return ErrRoomRunning
-	}
-
-	if atomic.CompareAndSwapUint32(&this.state, uint32(RoomStatePending), uint32(RoomStateRunning)) == false {
-		return ErrFailedToRun
 	}
 
 	var options = newRoomOptions()
@@ -421,6 +422,8 @@ func (this *room) RunGame(game Game, opts ...RoomOption) error {
 	this.playerInChan = make(chan net4go.Conn, options.PlayerBuffer)
 	this.playerOutChan = make(chan *message, options.PlayerBuffer)
 	this.closeChan = make(chan struct{})
+	this.state = RoomStateRunning
+	this.mu.Unlock()
 
 	game.RunInRoom(this)
 
@@ -742,13 +745,14 @@ func (this *room) GetReadyPlayersCountWithType(pType uint32) int {
 }
 
 func (this *room) Close() error {
-	var state = RoomState(atomic.LoadUint32(&this.state))
+	this.mu.Lock()
+	defer this.mu.Unlock()
 
-	if state == RoomStateClose {
+	if this.state == RoomStateClose {
 		return nil
 	}
 
-	if atomic.CompareAndSwapUint32(&this.state, uint32(RoomStateRunning), uint32(RoomStateClose)) {
+	if this.state == RoomStateRunning {
 		close(this.messageChan)
 		close(this.playerInChan)
 		close(this.playerOutChan)
@@ -757,6 +761,7 @@ func (this *room) Close() error {
 		this.messageChan = nil
 		this.playerInChan = nil
 		this.playerOutChan = nil
+		this.state = RoomStateClose
 	}
 
 	for _, p := range this.players {
