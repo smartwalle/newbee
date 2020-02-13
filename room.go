@@ -23,7 +23,7 @@ var (
 	ErrPlayerExists   = errors.New("newbee: player already exists")
 	ErrPlayerNotExist = errors.New("newbee: player not exist")
 	ErrNilPlayer      = errors.New("newbee: player is nil")
-	ErrFailedToRun    = errors.New("newbee: failed to run")
+	ErrFailedToRun    = errors.New("newbee: failed to run the room")
 	ErrBadConnection  = errors.New("newbee: bad connection")
 )
 

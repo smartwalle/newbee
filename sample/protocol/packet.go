@@ -1,62 +1,27 @@
 package protocol
 
-import (
-	"encoding/binary"
-	"github.com/golang/protobuf/proto"
+import "encoding/binary"
+
+type PacketType uint16
+
+const (
+	Heartbeat PacketType = iota + 1
 )
 
 type Packet struct {
-	pType uint32
-	data  []byte
+	Type    PacketType `json:"type"`
+	Message string     `json:"message"`
 }
 
 func (this *Packet) Marshal() ([]byte, error) {
-	var dataLen = len(this.data)
-	var data = make([]byte, 4+dataLen)
-	binary.BigEndian.PutUint32(data[:4], this.pType)
-	if dataLen > 0 {
-		copy(data[4:], this.data)
-	}
+	var data = make([]byte, 2+len(this.Message))
+	binary.BigEndian.PutUint16(data[0:2], uint16(this.Type))
+	copy(data[2:], []byte(this.Message))
 	return data, nil
 }
 
 func (this *Packet) Unmarshal(data []byte) error {
-	this.pType = binary.BigEndian.Uint32(data[:4])
-	this.data = data[4:]
+	this.Type = PacketType(binary.BigEndian.Uint16(data[:2]))
+	this.Message = string(data[2:])
 	return nil
-}
-
-func (this *Packet) GetType() PT {
-	return PT(this.pType)
-}
-
-func (this *Packet) GetData() []byte {
-	return this.data
-}
-
-func (this *Packet) UnmarshalProtoMessage(obj proto.Message) error {
-	return proto.Unmarshal(this.data, obj)
-}
-
-func NewPacket(pType PT, obj interface{}) *Packet {
-	var p = &Packet{}
-	p.pType = uint32(pType)
-
-	switch v := obj.(type) {
-	case []byte:
-		p.data = v
-	case proto.Message:
-		mData, err := proto.Marshal(v)
-		if err != nil {
-			// TODO 处理错误
-			return nil
-		}
-		p.data = mData
-	case nil:
-	default:
-		// TODO 处理类型不存在的错误
-		return nil
-	}
-
-	return p
 }
