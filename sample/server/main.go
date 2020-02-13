@@ -19,7 +19,7 @@ func main() {
 	var room = newbee.NewRoom(100, "xxx", nil)
 
 	var game = &Game{}
-	go room.RunGame(game)
+	go room.Run(game)
 
 	var mu = &sync.Mutex{}
 	var playerId uint64 = 0
@@ -85,11 +85,7 @@ func (this *Game) GetId() uint64 {
 	return this.id
 }
 
-func (this *Game) RunInRoom(room newbee.Room) {
-	this.room = room
-}
-
-func (this *Game) State() newbee.GameState {
+func (this *Game) GetState() newbee.GameState {
 	return this.state
 }
 
@@ -102,8 +98,8 @@ func (this *Game) OnTick(now int64) bool {
 	return true
 }
 
-func (this *Game) OnMessage(player newbee.Player, packet net4go.Packet) {
-	if p := packet.(*protocol.Packet); p != nil {
+func (this *Game) OnMessage(player newbee.Player, message interface{}) {
+	if p := message.(*protocol.Packet); p != nil {
 		switch p.Type {
 		case protocol.Heartbeat:
 			fmt.Println(player.GetId(), p.Message)
@@ -113,12 +109,16 @@ func (this *Game) OnMessage(player newbee.Player, packet net4go.Packet) {
 	}
 }
 
-func (this *Game) OnJoinGame(player newbee.Player) {
-	fmt.Println("OnJoinGame", player.GetId())
+func (this *Game) OnRunInRoom(room newbee.Room) {
+	this.room = room
 }
 
-func (this *Game) OnLeaveGame(player newbee.Player) {
-	fmt.Println("OnLeaveGame", player.GetId())
+func (this *Game) OnJoinRoom(player newbee.Player) {
+	fmt.Println("OnJoinRoom", player.GetId())
+}
+
+func (this *Game) OnLeaveRoom(player newbee.Player) {
+	fmt.Println("OnLeaveRoom", player.GetId())
 }
 
 func (this *Game) OnCloseRoom(room newbee.Room) {

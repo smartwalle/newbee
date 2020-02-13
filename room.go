@@ -32,7 +32,7 @@ type RoomState uint32
 const (
 	RoomStateClose   RoomState = iota // 房间已关闭
 	RoomStatePending                  // 等待游戏运行
-	RoomStateRunning                  // 有游戏在运行(和游戏的状态无关，调用 Room 的 RunGame() 方法成功之后，就会将 Room 的状态调整为此状态)
+	RoomStateRunning                  // 有游戏在运行(和游戏的状态无关，调用 Room 的 Run() 方法成功之后，就会将 Room 的状态调整为此状态)
 )
 
 const (
@@ -126,8 +126,8 @@ type Room interface {
 	// RemovePlayer 将玩家从房间中移除，只会清除玩家信息，不会断开玩家的网络连接
 	RemovePlayer(playerId uint64)
 
-	// RunGame 启动游戏
-	RunGame(game Game, opts ...RoomOption) error
+	// Run 启动
+	Run(game Game, opts ...RoomOption) error
 
 	// SendMessage 向指定玩家发送消息
 	SendMessage(playerId uint64, b []byte)
@@ -400,7 +400,7 @@ func (this *room) RemovePlayer(playerId uint64) {
 	}
 }
 
-func (this *room) RunGame(game Game, opts ...RoomOption) error {
+func (this *room) Run(game Game, opts ...RoomOption) error {
 	if game == nil {
 		return ErrNilGame
 	}
@@ -425,7 +425,7 @@ func (this *room) RunGame(game Game, opts ...RoomOption) error {
 	this.state = RoomStateRunning
 	this.mu.Unlock()
 
-	game.RunInRoom(this)
+	game.OnRunInRoom(this)
 
 	go this.tick(game)
 
@@ -451,7 +451,7 @@ RunFor:
 				var player = this.GetPlayer(playerId)
 				if player != nil {
 					player.Online(c)
-					game.OnJoinGame(player)
+					game.OnJoinRoom(player)
 				}
 			}
 		case m, ok := <-this.playerOutChan:
@@ -460,7 +460,7 @@ RunFor:
 			}
 			var player = this.GetPlayer(m.PlayerId)
 			if player != nil {
-				game.OnLeaveGame(player)
+				game.OnLeaveRoom(player)
 				player.Close()
 			}
 			releaseMessage(m)
