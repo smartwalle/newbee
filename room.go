@@ -395,6 +395,7 @@ func (this *room) RemovePlayer(playerId uint64) {
 	var player = this.GetPlayer(playerId)
 	if player != nil {
 		this.mu.Lock()
+		player.Conn().UpdateHandler(nil)
 		delete(this.players, player.GetId())
 		this.mu.Unlock()
 	}
