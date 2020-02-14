@@ -5,6 +5,7 @@ import (
 	"github.com/gorilla/websocket"
 	"github.com/smartwalle/net4go"
 	"github.com/smartwalle/newbee/sample/protocol"
+	"os"
 	"time"
 )
 
@@ -28,7 +29,7 @@ func main() {
 
 				nConn.AsyncWritePacket(p, 0)
 
-				time.Sleep(time.Second * 1)
+				time.Sleep(time.Millisecond * 10)
 			}
 		}(nConn)
 	}
@@ -51,4 +52,5 @@ func (this *WSHandler) OnMessage(c net4go.Conn, packet net4go.Packet) bool {
 
 func (this *WSHandler) OnClose(c net4go.Conn, err error) {
 	fmt.Println("OnClose", err)
+	os.Exit(-1)
 }

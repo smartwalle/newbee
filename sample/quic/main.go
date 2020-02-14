@@ -1,31 +1,33 @@
 package main
 
 import (
+	"crypto/tls"
 	"fmt"
 	"github.com/smartwalle/net4go"
 	"github.com/smartwalle/newbee/sample/protocol"
-	"net"
 	"os"
 	"time"
 )
 
 func main() {
 	var p = &protocol.TCPProtocol{}
-	var h = &TCPHandler{}
+	var h = &QUICHandler{}
 
 	for i := 0; i < 100; i++ {
-		c, err := net.Dial("tcp", "127.0.0.1:8899")
+		c, err := net4go.DialQUIC("127.0.0.1:8898", &tls.Config{InsecureSkipVerify: true,
+			NextProtos: []string{"newbee"}}, nil)
 		if err != nil {
 			fmt.Println(err)
 			return
 		}
 
 		nConn := net4go.NewConn(c, p, h)
+
 		go func(nConn net4go.Conn) {
 			for {
 				var p = &protocol.Packet{}
 				p.Type = protocol.Heartbeat
-				p.Message = "来自 TCP 的消息"
+				p.Message = "来自 QUIC 的消息"
 
 				nConn.AsyncWritePacket(p, 0)
 
@@ -37,10 +39,10 @@ func main() {
 	select {}
 }
 
-type TCPHandler struct {
+type QUICHandler struct {
 }
 
-func (this *TCPHandler) OnMessage(c net4go.Conn, packet net4go.Packet) bool {
+func (this *QUICHandler) OnMessage(c net4go.Conn, packet net4go.Packet) bool {
 	if p := packet.(*protocol.Packet); p != nil {
 		switch p.Type {
 		case protocol.Heartbeat:
@@ -50,7 +52,7 @@ func (this *TCPHandler) OnMessage(c net4go.Conn, packet net4go.Packet) bool {
 	return true
 }
 
-func (this *TCPHandler) OnClose(c net4go.Conn, err error) {
+func (this *QUICHandler) OnClose(c net4go.Conn, err error) {
 	fmt.Println("OnClose", err)
 	os.Exit(-1)
 }
