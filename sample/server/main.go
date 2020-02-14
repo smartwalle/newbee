@@ -98,8 +98,8 @@ func (this *Game) OnTick(now int64) bool {
 	return true
 }
 
-func (this *Game) OnMessage(player newbee.Player, message interface{}) {
-	if p := message.(*protocol.Packet); p != nil {
+func (this *Game) OnMessage(player newbee.Player, packet net4go.Packet) {
+	if p := packet.(*protocol.Packet); p != nil {
 		switch p.Type {
 		case protocol.Heartbeat:
 			fmt.Println(player.GetId(), p.Message)

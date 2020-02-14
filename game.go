@@ -1,6 +1,7 @@
 package newbee
 
 import (
+	"github.com/smartwalle/net4go"
 	"time"
 )
 
@@ -27,7 +28,7 @@ type Game interface {
 	OnTick(now int64) bool
 
 	// OnMessage 处理客户端消息
-	OnMessage(player Player, message interface{})
+	OnMessage(player Player, packet net4go.Packet)
 
 	// OnRunInRoom Room Run 成功之后会调用此方法
 	OnRunInRoom(room Room)
