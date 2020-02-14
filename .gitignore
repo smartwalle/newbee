@@ -17,6 +17,6 @@
 # vendor/
 
 .idea
-.DS_Strore
+.DS_Store
 *.iml
 go.sum
