@@ -21,7 +21,7 @@ type Game interface {
 	// GetState 游戏状态
 	GetState() GameState
 
-	// TickInterval 返回刷新时间间隔，Room 将按照该时间间隔调用 OnTick() 方法，返回 0 的时候，将禁用定时刷新
+	// TickInterval 返回刷新时间间隔，Room 将按照该时间间隔调用 OnTick() 方法，返回小于等于 0 的时候，将禁用定时刷新
 	TickInterval() time.Duration
 
 	// OnTick 定时器，Room 会定时调用，如果此方法返回 false，Room 将关闭
