@@ -475,7 +475,7 @@ RunFor:
 
 func (this *room) tick(game Game) {
 	var t = game.TickInterval()
-	if t == 0 {
+	if t <= 0 {
 		return
 	}
 
