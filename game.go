@@ -33,10 +33,10 @@ type Game interface {
 	// OnRunInRoom Room Run 成功之后会调用此方法
 	OnRunInRoom(room Room)
 
-	// OnJoinRoom 有玩家加入会调用此方法
+	// OnJoinRoom 玩家建立网络连接会调用此方法
 	OnJoinRoom(player Player)
 
-	// OnLeaveRoom 有玩家离开会调用此方法
+	// OnLeaveRoom 玩家断开网络连接会调用此方法
 	OnLeaveRoom(player Player)
 
 	// OnCloseRoom 房间关闭的时候会调用此方法

@@ -94,13 +94,13 @@ type Room interface {
 	// Connect 将玩家和连接进行绑定
 	Connect(playerId uint64, conn net4go.Conn) error
 
-	// Disconnect 断开玩家的网络连接，但是不会主动将玩家的信息从房间中清除
+	// Disconnect 断开玩家的网络连接, 作用与 RemovePlayer 一致
 	Disconnect(playerId uint64)
 
 	// AddPlayer 加入新的玩家，如果玩家已经存在或者 player 参数为空，会返回相应的错误，如果连接不为空，则将该玩家和连接进行绑定
 	AddPlayer(player Player, conn net4go.Conn) error
 
-	// RemovePlayer 将玩家从房间中移除，只会清除玩家信息，不会断开玩家的网络连接
+	// RemovePlayer 移除玩家，如果玩家有网络连接，则会断开网络连接
 	RemovePlayer(playerId uint64)
 
 	// Run 启动
@@ -227,13 +227,14 @@ func (this *room) Connect(playerId uint64, c net4go.Conn) error {
 }
 
 func (this *room) Disconnect(playerId uint64) {
-	this.mu.Lock()
-	var player = this.players[playerId]
-	this.mu.Unlock()
-
-	if player != nil {
-		player.Conn().Close()
-	}
+	//this.mu.Lock()
+	//var player = this.players[playerId]
+	//this.mu.Unlock()
+	//
+	//if player != nil {
+	//	player.Conn().Close()
+	//}
+	this.RemovePlayer(playerId)
 }
 
 func (this *room) AddPlayer(player Player, c net4go.Conn) error {
@@ -270,13 +271,14 @@ func (this *room) AddPlayer(player Player, c net4go.Conn) error {
 func (this *room) RemovePlayer(playerId uint64) {
 	var player = this.GetPlayer(playerId)
 	if player != nil {
-		this.mu.Lock()
 		var conn = player.Conn()
-		if conn != nil {
-			conn.UpdateHandler(nil)
+		if conn != nil && !conn.IsClosed() {
+			player.Close()
+		} else {
+			this.mu.Lock()
+			delete(this.players, player.GetId())
+			this.mu.Unlock()
 		}
-		delete(this.players, player.GetId())
-		this.mu.Unlock()
 	}
 }
 
@@ -340,6 +342,10 @@ RunFor:
 			}
 			var player = this.GetPlayer(m.PlayerId)
 			if player != nil {
+				this.mu.Lock()
+				delete(this.players, player.GetId())
+				this.mu.Unlock()
+
 				game.OnLeaveRoom(player)
 				player.Close()
 			}
@@ -405,6 +411,8 @@ func (this *room) OnClose(c net4go.Conn, err error) {
 	if playerId == 0 {
 		return
 	}
+
+	c.UpdateHandler(nil)
 
 	var m = newMessage(playerId, nil)
 	select {
