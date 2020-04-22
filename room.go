@@ -311,12 +311,12 @@ func (this *room) Run(game Game, opts ...RoomOption) error {
 
 	go this.tick(game)
 
-RunFor:
+RunLoop:
 	for {
 		select {
 		case m, ok := <-this.messageChan:
 			if ok == false {
-				break RunFor
+				break RunLoop
 			}
 			var player = this.GetPlayer(m.PlayerId)
 			if player != nil {
@@ -325,7 +325,7 @@ RunFor:
 			releaseMessage(m)
 		case c, ok := <-this.playerInChan:
 			if ok == false {
-				break RunFor
+				break RunLoop
 			}
 			var value = c.Get(kPlayerId)
 			if value != nil {
@@ -338,7 +338,7 @@ RunFor:
 			}
 		case m, ok := <-this.playerOutChan:
 			if ok == false {
-				break RunFor
+				break RunLoop
 			}
 			var player = this.GetPlayer(m.PlayerId)
 			if player != nil {
@@ -351,7 +351,7 @@ RunFor:
 			}
 			releaseMessage(m)
 		case <-this.closeChan:
-			break RunFor
+			break RunLoop
 		}
 	}
 	game.OnCloseRoom(this)
@@ -366,16 +366,16 @@ func (this *room) tick(game Game) {
 	}
 
 	var ticker = time.NewTicker(t)
-TickFor:
+TickLoop:
 	for {
 		select {
 		case <-ticker.C:
 			if game.OnTick(time.Now().Unix()) == false {
 				this.Close()
-				break TickFor
+				break TickLoop
 			}
 		case <-this.closeChan:
-			break TickFor
+			break TickLoop
 		}
 	}
 	ticker.Stop()
