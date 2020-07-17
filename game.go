@@ -30,7 +30,7 @@ type Game interface {
 	// OnMessage 处理客户端消息
 	OnMessage(player Player, packet net4go.Packet)
 
-	// OnRunInRoom Room Run 成功之后会调用此方法
+	// OnRunInRoom Room 启动成功之后会调用此方法
 	OnRunInRoom(room Room)
 
 	// OnJoinRoom 玩家建立网络连接会调用此方法
