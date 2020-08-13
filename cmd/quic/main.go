@@ -4,6 +4,7 @@ import (
 	"crypto/tls"
 	"fmt"
 	"github.com/smartwalle/net4go"
+	"github.com/smartwalle/net4go/quic"
 	"github.com/smartwalle/newbee/cmd/protocol"
 	"os"
 	"time"
@@ -14,7 +15,7 @@ func main() {
 	var h = &QUICHandler{}
 
 	for i := 0; i < 100; i++ {
-		c, err := net4go.DialQUIC("127.0.0.1:8898", &tls.Config{InsecureSkipVerify: true,
+		c, err := quic.Dial("127.0.0.1:8898", &tls.Config{InsecureSkipVerify: true,
 			NextProtos: []string{"newbee"}}, nil)
 		if err != nil {
 			fmt.Println(err)

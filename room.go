@@ -220,8 +220,11 @@ func (this *room) Connect(playerId uint64, c net4go.Conn) error {
 	c.UpdateHandler(this)
 
 	select {
-	case this.playerInChan <- c:
+	case <-this.closeChan:
 	default:
+		select {
+		case this.playerInChan <- c:
+		}
 	}
 	return nil
 }
@@ -314,44 +317,47 @@ func (this *room) Run(game Game, opts ...RoomOption) error {
 RunLoop:
 	for {
 		select {
-		case m, ok := <-this.messageChan:
-			if ok == false {
-				break RunLoop
-			}
-			var player = this.GetPlayer(m.PlayerId)
-			if player != nil {
-				game.OnMessage(player, m.Packet)
-			}
-			releaseMessage(m)
-		case c, ok := <-this.playerInChan:
-			if ok == false {
-				break RunLoop
-			}
-			var value = c.Get(kPlayerId)
-			if value != nil {
-				var playerId = value.(uint64)
-				var player = this.GetPlayer(playerId)
-				if player != nil {
-					player.Connect(c)
-					game.OnJoinRoom(player)
-				}
-			}
-		case m, ok := <-this.playerOutChan:
-			if ok == false {
-				break RunLoop
-			}
-			var player = this.GetPlayer(m.PlayerId)
-			if player != nil {
-				this.mu.Lock()
-				delete(this.players, player.GetId())
-				this.mu.Unlock()
-
-				game.OnLeaveRoom(player)
-				player.Close()
-			}
-			releaseMessage(m)
 		case <-this.closeChan:
 			break RunLoop
+		default:
+			select {
+			case m, ok := <-this.messageChan:
+				if ok == false {
+					break RunLoop
+				}
+				var player = this.GetPlayer(m.PlayerId)
+				if player != nil {
+					game.OnMessage(player, m.Packet)
+				}
+				releaseMessage(m)
+			case c, ok := <-this.playerInChan:
+				if ok == false {
+					break RunLoop
+				}
+				var value = c.Get(kPlayerId)
+				if value != nil {
+					var playerId = value.(uint64)
+					var player = this.GetPlayer(playerId)
+					if player != nil {
+						player.Connect(c)
+						game.OnJoinRoom(player)
+					}
+				}
+			case m, ok := <-this.playerOutChan:
+				if ok == false {
+					break RunLoop
+				}
+				var player = this.GetPlayer(m.PlayerId)
+				if player != nil {
+					this.mu.Lock()
+					delete(this.players, player.GetId())
+					this.mu.Unlock()
+
+					game.OnLeaveRoom(player)
+					player.Close()
+				}
+				releaseMessage(m)
+			}
 		}
 	}
 	game.OnCloseRoom(this)
@@ -369,13 +375,16 @@ func (this *room) tick(game Game) {
 TickLoop:
 	for {
 		select {
-		case <-ticker.C:
-			if game.OnTick(time.Now().Unix()) == false {
-				this.Close()
-				break TickLoop
-			}
 		case <-this.closeChan:
 			break TickLoop
+		default:
+			select {
+			case <-ticker.C:
+				if game.OnTick(time.Now().Unix()) == false {
+					this.Close()
+					break TickLoop
+				}
+			}
 		}
 	}
 	ticker.Stop()
@@ -392,13 +401,17 @@ func (this *room) OnMessage(c net4go.Conn, p net4go.Packet) bool {
 		return false
 	}
 
-	var m = newMessage(playerId, p)
 	select {
-	case this.messageChan <- m:
+	case <-this.closeChan:
+		return false
 	default:
+		var m = newMessage(playerId, p)
+		select {
+		case this.messageChan <- m:
+			return true
+		}
 	}
-
-	return true
+	return false
 }
 
 func (this *room) OnClose(c net4go.Conn, err error) {
@@ -414,10 +427,13 @@ func (this *room) OnClose(c net4go.Conn, err error) {
 
 	c.UpdateHandler(nil)
 
-	var m = newMessage(playerId, nil)
 	select {
-	case this.playerOutChan <- m:
+	case <-this.closeChan:
 	default:
+		var m = newMessage(playerId, nil)
+		select {
+		case this.playerOutChan <- m:
+		}
 	}
 }
 
@@ -480,21 +496,19 @@ func (this *room) Close() error {
 	}
 
 	if this.state == RoomStateRunning {
+		close(this.closeChan)
+
 		close(this.messageChan)
 		close(this.playerInChan)
 		close(this.playerOutChan)
-		close(this.closeChan)
 
-		this.messageChan = nil
-		this.playerInChan = nil
-		this.playerOutChan = nil
 		this.state = RoomStateClose
 	}
 
-	for _, p := range this.players {
+	for k, p := range this.players {
 		p.Close()
+		delete(this.players, k)
 	}
-	this.players = make(map[uint64]Player)
 
 	return nil
 }
