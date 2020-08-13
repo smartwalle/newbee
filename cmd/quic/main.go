@@ -4,7 +4,7 @@ import (
 	"crypto/tls"
 	"fmt"
 	"github.com/smartwalle/net4go"
-	"github.com/smartwalle/newbee/sample/protocol"
+	"github.com/smartwalle/newbee/cmd/protocol"
 	"os"
 	"time"
 )

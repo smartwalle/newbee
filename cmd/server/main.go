@@ -9,8 +9,10 @@ import (
 	"fmt"
 	"github.com/gorilla/websocket"
 	"github.com/smartwalle/net4go"
+	"github.com/smartwalle/net4go/quic"
+	"github.com/smartwalle/net4go/ws"
 	"github.com/smartwalle/newbee"
-	"github.com/smartwalle/newbee/sample/protocol"
+	"github.com/smartwalle/newbee/cmd/protocol"
 	"math/big"
 	"net"
 	"net/http"
@@ -44,7 +46,7 @@ func main() {
 			if err != nil {
 				return
 			}
-			nConn := net4go.NewWsConn(c, wsp, nil)
+			nConn := ws.NewConn(c, wsp, nil)
 
 			mu.Lock()
 			playerId = playerId + 1
@@ -80,7 +82,7 @@ func main() {
 
 	// quic
 	go func() {
-		l, err := net4go.ListenQUIC("127.0.0.1:8898", generateTLSConfig(), nil)
+		l, err := quic.Listen("127.0.0.1:8898", generateTLSConfig(), nil)
 		if err != nil {
 			fmt.Println(err)
 			return

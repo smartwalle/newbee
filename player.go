@@ -113,7 +113,7 @@ func (this *player) Disconnect() {
 }
 
 func (this *player) Connected() bool {
-	return this.conn != nil && this.conn.IsClosed() == false
+	return this.conn != nil && this.conn.Closed() == false
 }
 
 func (this *player) SendMessage(b []byte) {

@@ -4,7 +4,8 @@ import (
 	"fmt"
 	"github.com/gorilla/websocket"
 	"github.com/smartwalle/net4go"
-	"github.com/smartwalle/newbee/sample/protocol"
+	"github.com/smartwalle/net4go/ws"
+	"github.com/smartwalle/newbee/cmd/protocol"
 	"os"
 	"time"
 )
@@ -20,7 +21,7 @@ func main() {
 			return
 		}
 
-		nConn := net4go.NewWsConn(c, p, h)
+		nConn := ws.NewConn(c, p, h)
 		go func(nConn net4go.Conn) {
 			for {
 				var p = &protocol.Packet{}

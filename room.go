@@ -212,7 +212,7 @@ func (this *room) Connect(playerId uint64, c net4go.Conn) error {
 		return ErrPlayerNotExist
 	}
 
-	if c == nil || c.IsClosed() {
+	if c == nil || c.Closed() {
 		return ErrBadConnection
 	}
 
@@ -272,7 +272,7 @@ func (this *room) RemovePlayer(playerId uint64) {
 	var player = this.GetPlayer(playerId)
 	if player != nil {
 		var conn = player.Conn()
-		if conn != nil && !conn.IsClosed() {
+		if conn != nil && !conn.Closed() {
 			player.Close()
 		} else {
 			this.mu.Lock()

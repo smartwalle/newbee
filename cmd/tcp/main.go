@@ -3,7 +3,7 @@ package main
 import (
 	"fmt"
 	"github.com/smartwalle/net4go"
-	"github.com/smartwalle/newbee/sample/protocol"
+	"github.com/smartwalle/newbee/cmd/protocol"
 	"net"
 	"os"
 	"time"
