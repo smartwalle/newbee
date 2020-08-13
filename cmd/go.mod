@@ -7,7 +7,5 @@ require (
 	github.com/smartwalle/net4go v0.0.33
 	github.com/smartwalle/net4go/ws v0.0.3
 	github.com/smartwalle/net4go/quic v0.0.3
-	github.com/smartwalle/newbee v0.0.22
+	github.com/smartwalle/newbee v0.0.23
 )
-
-replace github.com/smartwalle/newbee => ../
