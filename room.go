@@ -292,10 +292,12 @@ func (this *room) Run(game Game, opts ...RoomOption) error {
 	this.mu.Lock()
 
 	if this.state == RoomStateClose {
+		this.mu.Unlock()
 		return ErrRoomClosed
 	}
 
 	if this.state == RoomStateRunning {
+		this.mu.Unlock()
 		return ErrRoomRunning
 	}
 
