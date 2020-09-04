@@ -142,17 +142,12 @@ type room struct {
 	closeChan chan struct{}
 }
 
-func NewRoom(roomId uint64, token string, players []Player) Room {
+func NewRoom(id uint64, token string) Room {
 	var r = &room{}
-	r.id = roomId
+	r.id = id
 	r.token = token
 	r.state = RoomStatePending
 	r.players = make(map[uint64]Player)
-	for _, player := range players {
-		if player.GetId() != 0 {
-			r.players[player.GetId()] = player
-		}
-	}
 	return r
 }
 
