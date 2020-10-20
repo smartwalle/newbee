@@ -376,6 +376,8 @@ TickLoop:
 			break TickLoop
 		default:
 			select {
+			case <-this.closeChan:
+				break TickLoop
 			case <-ticker.C:
 				if game.OnTick(time.Now().Unix()) == false {
 					this.Close()
@@ -384,7 +386,6 @@ TickLoop:
 			}
 		}
 	}
-	ticker.Stop()
 }
 
 func (this *room) OnMessage(c net4go.Conn, p net4go.Packet) bool {

@@ -13,14 +13,14 @@ type Packet struct {
 	Message string     `json:"message"`
 }
 
-func (this *Packet) Marshal() ([]byte, error) {
+func (this *Packet) MarshalPacket() ([]byte, error) {
 	var data = make([]byte, 2+len(this.Message))
 	binary.BigEndian.PutUint16(data[0:2], uint16(this.Type))
 	copy(data[2:], []byte(this.Message))
 	return data, nil
 }
 
-func (this *Packet) Unmarshal(data []byte) error {
+func (this *Packet) UnmarshalPacket(data []byte) error {
 	this.Type = PacketType(binary.BigEndian.Uint16(data[:2]))
 	this.Message = string(data[2:])
 	return nil

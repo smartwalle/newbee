@@ -9,7 +9,6 @@ import (
 	"fmt"
 	"github.com/gorilla/websocket"
 	"github.com/smartwalle/net4go"
-	"github.com/smartwalle/net4go/quic"
 	"github.com/smartwalle/net4go/ws"
 	"github.com/smartwalle/newbee"
 	"github.com/smartwalle/newbee/cmd/protocol"
@@ -24,7 +23,7 @@ func main() {
 	var tcpp = &protocol.TCPProtocol{}
 	var wsp = &protocol.WSProtocol{}
 
-	var room = newbee.NewRoom(100, "xxx", nil)
+	var room = newbee.NewRoom(100, "xxx")
 
 	var game = &Game{}
 	go room.Run(game)
@@ -81,28 +80,28 @@ func main() {
 	}()
 
 	// quic
-	go func() {
-		l, err := quic.Listen("127.0.0.1:8898", generateTLSConfig(), nil)
-		if err != nil {
-			fmt.Println(err)
-			return
-		}
-
-		for {
-			c, err := l.Accept()
-			if err != nil {
-				fmt.Println(err)
-				continue
-			}
-
-			nConn := net4go.NewConn(c, tcpp, nil)
-
-			mu.Lock()
-			playerId = playerId + 1
-			room.AddPlayer(newbee.NewPlayer(playerId), nConn)
-			mu.Unlock()
-		}
-	}()
+	//go func() {
+	//	l, err := quic.Listen("127.0.0.1:8898", generateTLSConfig(), nil)
+	//	if err != nil {
+	//		fmt.Println(err)
+	//		return
+	//	}
+	//
+	//	for {
+	//		c, err := l.Accept()
+	//		if err != nil {
+	//			fmt.Println(err)
+	//			continue
+	//		}
+	//
+	//		nConn := net4go.NewConn(c, tcpp, nil)
+	//
+	//		mu.Lock()
+	//		playerId = playerId + 1
+	//		room.AddPlayer(newbee.NewPlayer(playerId), nConn)
+	//		mu.Unlock()
+	//	}
+	//}()
 
 	select {}
 }
@@ -145,7 +144,7 @@ func (this *Game) GetState() newbee.GameState {
 }
 
 func (this *Game) TickInterval() time.Duration {
-	return 0
+	return time.Second * 5
 }
 
 func (this *Game) OnTick(now int64) bool {
