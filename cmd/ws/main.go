@@ -21,7 +21,7 @@ func main() {
 			return
 		}
 
-		nConn := ws.NewConn(c, p, h)
+		nConn := ws.NewConn(c, ws.Text, p, h)
 		go func(nConn net4go.Conn) {
 			for {
 				var p = &protocol.Packet{}

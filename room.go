@@ -219,6 +219,7 @@ func (this *room) Connect(playerId uint64, c net4go.Conn) error {
 	default:
 		select {
 		case this.playerInChan <- c:
+		case <-time.After(time.Second * 5):
 		}
 	}
 	return nil
@@ -318,6 +319,8 @@ RunLoop:
 			break RunLoop
 		default:
 			select {
+			case <-this.closeChan:
+				break RunLoop
 			case m, ok := <-this.messageChan:
 				if ok == false {
 					break RunLoop
@@ -407,6 +410,8 @@ func (this *room) OnMessage(c net4go.Conn, p net4go.Packet) bool {
 		select {
 		case this.messageChan <- m:
 			return true
+		case <-time.After(time.Second * 5):
+			return false
 		}
 	}
 	return false
@@ -431,6 +436,7 @@ func (this *room) OnClose(c net4go.Conn, err error) {
 		var m = newMessage(playerId, nil)
 		select {
 		case this.playerOutChan <- m:
+		case <-time.After(time.Second * 5):
 		}
 	}
 }
@@ -499,6 +505,10 @@ func (this *room) Close() error {
 		close(this.messageChan)
 		close(this.playerInChan)
 		close(this.playerOutChan)
+
+		this.messageChan = nil
+		this.playerInChan = nil
+		this.playerOutChan = nil
 
 		this.state = RoomStateClose
 	}

@@ -45,7 +45,7 @@ func main() {
 			if err != nil {
 				return
 			}
-			nConn := ws.NewConn(c, wsp, nil)
+			nConn := ws.NewConn(c, ws.Text, wsp, nil)
 
 			mu.Lock()
 			playerId = playerId + 1
@@ -169,6 +169,8 @@ func (this *Game) OnRunInRoom(room newbee.Room) {
 
 func (this *Game) OnJoinRoom(player newbee.Player) {
 	fmt.Println("OnJoinRoom", player.GetId())
+
+	this.room.Close()
 }
 
 func (this *Game) OnLeaveRoom(player newbee.Player) {
