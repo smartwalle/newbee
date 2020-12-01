@@ -43,12 +43,14 @@ const (
 type roomOptions struct {
 	MessageBuffer int
 	PlayerBuffer  int
+	Token         string
 }
 
 func newRoomOptions() *roomOptions {
 	var o = &roomOptions{}
 	o.MessageBuffer = kDefaultMessageBuffer
 	o.PlayerBuffer = kDefaultPlayerBuffer
+	o.Token = ""
 	return o
 }
 
@@ -69,6 +71,12 @@ func WithPlayerBuffer(buffer int) RoomOption {
 			buffer = kDefaultPlayerBuffer
 		}
 		o.PlayerBuffer = buffer
+	}
+}
+
+func WithToken(token string) RoomOption {
+	return func(o *roomOptions) {
+		o.Token = token
 	}
 }
 
@@ -104,7 +112,7 @@ type Room interface {
 	RemovePlayer(playerId uint64)
 
 	// Run 启动
-	Run(game Game, opts ...RoomOption) error
+	Run(game Game) error
 
 	// SendMessage 向指定玩家发送消息
 	SendMessage(playerId uint64, b []byte)
@@ -142,12 +150,21 @@ type room struct {
 	closeChan chan struct{}
 }
 
-func NewRoom(id uint64, token string) Room {
+func NewRoom(id uint64, opts ...RoomOption) Room {
 	var r = &room{}
 	r.id = id
-	r.token = token
 	r.state = RoomStatePending
 	r.players = make(map[uint64]Player)
+
+	var options = newRoomOptions()
+	for _, opt := range opts {
+		opt(options)
+	}
+	r.token = options.Token
+	r.messageChan = make(chan *message, options.MessageBuffer)
+	r.playerInChan = make(chan net4go.Conn, options.PlayerBuffer)
+	r.playerOutChan = make(chan *message, options.PlayerBuffer)
+
 	return r
 }
 
@@ -281,7 +298,7 @@ func (this *room) RemovePlayer(playerId uint64) {
 	}
 }
 
-func (this *room) Run(game Game, opts ...RoomOption) error {
+func (this *room) Run(game Game) error {
 	if game == nil {
 		return ErrNilGame
 	}
@@ -297,13 +314,6 @@ func (this *room) Run(game Game, opts ...RoomOption) error {
 		return ErrRoomRunning
 	}
 
-	var options = newRoomOptions()
-	for _, opt := range opts {
-		opt(options)
-	}
-	this.messageChan = make(chan *message, options.MessageBuffer)
-	this.playerInChan = make(chan net4go.Conn, options.PlayerBuffer)
-	this.playerOutChan = make(chan *message, options.PlayerBuffer)
 	this.closeChan = make(chan struct{})
 	this.state = RoomStateRunning
 	this.mu.Unlock()
