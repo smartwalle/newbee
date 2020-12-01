@@ -164,6 +164,7 @@ func NewRoom(id uint64, opts ...RoomOption) Room {
 	r.messageChan = make(chan *message, options.MessageBuffer)
 	r.playerInChan = make(chan net4go.Conn, options.PlayerBuffer)
 	r.playerOutChan = make(chan *message, options.PlayerBuffer)
+	r.closeChan = make(chan struct{})
 
 	return r
 }
@@ -314,7 +315,6 @@ func (this *room) Run(game Game) error {
 		return ErrRoomRunning
 	}
 
-	this.closeChan = make(chan struct{})
 	this.state = RoomStateRunning
 	this.mu.Unlock()
 
