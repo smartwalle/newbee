@@ -23,7 +23,7 @@ func main() {
 	var tcpp = &protocol.TCPProtocol{}
 	var wsp = &protocol.WSProtocol{}
 
-	var room = newbee.NewRoom(100, "xxx")
+	var room = newbee.NewRoom(100)
 
 	var game = &Game{}
 	go room.Run(game)
@@ -169,8 +169,6 @@ func (this *Game) OnRunInRoom(room newbee.Room) {
 
 func (this *Game) OnJoinRoom(player newbee.Player) {
 	fmt.Println("OnJoinRoom", player.GetId())
-
-	this.room.Close()
 }
 
 func (this *Game) OnLeaveRoom(player newbee.Player) {

@@ -36,7 +36,7 @@ const (
 )
 
 const (
-	kDefaultMessageBuffer = 1024
+	kDefaultMessageBuffer = 32
 	kDefaultPlayerBuffer  = 10
 )
 
@@ -509,19 +509,17 @@ func (this *room) Close() error {
 		return nil
 	}
 
-	if this.state == RoomStateRunning {
-		close(this.closeChan)
+	close(this.closeChan)
 
-		close(this.messageChan)
-		close(this.playerInChan)
-		close(this.playerOutChan)
+	close(this.messageChan)
+	close(this.playerInChan)
+	close(this.playerOutChan)
 
-		this.messageChan = nil
-		this.playerInChan = nil
-		this.playerOutChan = nil
+	this.messageChan = nil
+	this.playerInChan = nil
+	this.playerOutChan = nil
 
-		this.state = RoomStateClose
-	}
+	this.state = RoomStateClose
 
 	for k, p := range this.players {
 		p.Close()
