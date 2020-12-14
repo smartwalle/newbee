@@ -12,9 +12,19 @@ const (
 )
 
 type message struct {
+	Type     messageType
 	PlayerId uint64
 	Packet   net4go.Packet
+	Conn     net4go.Conn
 }
+
+type messageType int
+
+const (
+	messageTypeDefault   messageType = 0
+	messageTypePlayerIn  messageType = 1
+	messageTypePlayerOut messageType = 2
+)
 
 var (
 	ErrRoomClosed     = errors.New("newbee: room is closed")
@@ -144,7 +154,7 @@ type room struct {
 	players map[uint64]Player
 
 	messageChan   chan *message
-	playerInChan  chan net4go.Conn
+	playerInChan  chan *message
 	playerOutChan chan *message
 
 	closeChan chan struct{}
@@ -162,7 +172,7 @@ func NewRoom(id uint64, opts ...RoomOption) Room {
 	}
 	r.token = options.Token
 	r.messageChan = make(chan *message, options.MessageBuffer)
-	r.playerInChan = make(chan net4go.Conn, options.PlayerBuffer)
+	r.playerInChan = make(chan *message, options.PlayerBuffer)
 	r.playerOutChan = make(chan *message, options.PlayerBuffer)
 	r.closeChan = make(chan struct{})
 
@@ -235,8 +245,10 @@ func (this *room) Connect(playerId uint64, c net4go.Conn) error {
 	select {
 	case <-this.closeChan:
 	default:
+		var m = newMessage(playerId, messageTypePlayerIn, nil)
+		m.Conn = c
 		select {
-		case this.playerInChan <- c:
+		case this.playerInChan <- m:
 		case <-time.After(time.Second * 5):
 		}
 	}
@@ -340,18 +352,14 @@ RunLoop:
 					game.OnMessage(player, m.Packet)
 				}
 				releaseMessage(m)
-			case c, ok := <-this.playerInChan:
+			case m, ok := <-this.playerInChan:
 				if ok == false {
 					break RunLoop
 				}
-				var value = c.Get(kPlayerId)
-				if value != nil {
-					var playerId = value.(uint64)
-					var player = this.GetPlayer(playerId)
-					if player != nil {
-						player.Connect(c)
-						game.OnJoinRoom(player)
-					}
+				var player = this.GetPlayer(m.PlayerId)
+				if player != nil {
+					player.Connect(m.Conn)
+					game.OnJoinRoom(player)
 				}
 			case m, ok := <-this.playerOutChan:
 				if ok == false {
@@ -416,7 +424,7 @@ func (this *room) OnMessage(c net4go.Conn, p net4go.Packet) bool {
 	case <-this.closeChan:
 		return false
 	default:
-		var m = newMessage(playerId, p)
+		var m = newMessage(playerId, messageTypeDefault, p)
 		select {
 		case this.messageChan <- m:
 			return true
@@ -443,7 +451,7 @@ func (this *room) OnClose(c net4go.Conn, err error) {
 	select {
 	case <-this.closeChan:
 	default:
-		var m = newMessage(playerId, nil)
+		var m = newMessage(playerId, messageTypePlayerOut, nil)
 		select {
 		case this.playerOutChan <- m:
 		case <-time.After(time.Second * 5):
@@ -535,9 +543,10 @@ var messagePool = &sync.Pool{
 	},
 }
 
-func newMessage(playerId uint64, packet net4go.Packet) *message {
+func newMessage(playerId uint64, mType messageType, packet net4go.Packet) *message {
 	var m = messagePool.Get().(*message)
 	m.PlayerId = playerId
+	m.Type = mType
 	m.Packet = packet
 	return m
 }
@@ -545,7 +554,9 @@ func newMessage(playerId uint64, packet net4go.Packet) *message {
 func releaseMessage(m *message) {
 	if m != nil {
 		m.PlayerId = 0
+		m.Type = 0
 		m.Packet = nil
+		m.Conn = nil
 		messagePool.Put(m)
 	}
 }
