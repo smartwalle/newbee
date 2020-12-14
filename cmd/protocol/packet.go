@@ -5,7 +5,8 @@ import "encoding/binary"
 type PacketType uint16
 
 const (
-	Heartbeat PacketType = iota + 1
+	Heartbeat       PacketType = 1
+	JoinRoomSuccess PacketType = 2
 )
 
 type Packet struct {

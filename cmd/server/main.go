@@ -156,7 +156,6 @@ func (this *Game) OnMessage(player newbee.Player, packet net4go.Packet) {
 	if p := packet.(*protocol.Packet); p != nil {
 		switch p.Type {
 		case protocol.Heartbeat:
-			fmt.Println(player.GetId(), p.Message)
 			p.Message = "来自服务器的消息"
 			player.SendPacket(p)
 		}
@@ -169,6 +168,11 @@ func (this *Game) OnRunInRoom(room newbee.Room) {
 
 func (this *Game) OnJoinRoom(player newbee.Player) {
 	fmt.Println("OnJoinRoom", player.GetId())
+
+	var p = &protocol.Packet{}
+	p.Type = protocol.JoinRoomSuccess
+	player.SendPacket(p)
+
 }
 
 func (this *Game) OnLeaveRoom(player newbee.Player) {

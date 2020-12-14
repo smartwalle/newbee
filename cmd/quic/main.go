@@ -22,19 +22,7 @@ func main() {
 			return
 		}
 
-		nConn := net4go.NewConn(c, p, h)
-
-		go func(nConn net4go.Conn) {
-			for {
-				var p = &protocol.Packet{}
-				p.Type = protocol.Heartbeat
-				p.Message = "来自 QUIC 的消息"
-
-				nConn.AsyncWritePacket(p, 0)
-
-				time.Sleep(time.Millisecond * 10)
-			}
-		}(nConn)
+		net4go.NewConn(c, p, h)
 	}
 
 	select {}
@@ -47,7 +35,18 @@ func (this *QUICHandler) OnMessage(c net4go.Conn, packet net4go.Packet) bool {
 	if p := packet.(*protocol.Packet); p != nil {
 		switch p.Type {
 		case protocol.Heartbeat:
-			fmt.Println(p.Message)
+		case protocol.JoinRoomSuccess:
+			go func(nConn net4go.Conn) {
+				for {
+					var p = &protocol.Packet{}
+					p.Type = protocol.Heartbeat
+					p.Message = "来自 QUIC 的消息"
+
+					nConn.AsyncWritePacket(p)
+
+					time.Sleep(time.Second * 10)
+				}
+			}(c)
 		}
 	}
 	return true

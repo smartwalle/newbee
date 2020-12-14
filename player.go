@@ -120,7 +120,7 @@ func (this *player) SendMessage(b []byte) {
 	if this.conn == nil {
 		return
 	}
-	if err := this.conn.AsyncWrite(b, 0); err != nil {
+	if _, err := this.conn.Write(b); err != nil {
 		this.Close()
 	}
 }
@@ -129,7 +129,7 @@ func (this *player) SendPacket(p net4go.Packet) {
 	if this.conn == nil {
 		return
 	}
-	if err := this.conn.AsyncWritePacket(p, 0); err != nil {
+	if err := this.conn.WritePacket(p); err != nil {
 		this.Close()
 	}
 }
