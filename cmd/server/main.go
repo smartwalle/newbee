@@ -57,7 +57,7 @@ func main() {
 
 	// tcp
 	go func() {
-		l, err := net.Listen("tcp", "127.0.0.1:8899")
+		l, err := net.Listen("tcp", ":8899")
 		if err != nil {
 			fmt.Println(err)
 			return

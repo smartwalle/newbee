@@ -4,6 +4,7 @@ import (
 	"errors"
 	"github.com/smartwalle/net4go"
 	"sync"
+	"sync/atomic"
 	"time"
 )
 
@@ -153,11 +154,14 @@ type room struct {
 	mu      sync.RWMutex
 	players map[uint64]Player
 
-	messageChan   chan *message
-	playerInChan  chan *message
-	playerOutChan chan *message
+	//messageChan   chan *message
+	//playerInChan  chan *message
+	//playerOutChan chan *message
+	//closeChan chan struct{}
 
-	closeChan chan struct{}
+	closed int32
+
+	mQueue *queue
 }
 
 func NewRoom(id uint64, opts ...RoomOption) Room {
@@ -171,10 +175,14 @@ func NewRoom(id uint64, opts ...RoomOption) Room {
 		opt(options)
 	}
 	r.token = options.Token
-	r.messageChan = make(chan *message, options.MessageBuffer)
-	r.playerInChan = make(chan *message, options.PlayerBuffer)
-	r.playerOutChan = make(chan *message, options.PlayerBuffer)
-	r.closeChan = make(chan struct{})
+	//r.messageChan = make(chan *message, options.MessageBuffer)
+	//r.playerInChan = make(chan *message, options.PlayerBuffer)
+	//r.playerOutChan = make(chan *message, options.PlayerBuffer)
+	//r.closeChan = make(chan struct{})
+
+	r.closed = 0
+
+	r.mQueue = newQueue()
 
 	return r
 }
@@ -242,16 +250,21 @@ func (this *room) Connect(playerId uint64, c net4go.Conn) error {
 	c.Set(kPlayerId, playerId)
 	c.UpdateHandler(this)
 
-	select {
-	case <-this.closeChan:
-	default:
-		var m = newMessage(playerId, messageTypePlayerIn, nil)
-		m.Conn = c
-		select {
-		case this.playerInChan <- m:
-		case <-time.After(time.Second * 5):
-		}
-	}
+	var m = newMessage(playerId, messageTypePlayerIn, nil)
+	m.Conn = c
+
+	this.mQueue.Enqueue(m)
+
+	//select {
+	//case <-this.closeChan:
+	//default:
+	//	var m = newMessage(playerId, messageTypePlayerIn, nil)
+	//	m.Conn = c
+	//	select {
+	//	case this.playerInChan <- m:
+	//	case <-time.After(time.Second * 5):
+	//	}
+	//}
 	return nil
 }
 
@@ -334,50 +347,90 @@ func (this *room) Run(game Game) error {
 
 	go this.tick(game)
 
+	var mList []*message
 RunLoop:
-	for {
-		select {
-		case <-this.closeChan:
-			break RunLoop
-		default:
-			select {
-			case <-this.closeChan:
-				break RunLoop
-			case m, ok := <-this.messageChan:
-				if ok == false {
-					break RunLoop
-				}
-				var player = this.GetPlayer(m.PlayerId)
-				if player != nil {
-					game.OnMessage(player, m.Packet)
-				}
-				releaseMessage(m)
-			case m, ok := <-this.playerInChan:
-				if ok == false {
-					break RunLoop
-				}
-				var player = this.GetPlayer(m.PlayerId)
-				if player != nil {
-					player.Connect(m.Conn)
-					game.OnJoinRoom(player)
-				}
-			case m, ok := <-this.playerOutChan:
-				if ok == false {
-					break RunLoop
-				}
-				var player = this.GetPlayer(m.PlayerId)
-				if player != nil {
-					this.mu.Lock()
-					delete(this.players, player.GetId())
-					this.mu.Unlock()
 
-					game.OnLeaveRoom(player)
-					player.Close()
-				}
-				releaseMessage(m)
-			}
+	for {
+		if this.Closed() {
+			break RunLoop
 		}
+
+		mList = mList[0:0]
+
+		this.mQueue.Dequeue(&mList)
+
+		for _, m := range mList {
+			if m == nil || this.Closed() {
+				break RunLoop
+			}
+
+			var player = this.GetPlayer(m.PlayerId)
+
+			if player == nil {
+				continue
+			}
+
+			switch m.Type {
+			case messageTypeDefault:
+				game.OnMessage(player, m.Packet)
+			case messageTypePlayerIn:
+				player.Connect(m.Conn)
+				game.OnJoinRoom(player)
+			case messageTypePlayerOut:
+				this.mu.Lock()
+				delete(this.players, player.GetId())
+				this.mu.Unlock()
+
+				game.OnLeaveRoom(player)
+				player.Close()
+			}
+			releaseMessage(m)
+		}
+
 	}
+	//for {
+	//	select {
+	//	case <-this.closeChan:
+	//		break RunLoop
+	//	default:
+	//		select {
+	//		case <-this.closeChan:
+	//			break RunLoop
+	//		case m, ok := <-this.messageChan:
+	//			if ok == false {
+	//				break RunLoop
+	//			}
+	//			var player = this.GetPlayer(m.PlayerId)
+	//			if player != nil {
+	//				game.OnMessage(player, m.Packet)
+	//			}
+	//			releaseMessage(m)
+	//		case m, ok := <-this.playerInChan:
+	//			if ok == false {
+	//				break RunLoop
+	//			}
+	//			var player = this.GetPlayer(m.PlayerId)
+	//			if player != nil {
+	//				player.Connect(m.Conn)
+	//				game.OnJoinRoom(player)
+	//			}
+	//		case m, ok := <-this.playerOutChan:
+	//			if ok == false {
+	//				break RunLoop
+	//			}
+	//			var player = this.GetPlayer(m.PlayerId)
+	//			if player != nil {
+	//				this.mu.Lock()
+	//				delete(this.players, player.GetId())
+	//				this.mu.Unlock()
+	//
+	//				game.OnLeaveRoom(player)
+	//				player.Close()
+	//			}
+	//			releaseMessage(m)
+	//		}
+	//	}
+	//}
 	game.OnCloseRoom(this)
 	this.Close()
 	return nil
@@ -392,18 +445,18 @@ func (this *room) tick(game Game) {
 	var ticker = time.NewTicker(t)
 TickLoop:
 	for {
-		select {
-		case <-this.closeChan:
+		if this.Closed() {
 			break TickLoop
-		default:
-			select {
-			case <-this.closeChan:
+		}
+
+		select {
+		case <-ticker.C:
+			if this.Closed() {
 				break TickLoop
-			case <-ticker.C:
-				if game.OnTick(time.Now().Unix()) == false {
-					this.Close()
-					break TickLoop
-				}
+			}
+			if game.OnTick(time.Now().Unix()) == false {
+				this.Close()
+				break TickLoop
 			}
 		}
 	}
@@ -420,19 +473,22 @@ func (this *room) OnMessage(c net4go.Conn, p net4go.Packet) bool {
 		return false
 	}
 
-	select {
-	case <-this.closeChan:
-		return false
-	default:
-		var m = newMessage(playerId, messageTypeDefault, p)
-		select {
-		case this.messageChan <- m:
-			return true
-		case <-time.After(time.Second * 5):
-			return false
-		}
-	}
-	return false
+	var m = newMessage(playerId, messageTypeDefault, p)
+	this.mQueue.Enqueue(m)
+
+	//select {
+	//case <-this.closeChan:
+	//	return false
+	//default:
+	//	var m = newMessage(playerId, messageTypeDefault, p)
+	//	select {
+	//	case this.messageChan <- m:
+	//		return true
+	//	case <-time.After(time.Second * 5):
+	//		return false
+	//	}
+	//}
+	return true
 }
 
 func (this *room) OnClose(c net4go.Conn, err error) {
@@ -448,15 +504,18 @@ func (this *room) OnClose(c net4go.Conn, err error) {
 
 	c.UpdateHandler(nil)
 
-	select {
-	case <-this.closeChan:
-	default:
-		var m = newMessage(playerId, messageTypePlayerOut, nil)
-		select {
-		case this.playerOutChan <- m:
-		case <-time.After(time.Second * 5):
-		}
-	}
+	var m = newMessage(playerId, messageTypePlayerOut, nil)
+	this.mQueue.Enqueue(m)
+
+	//select {
+	//case <-this.closeChan:
+	//default:
+	//	var m = newMessage(playerId, messageTypePlayerOut, nil)
+	//	select {
+	//	case this.playerOutChan <- m:
+	//	case <-time.After(time.Second * 5):
+	//	}
+	//}
 }
 
 func (this *room) SendMessage(playerId uint64, b []byte) {
@@ -509,23 +568,30 @@ func (this *room) BroadcastPacketWithType(pType uint32, p net4go.Packet) {
 	this.mu.RUnlock()
 }
 
+func (this *room) Closed() bool {
+	return atomic.LoadInt32(&this.closed) != 0
+}
+
 func (this *room) Close() error {
-	this.mu.Lock()
-	defer this.mu.Unlock()
+	if old := atomic.SwapInt32(&this.closed, 1); old != 0 {
+		return nil
+	}
 
 	if this.state == RoomStateClose {
 		return nil
 	}
 
-	close(this.closeChan)
+	this.mQueue.Enqueue(nil)
 
-	close(this.messageChan)
-	close(this.playerInChan)
-	close(this.playerOutChan)
-
-	this.messageChan = nil
-	this.playerInChan = nil
-	this.playerOutChan = nil
+	//close(this.closeChan)
+	//
+	//close(this.messageChan)
+	//close(this.playerInChan)
+	//close(this.playerOutChan)
+	//
+	//this.messageChan = nil
+	//this.playerInChan = nil
+	//this.playerOutChan = nil
 
 	this.state = RoomStateClose
 
