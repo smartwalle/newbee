@@ -503,6 +503,10 @@ func (this *room) OnClose(c net4go.Conn, err error) {
 
 	c.UpdateHandler(nil)
 
+	if this.Closed() {
+		return
+	}
+
 	var m = newMessage(playerId, messageTypePlayerOut, nil)
 	this.mQueue.Enqueue(m)
 

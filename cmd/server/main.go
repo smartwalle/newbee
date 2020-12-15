@@ -197,10 +197,4 @@ func (this *Game) OnCloseRoom(room newbee.Room) {
 	fmt.Println("OnCloseRoom")
 
 	room.Clean()
-	room.Clean()
-	room.Clean()
-	room.Clean()
-	room.Clean()
-	room.Close()
-	room.Clean()
 }
