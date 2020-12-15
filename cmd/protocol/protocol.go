@@ -11,7 +11,7 @@ type TCPProtocol struct {
 }
 
 func (this *TCPProtocol) Marshal(p net4go.Packet) ([]byte, error) {
-	var pData, err = p.MarshalPacket()
+	var pData, err = json.Marshal(p)
 	if err != nil {
 		return nil, err
 	}
@@ -33,8 +33,8 @@ func (this *TCPProtocol) Unmarshal(r io.Reader) (net4go.Packet, error) {
 		return nil, err
 	}
 
-	var p = &Packet{}
-	if err := p.UnmarshalPacket(buff); err != nil {
+	var p *Packet
+	if err := json.Unmarshal(buff, &p); err != nil {
 		return nil, err
 	}
 	return p, nil

@@ -52,8 +52,14 @@ type Player interface {
 	// SendMessage 发送消息
 	SendMessage([]byte)
 
+	// AsyncSendMessage 异步发送消息
+	AsyncSendMessage([]byte)
+
 	// SendPacket 发送消息
 	SendPacket(net4go.Packet)
+
+	// AsyncSendPacket 异步发送消息
+	AsyncSendPacket(net4go.Packet)
 
 	// Close 关闭该玩家的所有信息，同时会断开连接
 	Close() error
@@ -125,11 +131,29 @@ func (this *player) SendMessage(b []byte) {
 	}
 }
 
+func (this *player) AsyncSendMessage(b []byte) {
+	if this.conn == nil {
+		return
+	}
+	if err := this.conn.AsyncWrite(b); err != nil {
+		this.Close()
+	}
+}
+
 func (this *player) SendPacket(p net4go.Packet) {
 	if this.conn == nil {
 		return
 	}
 	if err := this.conn.WritePacket(p); err != nil {
+		this.Close()
+	}
+}
+
+func (this *player) AsyncSendPacket(p net4go.Packet) {
+	if this.conn == nil {
+		return
+	}
+	if err := this.conn.AsyncWritePacket(p); err != nil {
 		this.Close()
 	}
 }

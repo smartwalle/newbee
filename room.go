@@ -12,21 +12,6 @@ const (
 	kPlayerId = "player_id"
 )
 
-type message struct {
-	Type     messageType
-	PlayerId uint64
-	Packet   net4go.Packet
-	Conn     net4go.Conn
-}
-
-type messageType int
-
-const (
-	messageTypeDefault   messageType = 0
-	messageTypePlayerIn  messageType = 1
-	messageTypePlayerOut messageType = 2
-)
-
 var (
 	ErrRoomClosed     = errors.New("newbee: room is closed")
 	ErrRoomRunning    = errors.New("newbee: room is running")
@@ -145,6 +130,9 @@ type Room interface {
 
 	// Close 关闭房间
 	Close() error
+
+	// Clean 清理房间
+	Clean()
 }
 
 type room struct {
@@ -161,7 +149,7 @@ type room struct {
 
 	closed int32
 
-	mQueue *queue
+	mQueue *messageQueue
 }
 
 func NewRoom(id uint64, opts ...RoomOption) Room {
@@ -229,7 +217,7 @@ func (this *room) GetPlayersCount() int {
 	return c
 }
 
-func (this *room) Connect(playerId uint64, c net4go.Conn) error {
+func (this *room) Connect(playerId uint64, conn net4go.Conn) error {
 	if playerId == 0 {
 		return ErrPlayerNotExist
 	}
@@ -243,15 +231,19 @@ func (this *room) Connect(playerId uint64, c net4go.Conn) error {
 		return ErrPlayerNotExist
 	}
 
-	if c == nil || c.Closed() {
+	if conn == nil || conn.Closed() {
 		return ErrBadConnection
 	}
 
-	c.Set(kPlayerId, playerId)
-	c.UpdateHandler(this)
+	if this.Closed() {
+		return ErrRoomClosed
+	}
+
+	conn.Set(kPlayerId, playerId)
+	conn.UpdateHandler(this)
 
 	var m = newMessage(playerId, messageTypePlayerIn, nil)
-	m.Conn = c
+	m.Conn = conn
 
 	this.mQueue.Enqueue(m)
 
@@ -259,7 +251,7 @@ func (this *room) Connect(playerId uint64, c net4go.Conn) error {
 	//case <-this.closeChan:
 	//default:
 	//	var m = newMessage(playerId, messageTypePlayerIn, nil)
-	//	m.Conn = c
+	//	m.Conn = conn
 	//	select {
 	//	case this.playerInChan <- m:
 	//	case <-time.After(time.Second * 5):
@@ -279,7 +271,7 @@ func (this *room) Disconnect(playerId uint64) {
 	this.RemovePlayer(playerId)
 }
 
-func (this *room) AddPlayer(player Player, c net4go.Conn) error {
+func (this *room) AddPlayer(player Player, conn net4go.Conn) error {
 	if player == nil {
 		return ErrNilPlayer
 	}
@@ -288,7 +280,7 @@ func (this *room) AddPlayer(player Player, c net4go.Conn) error {
 		return ErrPlayerNotExist
 	}
 
-	if this.GetState() == RoomStateClose {
+	if this.Closed() {
 		return ErrRoomClosed
 	}
 
@@ -304,8 +296,8 @@ func (this *room) AddPlayer(player Player, c net4go.Conn) error {
 
 	this.mu.Unlock()
 
-	if c != nil {
-		return this.Connect(player.GetId(), c)
+	if conn != nil {
+		return this.Connect(player.GetId(), conn)
 	}
 	return nil
 }
@@ -345,7 +337,10 @@ func (this *room) Run(game Game) error {
 
 	game.OnRunInRoom(this)
 
-	go this.tick(game)
+	var stopTicker = make(chan struct{}, 1)
+	var tickerDone = make(chan struct{}, 1)
+
+	go this.tick(game, stopTicker, tickerDone)
 
 	var mList []*message
 RunLoop:
@@ -386,7 +381,6 @@ RunLoop:
 			}
 			releaseMessage(m)
 		}
-
 	}
 	//for {
 	//	select {
@@ -431,12 +425,16 @@ RunLoop:
 	//		}
 	//	}
 	//}
+	close(stopTicker)
+
+	<-tickerDone
+
 	game.OnCloseRoom(this)
 	this.Close()
 	return nil
 }
 
-func (this *room) tick(game Game) {
+func (this *room) tick(game Game, stopTicker chan struct{}, tickerDone chan struct{}) {
 	var t = game.TickInterval()
 	if t <= 0 {
 		return
@@ -445,11 +443,9 @@ func (this *room) tick(game Game) {
 	var ticker = time.NewTicker(t)
 TickLoop:
 	for {
-		if this.Closed() {
-			break TickLoop
-		}
-
 		select {
+		case <-stopTicker:
+			break TickLoop
 		case <-ticker.C:
 			if this.Closed() {
 				break TickLoop
@@ -460,6 +456,9 @@ TickLoop:
 			}
 		}
 	}
+	ticker.Stop()
+
+	close(tickerDone)
 }
 
 func (this *room) OnMessage(c net4go.Conn, p net4go.Packet) bool {
@@ -581,6 +580,8 @@ func (this *room) Close() error {
 		return nil
 	}
 
+	this.state = RoomStateClose
+
 	this.mQueue.Enqueue(nil)
 
 	//close(this.closeChan)
@@ -593,36 +594,23 @@ func (this *room) Close() error {
 	//this.playerInChan = nil
 	//this.playerOutChan = nil
 
-	this.state = RoomStateClose
-
-	for k, p := range this.players {
-		p.Close()
-		delete(this.players, k)
-	}
+	//for k, p := range this.players {
+	//	p.Close()
+	//	delete(this.players, k)
+	//}
 
 	return nil
 }
 
-var messagePool = &sync.Pool{
-	New: func() interface{} {
-		return &message{}
-	},
-}
-
-func newMessage(playerId uint64, mType messageType, packet net4go.Packet) *message {
-	var m = messagePool.Get().(*message)
-	m.PlayerId = playerId
-	m.Type = mType
-	m.Packet = packet
-	return m
-}
-
-func releaseMessage(m *message) {
-	if m != nil {
-		m.PlayerId = 0
-		m.Type = 0
-		m.Packet = nil
-		m.Conn = nil
-		messagePool.Put(m)
+func (this *room) Clean() {
+	this.mu.Lock()
+	for k, p := range this.players {
+		p.Close()
+		delete(this.players, k)
 	}
+	//if this.mQueue != nil {
+	//	this.mQueue.Reset()
+	//	this.mQueue = nil
+	//}
+	this.mu.Unlock()
 }

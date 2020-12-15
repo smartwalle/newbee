@@ -13,8 +13,8 @@ func main() {
 	var p = &protocol.TCPProtocol{}
 	var h = &TCPHandler{}
 
-	for i := 0; i < 1000; i++ {
-		c, err := net.Dial("tcp", "192.168.1.77:8899")
+	for i := 0; i < 1; i++ {
+		c, err := net.Dial("tcp", ":8899")
 		if err != nil {
 			fmt.Println(err)
 			return
@@ -34,7 +34,7 @@ func (this *TCPHandler) OnMessage(c net4go.Conn, packet net4go.Packet) bool {
 	if p := packet.(*protocol.Packet); p != nil {
 		switch p.Type {
 		case protocol.Heartbeat:
-			//fmt.Println(c.Get("index"), p.Message)
+			fmt.Println(c.Get("index"), p.Message)
 		case protocol.JoinRoomSuccess:
 			go func(nConn net4go.Conn) {
 				for {
@@ -44,7 +44,7 @@ func (this *TCPHandler) OnMessage(c net4go.Conn, packet net4go.Packet) bool {
 
 					nConn.AsyncWritePacket(p)
 
-					time.Sleep(time.Millisecond * 66)
+					time.Sleep(time.Second * 1)
 				}
 			}(c)
 		}
