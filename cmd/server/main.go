@@ -32,10 +32,6 @@ func main() {
 	var mu = &sync.Mutex{}
 	var playerId uint64 = 0
 
-	time.AfterFunc(time.Second*10, func() {
-		room.Close()
-	})
-
 	// ws
 	go func() {
 		var upgrader = websocket.Upgrader{
@@ -62,7 +58,7 @@ func main() {
 
 	// tcp
 	go func() {
-		l, err := net.Listen("tcp", ":8899")
+		l, err := net.Listen("tcp", ":9999")
 		if err != nil {
 			fmt.Println(err)
 			return
@@ -75,11 +71,11 @@ func main() {
 				continue
 			}
 
-			nConn := net4go.NewConn(c, tcpp, nil)
+			nConn := net4go.NewConn(c, tcpp, nil, net4go.WithNoDelay(false))
 
 			mu.Lock()
 			playerId = playerId + 1
-			fmt.Println(room.AddPlayer(newbee.NewPlayer(playerId), nConn))
+			room.AddPlayer(newbee.NewPlayer(playerId), nConn)
 			mu.Unlock()
 		}
 	}()
@@ -167,7 +163,7 @@ func (this *Game) OnMessage(player newbee.Player, packet net4go.Packet) {
 		switch p.Type {
 		case protocol.Heartbeat:
 			p.Message = "来自服务器的消息"
-			player.SendPacket(p)
+			player.AsyncSendPacket(p)
 		}
 	}
 }
@@ -181,16 +177,12 @@ func (this *Game) OnJoinRoom(player newbee.Player) {
 
 	var p = &protocol.Packet{}
 	p.Type = protocol.JoinRoomSuccess
-	player.SendPacket(p)
+	player.AsyncSendPacket(p)
 
 }
 
 func (this *Game) OnLeaveRoom(player newbee.Player) {
 	fmt.Println("OnLeaveRoom", player.GetId())
-
-	if this.room.GetPlayersCount() == 0 {
-		this.room.Close()
-	}
 }
 
 func (this *Game) OnCloseRoom(room newbee.Room) {

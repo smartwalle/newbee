@@ -5,7 +5,6 @@ import (
 	"github.com/smartwalle/net4go"
 	"github.com/smartwalle/newbee/cmd/protocol"
 	"net"
-	"os"
 	"time"
 )
 
@@ -13,8 +12,8 @@ func main() {
 	var p = &protocol.TCPProtocol{}
 	var h = &TCPHandler{}
 
-	for i := 0; i < 1; i++ {
-		c, err := net.Dial("tcp", ":8899")
+	for i := 0; i < 1000; i++ {
+		c, err := net.Dial("tcp", ":9999")
 		if err != nil {
 			fmt.Println(err)
 			return
@@ -34,7 +33,7 @@ func (this *TCPHandler) OnMessage(c net4go.Conn, packet net4go.Packet) bool {
 	if p := packet.(*protocol.Packet); p != nil {
 		switch p.Type {
 		case protocol.Heartbeat:
-			fmt.Println(c.Get("index"), p.Message)
+			//fmt.Println(c.Get("index"), p.Message)
 		case protocol.JoinRoomSuccess:
 			go func(nConn net4go.Conn) {
 				for {
@@ -42,9 +41,9 @@ func (this *TCPHandler) OnMessage(c net4go.Conn, packet net4go.Packet) bool {
 					p.Type = protocol.Heartbeat
 					p.Message = "来自 TCP 的消息"
 
-					nConn.AsyncWritePacket(p)
+					nConn.WritePacket(p)
 
-					time.Sleep(time.Second * 1)
+					time.Sleep(time.Millisecond * 66)
 				}
 			}(c)
 		}
@@ -54,5 +53,4 @@ func (this *TCPHandler) OnMessage(c net4go.Conn, packet net4go.Packet) bool {
 
 func (this *TCPHandler) OnClose(c net4go.Conn, err error) {
 	fmt.Println("OnClose", err, c.Get("index"))
-	os.Exit(-1)
 }
