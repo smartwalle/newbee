@@ -25,7 +25,7 @@ type Game interface {
 	TickInterval() time.Duration
 
 	// OnTick 定时器，Room 会定时调用，如果此方法返回 false，Room 将关闭
-	OnTick(now int64) bool
+	OnTick()
 
 	// OnMessage 处理客户端消息
 	OnMessage(player Player, packet net4go.Packet)

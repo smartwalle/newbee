@@ -149,13 +149,12 @@ func (this *Game) TickInterval() time.Duration {
 	return time.Second * 1
 }
 
-func (this *Game) OnTick(now int64) bool {
-	fmt.Println("OnTick", now)
+func (this *Game) OnTick() {
+	fmt.Println("OnTick", time.Now())
 	this.tickCount++
-	//if this.tickCount >=5 {
-	//	this.room.Close()
-	//}
-	return true
+	if this.tickCount >= 15 {
+		this.room.Close()
+	}
 }
 
 func (this *Game) OnMessage(player newbee.Player, packet net4go.Packet) {

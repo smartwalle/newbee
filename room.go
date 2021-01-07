@@ -5,7 +5,6 @@ import (
 	"github.com/smartwalle/net4go"
 	"sync"
 	"sync/atomic"
-	"time"
 )
 
 const (
@@ -135,21 +134,26 @@ type Room interface {
 	Clean()
 }
 
+type roomProxy interface {
+	Connect(playerId uint64, conn net4go.Conn) error
+
+	Close() error
+
+	Run(game Game) error
+
+	OnMessage(playerId uint64, p net4go.Packet) bool
+
+	OnClose(playerId uint64)
+}
+
 type room struct {
 	id      uint64
 	token   string
 	state   RoomState
 	mu      sync.RWMutex
 	players map[uint64]Player
-
-	//messageChan   chan *message
-	//playerInChan  chan *message
-	//playerOutChan chan *message
-	//closeChan chan struct{}
-
-	closed int32
-
-	mQueue *messageQueue
+	closed  int32
+	proxy   roomProxy
 }
 
 func NewRoom(id uint64, opts ...RoomOption) Room {
@@ -163,15 +167,8 @@ func NewRoom(id uint64, opts ...RoomOption) Room {
 		opt(options)
 	}
 	r.token = options.Token
-	//r.messageChan = make(chan *message, options.MessageBuffer)
-	//r.playerInChan = make(chan *message, options.PlayerBuffer)
-	//r.playerOutChan = make(chan *message, options.PlayerBuffer)
-	//r.closeChan = make(chan struct{})
-
 	r.closed = 0
-
-	r.mQueue = newQueue()
-
+	r.proxy = newAsyncRoom(r)
 	return r
 }
 
@@ -242,32 +239,10 @@ func (this *room) Connect(playerId uint64, conn net4go.Conn) error {
 	conn.Set(kPlayerId, playerId)
 	conn.UpdateHandler(this)
 
-	var m = newMessage(playerId, messageTypePlayerIn, nil)
-	m.Conn = conn
-
-	this.mQueue.Enqueue(m)
-
-	//select {
-	//case <-this.closeChan:
-	//default:
-	//	var m = newMessage(playerId, messageTypePlayerIn, nil)
-	//	m.Conn = conn
-	//	select {
-	//	case this.playerInChan <- m:
-	//	case <-time.After(time.Second * 5):
-	//	}
-	//}
-	return nil
+	return this.proxy.Connect(playerId, conn)
 }
 
 func (this *room) Disconnect(playerId uint64) {
-	//this.mu.Lock()
-	//var player = this.players[playerId]
-	//this.mu.Unlock()
-	//
-	//if player != nil {
-	//	player.Conn().Close()
-	//}
 	this.RemovePlayer(playerId)
 }
 
@@ -315,150 +290,8 @@ func (this *room) RemovePlayer(playerId uint64) {
 		}
 	}
 }
-
 func (this *room) Run(game Game) error {
-	if game == nil {
-		return ErrNilGame
-	}
-	this.mu.Lock()
-
-	if this.state == RoomStateClose {
-		this.mu.Unlock()
-		return ErrRoomClosed
-	}
-
-	if this.state == RoomStateRunning {
-		this.mu.Unlock()
-		return ErrRoomRunning
-	}
-
-	this.state = RoomStateRunning
-	this.mu.Unlock()
-
-	game.OnRunInRoom(this)
-
-	var stopTicker = make(chan struct{}, 1)
-	var tickerDone = make(chan struct{}, 1)
-
-	go this.tick(game, stopTicker, tickerDone)
-
-	var mList []*message
-RunLoop:
-
-	for {
-		if this.Closed() {
-			break RunLoop
-		}
-
-		mList = mList[0:0]
-
-		this.mQueue.Dequeue(&mList)
-
-		for _, m := range mList {
-			if m == nil || this.Closed() {
-				break RunLoop
-			}
-
-			var player = this.GetPlayer(m.PlayerId)
-
-			if player == nil {
-				continue
-			}
-
-			switch m.Type {
-			case messageTypeDefault:
-				game.OnMessage(player, m.Packet)
-			case messageTypePlayerIn:
-				player.Connect(m.Conn)
-				game.OnJoinRoom(player)
-			case messageTypePlayerOut:
-				this.mu.Lock()
-				delete(this.players, player.GetId())
-				this.mu.Unlock()
-
-				game.OnLeaveRoom(player)
-				player.Close()
-			}
-			releaseMessage(m)
-		}
-	}
-	//for {
-	//	select {
-	//	case <-this.closeChan:
-	//		break RunLoop
-	//	default:
-	//		select {
-	//		case <-this.closeChan:
-	//			break RunLoop
-	//		case m, ok := <-this.messageChan:
-	//			if ok == false {
-	//				break RunLoop
-	//			}
-	//			var player = this.GetPlayer(m.PlayerId)
-	//			if player != nil {
-	//				game.OnMessage(player, m.Packet)
-	//			}
-	//			releaseMessage(m)
-	//		case m, ok := <-this.playerInChan:
-	//			if ok == false {
-	//				break RunLoop
-	//			}
-	//			var player = this.GetPlayer(m.PlayerId)
-	//			if player != nil {
-	//				player.Connect(m.Conn)
-	//				game.OnJoinRoom(player)
-	//			}
-	//		case m, ok := <-this.playerOutChan:
-	//			if ok == false {
-	//				break RunLoop
-	//			}
-	//			var player = this.GetPlayer(m.PlayerId)
-	//			if player != nil {
-	//				this.mu.Lock()
-	//				delete(this.players, player.GetId())
-	//				this.mu.Unlock()
-	//
-	//				game.OnLeaveRoom(player)
-	//				player.Close()
-	//			}
-	//			releaseMessage(m)
-	//		}
-	//	}
-	//}
-	close(stopTicker)
-
-	<-tickerDone
-
-	game.OnCloseRoom(this)
-	this.Close()
-	return nil
-}
-
-func (this *room) tick(game Game, stopTicker chan struct{}, tickerDone chan struct{}) {
-	var t = game.TickInterval()
-	if t <= 0 {
-		return
-	}
-
-	var ticker = time.NewTicker(t)
-TickLoop:
-	for {
-		select {
-		case <-stopTicker:
-			break TickLoop
-		case <-ticker.C:
-			if this.Closed() {
-				break TickLoop
-			}
-			if game.OnTick(time.Now().Unix()) == false {
-				this.Close()
-				break TickLoop
-			}
-		}
-	}
-	ticker.Stop()
-
-	close(tickerDone)
+	return this.proxy.Run(game)
 }
 
 func (this *room) OnMessage(c net4go.Conn, p net4go.Packet) bool {
@@ -472,22 +305,7 @@ func (this *room) OnMessage(c net4go.Conn, p net4go.Packet) bool {
 		return false
 	}
 
-	var m = newMessage(playerId, messageTypeDefault, p)
-	this.mQueue.Enqueue(m)
-
-	//select {
-	//case <-this.closeChan:
-	//	return false
-	//default:
-	//	var m = newMessage(playerId, messageTypeDefault, p)
-	//	select {
-	//	case this.messageChan <- m:
-	//		return true
-	//	case <-time.After(time.Second * 5):
-	//		return false
-	//	}
-	//}
-	return true
+	return this.proxy.OnMessage(playerId, p)
 }
 
 func (this *room) OnClose(c net4go.Conn, err error) {
@@ -507,18 +325,7 @@ func (this *room) OnClose(c net4go.Conn, err error) {
 		return
 	}
 
-	var m = newMessage(playerId, messageTypePlayerOut, nil)
-	this.mQueue.Enqueue(m)
-
-	//select {
-	//case <-this.closeChan:
-	//default:
-	//	var m = newMessage(playerId, messageTypePlayerOut, nil)
-	//	select {
-	//	case this.playerOutChan <- m:
-	//	case <-time.After(time.Second * 5):
-	//	}
-	//}
+	this.proxy.OnClose(playerId)
 }
 
 func (this *room) SendMessage(playerId uint64, b []byte) {
@@ -586,24 +393,7 @@ func (this *room) Close() error {
 
 	this.state = RoomStateClose
 
-	this.mQueue.Enqueue(nil)
-
-	//close(this.closeChan)
-	//
-	//close(this.messageChan)
-	//close(this.playerInChan)
-	//close(this.playerOutChan)
-	//
-	//this.messageChan = nil
-	//this.playerInChan = nil
-	//this.playerOutChan = nil
-
-	//for k, p := range this.players {
-	//	p.Close()
-	//	delete(this.players, k)
-	//}
-
-	return nil
+	return this.proxy.Close()
 }
 
 func (this *room) Clean() {
@@ -612,9 +402,5 @@ func (this *room) Clean() {
 		p.Close()
 		delete(this.players, k)
 	}
-	//if this.mQueue != nil {
-	//	this.mQueue.Reset()
-	//	this.mQueue = nil
-	//}
 	this.mu.Unlock()
 }
