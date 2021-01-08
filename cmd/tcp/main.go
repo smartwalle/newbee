@@ -12,7 +12,7 @@ func main() {
 	var p = &protocol.TCPProtocol{}
 	var h = &TCPHandler{}
 
-	for i := 0; i < 1; i++ {
+	for i := 0; i < 100; i++ {
 		c, err := net.Dial("tcp", ":9999")
 		if err != nil {
 			fmt.Println(err)
@@ -33,7 +33,7 @@ func (this *TCPHandler) OnMessage(c net4go.Conn, packet net4go.Packet) bool {
 	if p := packet.(*protocol.Packet); p != nil {
 		switch p.Type {
 		case protocol.Heartbeat:
-			//fmt.Println(c.Get("index"), p.Message)
+			fmt.Println(c.Get("index"), p.Message)
 		case protocol.JoinRoomSuccess:
 			go func(nConn net4go.Conn) {
 				for {

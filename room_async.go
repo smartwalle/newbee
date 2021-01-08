@@ -1,27 +1,17 @@
 package newbee
 
 import (
-	"github.com/smartwalle/net4go"
 	"time"
 )
 
 type asyncRoom struct {
 	*room
-	mQueue *messageQueue
 }
 
-func newAsyncRoom(room *room) *asyncRoom {
+func newAsyncRoom(room *room) roomMode {
 	var r = &asyncRoom{}
 	r.room = room
-	r.mQueue = newQueue()
 	return r
-}
-
-func (this *asyncRoom) Connect(playerId uint64, conn net4go.Conn) error {
-	var m = newMessage(playerId, messageTypePlayerIn, nil)
-	m.Conn = conn
-	this.mQueue.Enqueue(m)
-	return nil
 }
 
 func (this *asyncRoom) Run(game Game) error {
@@ -121,21 +111,4 @@ TickLoop:
 	ticker.Stop()
 
 	close(tickerDone)
-}
-
-func (this *asyncRoom) OnMessage(playerId uint64, p net4go.Packet) bool {
-	var m = newMessage(playerId, messageTypeDefault, p)
-	this.mQueue.Enqueue(m)
-	return true
-}
-
-func (this *asyncRoom) OnClose(playerId uint64) {
-	var m = newMessage(playerId, messageTypePlayerOut, nil)
-	this.mQueue.Enqueue(m)
-}
-
-func (this *asyncRoom) Close() error {
-	this.state = RoomStateClose
-	this.mQueue.Enqueue(nil)
-	return nil
 }

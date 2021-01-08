@@ -24,9 +24,10 @@ func main() {
 	var tcpp = &protocol.TCPProtocol{}
 	var wsp = &protocol.WSProtocol{}
 
-	var room = newbee.NewRoom(100)
+	var room = newbee.NewRoom(100, newbee.WithMode(false))
 
 	var game = &Game{}
+	game.m = make(map[uint64]uint64)
 	go room.Run(game)
 
 	var mu = &sync.Mutex{}
@@ -134,7 +135,9 @@ type Game struct {
 	id        uint64
 	room      newbee.Room
 	state     newbee.GameState
-	tickCount int
+	tickCount uint64
+
+	m map[uint64]uint64
 }
 
 func (this *Game) GetId() uint64 {
@@ -146,15 +149,14 @@ func (this *Game) GetState() newbee.GameState {
 }
 
 func (this *Game) TickInterval() time.Duration {
-	return time.Second * 1
+	return time.Second / 60
 }
 
 func (this *Game) OnTick() {
-	fmt.Println("OnTick", time.Now())
+	//fmt.Println("OnTick", time.Now())
 	this.tickCount++
-	if this.tickCount >= 15 {
-		this.room.Close()
-	}
+
+	this.m[this.tickCount] = this.tickCount
 }
 
 func (this *Game) OnMessage(player newbee.Player, packet net4go.Packet) {
@@ -163,6 +165,7 @@ func (this *Game) OnMessage(player newbee.Player, packet net4go.Packet) {
 		case protocol.Heartbeat:
 			p.Message = "来自服务器的消息"
 			player.AsyncSendPacket(p)
+			this.m[player.GetId()] = player.GetId()
 		}
 	}
 }

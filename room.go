@@ -30,48 +30,32 @@ const (
 	RoomStateRunning                  // 有游戏在运行(和游戏的状态无关，调用 Room 的 Run() 方法成功之后，就会将 Room 的状态调整为此状态)
 )
 
-const (
-	kDefaultMessageBuffer = 32
-	kDefaultPlayerBuffer  = 10
-)
-
 type roomOptions struct {
-	MessageBuffer int
-	PlayerBuffer  int
-	Token         string
+	token string
+	mode  func(*room) roomMode
 }
 
 func newRoomOptions() *roomOptions {
 	var o = &roomOptions{}
-	o.MessageBuffer = kDefaultMessageBuffer
-	o.PlayerBuffer = kDefaultPlayerBuffer
-	o.Token = ""
+	o.token = ""
 	return o
 }
 
 type RoomOption func(options *roomOptions)
 
-func WithMessageBuffer(buffer int) RoomOption {
-	return func(o *roomOptions) {
-		if buffer <= 0 {
-			buffer = kDefaultMessageBuffer
-		}
-		o.MessageBuffer = buffer
-	}
-}
-
-func WithPlayerBuffer(buffer int) RoomOption {
-	return func(o *roomOptions) {
-		if buffer <= 0 {
-			buffer = kDefaultPlayerBuffer
-		}
-		o.PlayerBuffer = buffer
-	}
-}
-
 func WithToken(token string) RoomOption {
 	return func(o *roomOptions) {
-		o.Token = token
+		o.token = token
+	}
+}
+
+func WithMode(async bool) RoomOption {
+	return func(o *roomOptions) {
+		if async {
+			o.mode = newAsyncRoom
+		} else {
+			o.mode = newSyncRoom
+		}
 	}
 }
 
@@ -134,16 +118,8 @@ type Room interface {
 	Clean()
 }
 
-type roomProxy interface {
-	Connect(playerId uint64, conn net4go.Conn) error
-
-	Close() error
-
+type roomMode interface {
 	Run(game Game) error
-
-	OnMessage(playerId uint64, p net4go.Packet) bool
-
-	OnClose(playerId uint64)
 }
 
 type room struct {
@@ -153,7 +129,8 @@ type room struct {
 	mu      sync.RWMutex
 	players map[uint64]Player
 	closed  int32
-	proxy   roomProxy
+	mQueue  *messageQueue
+	mode    roomMode
 }
 
 func NewRoom(id uint64, opts ...RoomOption) Room {
@@ -161,14 +138,19 @@ func NewRoom(id uint64, opts ...RoomOption) Room {
 	r.id = id
 	r.state = RoomStatePending
 	r.players = make(map[uint64]Player)
-
-	var options = newRoomOptions()
-	for _, opt := range opts {
-		opt(options)
-	}
-	r.token = options.Token
 	r.closed = 0
-	r.proxy = newAsyncRoom(r)
+	r.mQueue = newQueue()
+
+	var option = newRoomOptions()
+	for _, opt := range opts {
+		opt(option)
+	}
+	r.token = option.token
+	if option.mode == nil {
+		option.mode = newAsyncRoom
+	}
+	r.mode = option.mode(r)
+
 	return r
 }
 
@@ -239,7 +221,10 @@ func (this *room) Connect(playerId uint64, conn net4go.Conn) error {
 	conn.Set(kPlayerId, playerId)
 	conn.UpdateHandler(this)
 
-	return this.proxy.Connect(playerId, conn)
+	var m = newMessage(playerId, messageTypePlayerIn, nil)
+	m.Conn = conn
+	this.mQueue.Enqueue(m)
+	return nil
 }
 
 func (this *room) Disconnect(playerId uint64) {
@@ -291,7 +276,7 @@ func (this *room) RemovePlayer(playerId uint64) {
 	}
 }
 func (this *room) Run(game Game) error {
-	return this.proxy.Run(game)
+	return this.mode.Run(game)
 }
 
 func (this *room) OnMessage(c net4go.Conn, p net4go.Packet) bool {
@@ -305,7 +290,10 @@ func (this *room) OnMessage(c net4go.Conn, p net4go.Packet) bool {
 		return false
 	}
 
-	return this.proxy.OnMessage(playerId, p)
+	var m = newMessage(playerId, messageTypeDefault, p)
+	this.mQueue.Enqueue(m)
+
+	return true
 }
 
 func (this *room) OnClose(c net4go.Conn, err error) {
@@ -325,7 +313,8 @@ func (this *room) OnClose(c net4go.Conn, err error) {
 		return
 	}
 
-	this.proxy.OnClose(playerId)
+	var m = newMessage(playerId, messageTypePlayerOut, nil)
+	this.mQueue.Enqueue(m)
 }
 
 func (this *room) SendMessage(playerId uint64, b []byte) {
@@ -393,7 +382,9 @@ func (this *room) Close() error {
 
 	this.state = RoomStateClose
 
-	return this.proxy.Close()
+	this.mQueue.Enqueue(nil)
+
+	return nil
 }
 
 func (this *room) Clean() {

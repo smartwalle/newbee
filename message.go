@@ -18,6 +18,7 @@ const (
 	messageTypeDefault   messageType = 0
 	messageTypePlayerIn  messageType = 1
 	messageTypePlayerOut messageType = 2
+	messageTypeTick      messageType = 3
 )
 
 var messagePool = &sync.Pool{
