@@ -61,20 +61,20 @@ RunLoop:
 			case messageTypeDefault:
 				var player = this.GetPlayer(m.PlayerId)
 				if player == nil {
-					continue
+					break
 				}
 				game.OnMessage(player, m.Packet)
 			case messageTypePlayerIn:
 				var player = this.GetPlayer(m.PlayerId)
 				if player == nil {
-					continue
+					break
 				}
 				player.Connect(m.Conn)
 				game.OnJoinRoom(player)
 			case messageTypePlayerOut:
 				var player = this.GetPlayer(m.PlayerId)
 				if player == nil {
-					continue
+					break
 				}
 				this.mu.Lock()
 				delete(this.players, player.GetId())

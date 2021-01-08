@@ -24,7 +24,7 @@ func main() {
 	var tcpp = &protocol.TCPProtocol{}
 	var wsp = &protocol.WSProtocol{}
 
-	var room = newbee.NewRoom(100, newbee.WithMode(false))
+	var room = newbee.NewRoom(100, newbee.WithSync())
 
 	var game = &Game{}
 	game.m = make(map[uint64]uint64)

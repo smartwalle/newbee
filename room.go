@@ -49,13 +49,21 @@ func WithToken(token string) RoomOption {
 	}
 }
 
-func WithMode(async bool) RoomOption {
+// WithSync 网络消息的定时器消息为同步模式
+// 网络消息和定时器消息会放入同一队列等待执行
+// 定时任务放入队列之后，定时器就会暂停，需要等到队列中的定时任务执行之后才会再次激活定时器
+func WithSync() RoomOption {
 	return func(o *roomOptions) {
-		if async {
-			o.mode = newAsyncRoom
-		} else {
-			o.mode = newSyncRoom
-		}
+		o.mode = newSyncRoom
+	}
+}
+
+// WithAsync 网络消息的定时器消息为异步模式
+// 网络消息会放入队列中，定时器消息不会放入队列中
+// 定时器会定时触发，不管上一次的定时任务是否处理完成
+func WithAsync() RoomOption {
+	return func(o *roomOptions) {
+		o.mode = newAsyncRoom
 	}
 }
 

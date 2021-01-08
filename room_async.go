@@ -60,6 +60,7 @@ RunLoop:
 			var player = this.GetPlayer(m.PlayerId)
 
 			if player == nil {
+				releaseMessage(m)
 				continue
 			}
 
