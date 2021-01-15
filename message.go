@@ -15,10 +15,10 @@ type message struct {
 type messageType int
 
 const (
-	messageTypeDefault   messageType = 0
-	messageTypePlayerIn  messageType = 1
-	messageTypePlayerOut messageType = 2
-	messageTypeTick      messageType = 3
+	mTypeDefault   messageType = 0
+	mTypePlayerIn  messageType = 1
+	mTypePlayerOut messageType = 2
+	mTypeTick      messageType = 3
 )
 
 var messagePool = &sync.Pool{
@@ -45,13 +45,21 @@ func releaseMessage(m *message) {
 	}
 }
 
-type messageQueue struct {
+type iMessageQueue interface {
+	Enqueue(m *message)
+
+	Dequeue(items *[]*message)
+
+	Reset()
+}
+
+type blockMessageQueue struct {
 	items []*message
 	mu    sync.Mutex
 	cond  *sync.Cond
 }
 
-func (this *messageQueue) Enqueue(m *message) {
+func (this *blockMessageQueue) Enqueue(m *message) {
 	this.mu.Lock()
 	this.items = append(this.items, m)
 	this.mu.Unlock()
@@ -59,11 +67,11 @@ func (this *messageQueue) Enqueue(m *message) {
 	this.cond.Signal()
 }
 
-func (this *messageQueue) Reset() {
+func (this *blockMessageQueue) Reset() {
 	this.items = this.items[0:0]
 }
 
-func (this *messageQueue) Dequeue(items *[]*message) {
+func (this *blockMessageQueue) Dequeue(items *[]*message) {
 	this.mu.Lock()
 	for len(this.items) == 0 {
 		this.cond.Wait()
@@ -83,8 +91,46 @@ func (this *messageQueue) Dequeue(items *[]*message) {
 	this.mu.Unlock()
 }
 
+func newBlockQueue() *blockMessageQueue {
+	var q = &blockMessageQueue{}
+	q.cond = sync.NewCond(&q.mu)
+	return q
+}
+
+type messageQueue struct {
+	items []*message
+	mu    sync.Mutex
+}
+
+func (this *messageQueue) Enqueue(m *message) {
+	this.mu.Lock()
+	this.items = append(this.items, m)
+	this.mu.Unlock()
+}
+
+func (this *messageQueue) Reset() {
+	this.items = this.items[0:0]
+}
+
+func (this *messageQueue) Dequeue(items *[]*message) {
+	this.mu.Lock()
+	for len(this.items) == 0 {
+		this.mu.Unlock()
+		return
+	}
+
+	for _, item := range this.items {
+		*items = append(*items, item)
+		if item == nil {
+			break
+		}
+	}
+
+	this.Reset()
+	this.mu.Unlock()
+}
+
 func newQueue() *messageQueue {
 	var q = &messageQueue{}
-	q.cond = sync.NewCond(&q.mu)
 	return q
 }

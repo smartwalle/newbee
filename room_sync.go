@@ -58,20 +58,20 @@ RunLoop:
 			}
 
 			switch m.Type {
-			case messageTypeDefault:
+			case mTypeDefault:
 				var player = this.GetPlayer(m.PlayerId)
 				if player == nil {
 					break
 				}
 				game.OnMessage(player, m.Packet)
-			case messageTypePlayerIn:
+			case mTypePlayerIn:
 				var player = this.GetPlayer(m.PlayerId)
 				if player == nil {
 					break
 				}
 				player.Connect(m.Conn)
 				game.OnJoinRoom(player)
-			case messageTypePlayerOut:
+			case mTypePlayerOut:
 				var player = this.GetPlayer(m.PlayerId)
 				if player == nil {
 					break
@@ -82,7 +82,7 @@ RunLoop:
 
 				game.OnLeaveRoom(player)
 				player.Close()
-			case messageTypeTick:
+			case mTypeTick:
 				game.OnTick()
 				this.tick(d)
 			}
@@ -97,7 +97,11 @@ RunLoop:
 
 func (this *syncRoom) tick(d time.Duration) {
 	time.AfterFunc(d, func() {
-		var m = newMessage(0, messageTypeTick, nil)
+		var m = newMessage(0, mTypeTick, nil)
 		this.mQueue.Enqueue(m)
 	})
+}
+
+func (this *syncRoom) OnClose() error {
+	return nil
 }

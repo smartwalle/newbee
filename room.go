@@ -30,22 +30,22 @@ const (
 	RoomStateRunning                  // 有游戏在运行(和游戏的状态无关，调用 Room 的 Run() 方法成功之后，就会将 Room 的状态调整为此状态)
 )
 
-type roomOptions struct {
-	token string
-	mode  func(*room) roomMode
-}
+//type roomOptions struct {
+//	token string
+//	mode  func(*room) roomMode
+//}
+//
+//func newRoomOptions() *roomOptions {
+//	var o = &roomOptions{}
+//	o.token = ""
+//	return o
+//}
 
-func newRoomOptions() *roomOptions {
-	var o = &roomOptions{}
-	o.token = ""
-	return o
-}
-
-type RoomOption func(options *roomOptions)
+type RoomOption func(options *room)
 
 func WithToken(token string) RoomOption {
-	return func(o *roomOptions) {
-		o.token = token
+	return func(r *room) {
+		r.token = token
 	}
 }
 
@@ -53,8 +53,9 @@ func WithToken(token string) RoomOption {
 // 网络消息和定时器消息会放入同一队列等待执行
 // 定时任务放入队列之后，定时器就会暂停，需要等到队列中的定时任务执行之后才会再次激活定时器
 func WithSync() RoomOption {
-	return func(o *roomOptions) {
-		o.mode = newSyncRoom
+	return func(r *room) {
+		r.mQueue = newBlockQueue()
+		r.mode = newSyncRoom(r)
 	}
 }
 
@@ -62,8 +63,18 @@ func WithSync() RoomOption {
 // 网络消息会放入队列中，定时器消息不会放入队列中
 // 定时器会定时触发，不管上一次的定时任务是否处理完成
 func WithAsync() RoomOption {
-	return func(o *roomOptions) {
-		o.mode = newAsyncRoom
+	return func(r *room) {
+		r.mQueue = newBlockQueue()
+		r.mode = newAsyncRoom(r)
+	}
+}
+
+// WithFrame 网络消息的定时器消息为同步模式，同时网络消息的处理由定时器驱动
+// 会启用一个定时器定时处理网络消息，网络消息处理完成之后，会触发游戏的 OnTick 方法
+func WithFrame() RoomOption {
+	return func(r *room) {
+		r.mQueue = newQueue()
+		r.mode = newFrameRoom(r)
 	}
 }
 
@@ -128,6 +139,8 @@ type Room interface {
 
 type roomMode interface {
 	Run(game Game) error
+
+	OnClose() error
 }
 
 type room struct {
@@ -137,8 +150,9 @@ type room struct {
 	mu      sync.RWMutex
 	players map[uint64]Player
 	closed  int32
-	mQueue  *messageQueue
-	mode    roomMode
+
+	mQueue iMessageQueue
+	mode   roomMode
 }
 
 func NewRoom(id uint64, opts ...RoomOption) Room {
@@ -147,17 +161,26 @@ func NewRoom(id uint64, opts ...RoomOption) Room {
 	r.state = RoomStatePending
 	r.players = make(map[uint64]Player)
 	r.closed = 0
-	r.mQueue = newQueue()
 
-	var option = newRoomOptions()
 	for _, opt := range opts {
-		opt(option)
+		opt(r)
 	}
-	r.token = option.token
-	if option.mode == nil {
-		option.mode = newAsyncRoom
+
+	if r.mQueue == nil {
+		r.mQueue = newBlockQueue()
+		r.mode = newAsyncRoom(r)
 	}
-	r.mode = option.mode(r)
+
+	//r.mQueue = newQueue()
+	//var option = newRoomOptions()
+	//for _, opt := range opts {
+	//	opt(option)
+	//}
+	//r.token = option.token
+	//if option.mode == nil {
+	//	option.mode = newAsyncRoom
+	//}
+	//r.mode = option.mode(r)
 
 	return r
 }
@@ -229,7 +252,7 @@ func (this *room) Connect(playerId uint64, conn net4go.Conn) error {
 	conn.Set(kPlayerId, playerId)
 	conn.UpdateHandler(this)
 
-	var m = newMessage(playerId, messageTypePlayerIn, nil)
+	var m = newMessage(playerId, mTypePlayerIn, nil)
 	m.Conn = conn
 	this.mQueue.Enqueue(m)
 	return nil
@@ -298,7 +321,7 @@ func (this *room) OnMessage(c net4go.Conn, p net4go.Packet) bool {
 		return false
 	}
 
-	var m = newMessage(playerId, messageTypeDefault, p)
+	var m = newMessage(playerId, mTypeDefault, p)
 	this.mQueue.Enqueue(m)
 
 	return true
@@ -321,7 +344,7 @@ func (this *room) OnClose(c net4go.Conn, err error) {
 		return
 	}
 
-	var m = newMessage(playerId, messageTypePlayerOut, nil)
+	var m = newMessage(playerId, mTypePlayerOut, nil)
 	this.mQueue.Enqueue(m)
 }
 
@@ -392,7 +415,7 @@ func (this *room) Close() error {
 
 	this.mQueue.Enqueue(nil)
 
-	return nil
+	return this.mode.OnClose()
 }
 
 func (this *room) Clean() {

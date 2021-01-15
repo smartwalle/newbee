@@ -24,7 +24,7 @@ func main() {
 	var tcpp = &protocol.TCPProtocol{}
 	var wsp = &protocol.WSProtocol{}
 
-	var room = newbee.NewRoom(100, newbee.WithSync())
+	var room = newbee.NewRoom(100, newbee.WithFrame())
 
 	var game = &Game{}
 	game.m = make(map[uint64]uint64)
@@ -149,12 +149,14 @@ func (this *Game) GetState() newbee.GameState {
 }
 
 func (this *Game) TickInterval() time.Duration {
-	return time.Second / 60
+	return time.Second
 }
 
 func (this *Game) OnTick() {
 	//fmt.Println("OnTick", time.Now())
 	this.tickCount++
+	fmt.Println(this.tickCount)
+	time.Sleep(time.Second * 2)
 
 	this.m[this.tickCount] = this.tickCount
 }

@@ -65,12 +65,12 @@ RunLoop:
 			}
 
 			switch m.Type {
-			case messageTypeDefault:
+			case mTypeDefault:
 				game.OnMessage(player, m.Packet)
-			case messageTypePlayerIn:
+			case mTypePlayerIn:
 				player.Connect(m.Conn)
 				game.OnJoinRoom(player)
-			case messageTypePlayerOut:
+			case mTypePlayerOut:
 				this.mu.Lock()
 				delete(this.players, player.GetId())
 				this.mu.Unlock()
@@ -112,4 +112,8 @@ TickLoop:
 	ticker.Stop()
 
 	close(tickerDone)
+}
+
+func (this *asyncRoom) OnClose() error {
+	return nil
 }
