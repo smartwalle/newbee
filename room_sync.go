@@ -41,8 +41,8 @@ func (this *syncRoom) Run(game Game) error {
 	}
 
 	var mList []*message
-RunLoop:
 
+RunLoop:
 	for {
 		if this.Closed() {
 			break RunLoop

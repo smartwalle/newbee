@@ -41,8 +41,8 @@ func (this *asyncRoom) Run(game Game) error {
 	go this.tick(game, stopTicker, tickerDone)
 
 	var mList []*message
-RunLoop:
 
+RunLoop:
 	for {
 		if this.Closed() {
 			break RunLoop
