@@ -49,7 +49,7 @@ func WithToken(token string) RoomOption {
 	}
 }
 
-// WithSync 网络消息的定时器消息为同步模式
+// WithSync 网络消息和定时器消息为同步模式
 // 网络消息和定时器消息会放入同一队列等待执行
 // 定时任务放入队列之后，定时器就会暂停，需要等到队列中的定时任务执行之后才会再次激活定时器
 func WithSync() RoomOption {
@@ -59,7 +59,7 @@ func WithSync() RoomOption {
 	}
 }
 
-// WithAsync 网络消息的定时器消息为异步模式
+// WithAsync 网络消息和定时器消息为异步模式
 // 网络消息会放入队列中，定时器消息不会放入队列中
 // 定时器会定时触发，不管上一次的定时任务是否处理完成
 func WithAsync() RoomOption {
@@ -69,7 +69,7 @@ func WithAsync() RoomOption {
 	}
 }
 
-// WithFrame 网络消息的定时器消息为同步模式，同时网络消息的处理由定时器驱动
+// WithFrame 网络消息和定时器消息为帧模式，同时网络消息的处理由定时器驱动
 // 会启用一个定时器定时处理网络消息，网络消息处理完成之后，会触发游戏的 OnTick 方法
 func WithFrame() RoomOption {
 	return func(r *room) {
