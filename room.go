@@ -20,6 +20,7 @@ var (
 	ErrNilPlayer      = errors.New("newbee: player is nil")
 	ErrFailedToRun    = errors.New("newbee: failed to run the room")
 	ErrBadConnection  = errors.New("newbee: bad connection")
+	ErrBadInterval    = errors.New("newbee: bad interval")
 )
 
 type RoomState uint32

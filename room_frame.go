@@ -38,9 +38,10 @@ func (this *frameRoom) Run(game Game) error {
 	game.OnRunInRoom(this)
 
 	var d = game.TickInterval()
-	if d > 0 {
-		this.tick(d)
+	if d <= 0 {
+		return ErrBadInterval
 	}
+	this.tick(d)
 
 	var mList []*message
 
