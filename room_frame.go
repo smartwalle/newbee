@@ -7,6 +7,7 @@ import (
 type frameRoom struct {
 	*room
 	frame chan struct{}
+	timer *time.Timer
 }
 
 func newFrameRoom(room *room) roomMode {
@@ -100,14 +101,16 @@ RunLoop:
 			this.tick(d)
 		}
 	}
-
+	if this.timer != nil {
+		this.timer.Stop()
+	}
 	game.OnCloseRoom(this)
 	this.Close()
 	return nil
 }
 
 func (this *frameRoom) tick(d time.Duration) {
-	time.AfterFunc(d, func() {
+	this.timer = time.AfterFunc(d, func() {
 		this.frame <- struct{}{}
 	})
 }
