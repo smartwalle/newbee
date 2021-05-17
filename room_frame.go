@@ -50,9 +50,7 @@ RunLoop:
 	for {
 		select {
 		case <-this.frame:
-
 			mList = mList[0:0]
-
 			this.mQueue.Dequeue(&mList)
 
 			for _, m := range mList {

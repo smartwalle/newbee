@@ -45,9 +45,7 @@ func (this *syncRoom) Run(game Game) error {
 
 RunLoop:
 	for {
-
 		mList = mList[0:0]
-
 		this.mQueue.Dequeue(&mList)
 
 		for _, m := range mList {
