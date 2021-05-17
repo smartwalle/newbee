@@ -44,39 +44,35 @@ func (this *asyncRoom) Run(game Game) error {
 
 RunLoop:
 	for {
-		if this.Closed() {
-			break RunLoop
-		}
-
 		mList = mList[0:0]
 
 		this.mQueue.Dequeue(&mList)
 
 		for _, m := range mList {
-			if m == nil || this.Closed() {
+			if m == nil {
 				break RunLoop
 			}
 
-			var player = this.GetPlayer(m.PlayerId)
+			var p = this.GetPlayer(m.PlayerId)
 
-			if player == nil {
+			if p == nil {
 				releaseMessage(m)
 				continue
 			}
 
 			switch m.Type {
 			case mTypeDefault:
-				game.OnMessage(player, m.Packet)
+				game.OnMessage(p, m.Packet)
 			case mTypePlayerIn:
-				player.Connect(m.Conn)
-				game.OnJoinRoom(player)
+				p.Connect(m.Conn)
+				game.OnJoinRoom(p)
 			case mTypePlayerOut:
 				this.mu.Lock()
-				delete(this.players, player.GetId())
+				delete(this.players, p.GetId())
 				this.mu.Unlock()
 
-				game.OnLeaveRoom(player)
-				player.Close()
+				game.OnLeaveRoom(p)
+				p.Close()
 			}
 			releaseMessage(m)
 		}
@@ -86,7 +82,7 @@ RunLoop:
 	<-tickerDone
 
 	game.OnCloseRoom(this)
-	this.Close()
+	this.clean()
 	return nil
 }
 

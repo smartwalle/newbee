@@ -6,6 +6,7 @@ import (
 
 type syncRoom struct {
 	*room
+	timer *time.Timer
 }
 
 func newSyncRoom(room *room) roomMode {
@@ -44,44 +45,41 @@ func (this *syncRoom) Run(game Game) error {
 
 RunLoop:
 	for {
-		if this.Closed() {
-			break RunLoop
-		}
 
 		mList = mList[0:0]
 
 		this.mQueue.Dequeue(&mList)
 
 		for _, m := range mList {
-			if m == nil || this.Closed() {
+			if m == nil {
 				break RunLoop
 			}
 
 			switch m.Type {
 			case mTypeDefault:
-				var player = this.GetPlayer(m.PlayerId)
-				if player == nil {
+				var p = this.GetPlayer(m.PlayerId)
+				if p == nil {
 					break
 				}
-				game.OnMessage(player, m.Packet)
+				game.OnMessage(p, m.Packet)
 			case mTypePlayerIn:
-				var player = this.GetPlayer(m.PlayerId)
-				if player == nil {
+				var p = this.GetPlayer(m.PlayerId)
+				if p == nil {
 					break
 				}
-				player.Connect(m.Conn)
-				game.OnJoinRoom(player)
+				p.Connect(m.Conn)
+				game.OnJoinRoom(p)
 			case mTypePlayerOut:
-				var player = this.GetPlayer(m.PlayerId)
-				if player == nil {
+				var p = this.GetPlayer(m.PlayerId)
+				if p == nil {
 					break
 				}
 				this.mu.Lock()
-				delete(this.players, player.GetId())
+				delete(this.players, p.GetId())
 				this.mu.Unlock()
 
-				game.OnLeaveRoom(player)
-				player.Close()
+				game.OnLeaveRoom(p)
+				p.Close()
 			case mTypeTick:
 				game.OnTick()
 				this.tick(d)
@@ -89,14 +87,16 @@ RunLoop:
 			releaseMessage(m)
 		}
 	}
-
+	if this.timer != nil {
+		this.timer.Stop()
+	}
 	game.OnCloseRoom(this)
-	this.Close()
+	this.clean()
 	return nil
 }
 
 func (this *syncRoom) tick(d time.Duration) {
-	time.AfterFunc(d, func() {
+	this.timer = time.AfterFunc(d, func() {
 		var m = newMessage(0, mTypeTick, nil)
 		this.mQueue.Enqueue(m)
 	})

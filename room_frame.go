@@ -48,52 +48,43 @@ func (this *frameRoom) Run(game Game) error {
 
 RunLoop:
 	for {
-		if this.Closed() {
-			break RunLoop
-		}
 		select {
-		case _, ok := <-this.frame:
-			if ok == false {
-				break RunLoop
-			}
+		case <-this.frame:
 
 			mList = mList[0:0]
 
 			this.mQueue.Dequeue(&mList)
 
 			for _, m := range mList {
-				if m == nil || this.Closed() {
+				if m == nil {
 					break RunLoop
 				}
 
 				switch m.Type {
 				case mTypeDefault:
-					var player = this.GetPlayer(m.PlayerId)
-					if player == nil {
+					var p = this.GetPlayer(m.PlayerId)
+					if p == nil {
 						break
 					}
-					game.OnMessage(player, m.Packet)
+					game.OnMessage(p, m.Packet)
 				case mTypePlayerIn:
-					var player = this.GetPlayer(m.PlayerId)
-					if player == nil {
+					var p = this.GetPlayer(m.PlayerId)
+					if p == nil {
 						break
 					}
-					player.Connect(m.Conn)
-					game.OnJoinRoom(player)
+					p.Connect(m.Conn)
+					game.OnJoinRoom(p)
 				case mTypePlayerOut:
-					var player = this.GetPlayer(m.PlayerId)
-					if player == nil {
+					var p = this.GetPlayer(m.PlayerId)
+					if p == nil {
 						break
 					}
 					this.mu.Lock()
-					delete(this.players, player.GetId())
+					delete(this.players, p.GetId())
 					this.mu.Unlock()
 
-					game.OnLeaveRoom(player)
-					player.Close()
-					//case mTypeTick:
-					//	game.OnTick()
-					//	this.tick(d)
+					game.OnLeaveRoom(p)
+					p.Close()
 				}
 				releaseMessage(m)
 			}
@@ -105,7 +96,8 @@ RunLoop:
 		this.timer.Stop()
 	}
 	game.OnCloseRoom(this)
-	this.Close()
+	this.clean()
+	close(this.frame)
 	return nil
 }
 
@@ -116,6 +108,5 @@ func (this *frameRoom) tick(d time.Duration) {
 }
 
 func (this *frameRoom) OnClose() error {
-	close(this.frame)
 	return nil
 }

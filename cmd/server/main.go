@@ -27,7 +27,6 @@ func main() {
 	var room = newbee.NewRoom(100, newbee.WithFrame())
 
 	var game = &Game{}
-	game.m = make(map[uint64]uint64)
 	go room.Run(game)
 
 	var mu = &sync.Mutex{}
@@ -136,8 +135,6 @@ type Game struct {
 	room      newbee.Room
 	state     newbee.GameState
 	tickCount uint64
-
-	m map[uint64]uint64
 }
 
 func (this *Game) GetId() uint64 {
@@ -149,16 +146,16 @@ func (this *Game) GetState() newbee.GameState {
 }
 
 func (this *Game) TickInterval() time.Duration {
-	return time.Second
+	return time.Second / 100
 }
 
 func (this *Game) OnTick() {
-	//fmt.Println("OnTick", time.Now())
 	this.tickCount++
-	fmt.Println(this.tickCount)
-	time.Sleep(time.Second * 2)
+	fmt.Println("OnTick", time.Now(), this.tickCount)
 
-	this.m[this.tickCount] = this.tickCount
+	if this.tickCount >= 200 {
+		this.room.Close()
+	}
 }
 
 func (this *Game) OnMessage(player newbee.Player, packet net4go.Packet) {
@@ -167,7 +164,6 @@ func (this *Game) OnMessage(player newbee.Player, packet net4go.Packet) {
 		case protocol.Heartbeat:
 			p.Message = "来自服务器的消息"
 			player.AsyncSendPacket(p)
-			this.m[player.GetId()] = player.GetId()
 		}
 	}
 }
@@ -186,11 +182,9 @@ func (this *Game) OnJoinRoom(player newbee.Player) {
 }
 
 func (this *Game) OnLeaveRoom(player newbee.Player) {
-	fmt.Println("OnLeaveRoom", player.GetId())
+	fmt.Println("OnLeaveRoom", player.GetId(), this.room.GetState())
 }
 
 func (this *Game) OnCloseRoom(room newbee.Room) {
-	fmt.Println("OnCloseRoom")
-
-	room.Clean()
+	fmt.Println("OnCloseRoom", room.GetPlayersCount())
 }

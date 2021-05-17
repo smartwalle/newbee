@@ -12,7 +12,7 @@ func main() {
 	var p = &protocol.TCPProtocol{}
 	var h = &TCPHandler{}
 
-	for i := 0; i < 500; i++ {
+	for i := 0; i < 100; i++ {
 		c, err := net.Dial("tcp", ":9999")
 		if err != nil {
 			fmt.Println(err)
@@ -43,7 +43,7 @@ func (this *TCPHandler) OnMessage(c net4go.Conn, packet net4go.Packet) bool {
 
 					nConn.WritePacket(p)
 
-					time.Sleep(time.Millisecond * 66)
+					time.Sleep(time.Second * 1)
 				}
 			}(c)
 		}
