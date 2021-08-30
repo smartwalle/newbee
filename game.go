@@ -16,7 +16,7 @@ const (
 
 type Game interface {
 	// GetId 获取游戏 id
-	GetId() uint64
+	GetId() int64
 
 	// GetState 游戏状态
 	GetState() GameState

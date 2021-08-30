@@ -81,7 +81,7 @@ func WithFrame() RoomOption {
 
 type Room interface {
 	// GetId 获取房间 id
-	GetId() uint64
+	GetId() int64
 
 	// GetToken 房间 token
 	GetToken() string
@@ -90,10 +90,10 @@ type Room interface {
 	GetState() RoomState
 
 	// GetPlayer 获取玩家信息
-	GetPlayer(playerId uint64) Player
+	GetPlayer(playerId int64) Player
 
 	// GetPlayers 获取所有玩家信息
-	GetPlayers() map[uint64]Player
+	GetPlayers() map[int64]Player
 
 	// RangePlayer 只读遍历玩家信息，在回调函数中，不可执行 Room 的其它可以影响玩家列表的操作
 	RangePlayer(fn func(player Player))
@@ -102,22 +102,22 @@ type Room interface {
 	GetPlayerCount() int
 
 	// Connect 将玩家和连接进行绑定
-	Connect(playerId uint64, sess net4go.Session) error
+	Connect(playerId int64, sess net4go.Session) error
 
 	// Disconnect 断开玩家的网络连接, 作用与 RemovePlayer 一致
-	Disconnect(playerId uint64)
+	Disconnect(playerId int64)
 
 	// AddPlayer 加入新的玩家，如果玩家已经存在或者 player 参数为空，会返回相应的错误，如果连接不为空，则将该玩家和连接进行绑定
 	AddPlayer(player Player, sess net4go.Session) error
 
 	// RemovePlayer 移除玩家，如果玩家有网络连接，则会断开网络连接
-	RemovePlayer(playerId uint64)
+	RemovePlayer(playerId int64)
 
 	// Run 启动
 	Run(game Game) error
 
 	// SendPacket 向指定玩家发送消息
-	SendPacket(playerId uint64, packet net4go.Packet)
+	SendPacket(playerId int64, packet net4go.Packet)
 
 	// BroadcastPacket 向所有玩家广播消息
 	BroadcastPacket(packet net4go.Packet)
@@ -136,11 +136,11 @@ type roomMode interface {
 }
 
 type room struct {
-	id          uint64
+	id          int64
 	token       string
 	state       RoomState
 	mu          sync.RWMutex
-	players     map[uint64]Player
+	players     map[int64]Player
 	closed      int32
 	messagePool *sync.Pool
 
@@ -148,11 +148,11 @@ type room struct {
 	mode   roomMode
 }
 
-func NewRoom(id uint64, opts ...RoomOption) Room {
+func NewRoom(id int64, opts ...RoomOption) Room {
 	var r = &room{}
 	r.id = id
 	r.state = RoomStatePending
-	r.players = make(map[uint64]Player)
+	r.players = make(map[int64]Player)
 	r.closed = 0
 	r.messagePool = &sync.Pool{
 		New: func() interface{} {
@@ -172,7 +172,7 @@ func NewRoom(id uint64, opts ...RoomOption) Room {
 	return r
 }
 
-func (this *room) newMessage(playerId uint64, mType messageType, sess net4go.Session, packet net4go.Packet) *message {
+func (this *room) newMessage(playerId int64, mType messageType, sess net4go.Session, packet net4go.Packet) *message {
 	var m = this.messagePool.Get().(*message)
 	m.PlayerId = playerId
 	m.Type = mType
@@ -191,7 +191,7 @@ func (this *room) releaseMessage(m *message) {
 	}
 }
 
-func (this *room) GetId() uint64 {
+func (this *room) GetId() int64 {
 	return this.id
 }
 
@@ -205,7 +205,7 @@ func (this *room) GetState() RoomState {
 	return this.state
 }
 
-func (this *room) GetPlayer(playerId uint64) Player {
+func (this *room) GetPlayer(playerId int64) Player {
 	if playerId == 0 {
 		return nil
 	}
@@ -216,9 +216,9 @@ func (this *room) GetPlayer(playerId uint64) Player {
 	return p
 }
 
-func (this *room) GetPlayers() map[uint64]Player {
+func (this *room) GetPlayers() map[int64]Player {
 	this.mu.RLock()
-	var ps = make(map[uint64]Player, len(this.players))
+	var ps = make(map[int64]Player, len(this.players))
 	for pId, p := range this.players {
 		ps[pId] = p
 	}
@@ -243,7 +243,7 @@ func (this *room) GetPlayerCount() int {
 	return c
 }
 
-func (this *room) Connect(playerId uint64, sess net4go.Session) error {
+func (this *room) Connect(playerId int64, sess net4go.Session) error {
 	if playerId == 0 {
 		return ErrPlayerNotExist
 	}
@@ -273,7 +273,7 @@ func (this *room) Connect(playerId uint64, sess net4go.Session) error {
 	return nil
 }
 
-func (this *room) Disconnect(playerId uint64) {
+func (this *room) Disconnect(playerId int64) {
 	this.RemovePlayer(playerId)
 }
 
@@ -309,7 +309,7 @@ func (this *room) AddPlayer(player Player, sess net4go.Session) error {
 	return this.Connect(player.GetId(), sess)
 }
 
-func (this *room) RemovePlayer(playerId uint64) {
+func (this *room) RemovePlayer(playerId int64) {
 	var p = this.GetPlayer(playerId)
 	if p != nil {
 		var conn = p.Session()
@@ -332,7 +332,7 @@ func (this *room) OnMessage(sess net4go.Session, p net4go.Packet) bool {
 		return false
 	}
 
-	var playerId = value.(uint64)
+	var playerId = value.(int64)
 	if playerId == 0 {
 		return false
 	}
@@ -349,7 +349,7 @@ func (this *room) OnClose(c net4go.Session, err error) {
 		return
 	}
 
-	var playerId = value.(uint64)
+	var playerId = value.(int64)
 	if playerId == 0 {
 		return
 	}
@@ -359,12 +359,12 @@ func (this *room) OnClose(c net4go.Session, err error) {
 	this.enqueuePlayerLeave(playerId)
 }
 
-func (this *room) enqueuePlayerLeave(playerId uint64) {
+func (this *room) enqueuePlayerLeave(playerId int64) {
 	var m = this.newMessage(playerId, mTypePlayerOut, nil, nil)
 	this.mQueue.Enqueue(m)
 }
 
-func (this *room) SendPacket(playerId uint64, packet net4go.Packet) {
+func (this *room) SendPacket(playerId int64, packet net4go.Packet) {
 	var p = this.GetPlayer(playerId)
 	if p != nil {
 		p.SendPacket(packet)

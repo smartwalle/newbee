@@ -26,7 +26,7 @@ func WithPlayerIndex(index uint32) PlayerOption {
 
 type Player interface {
 	// GetId 获取玩家 id
-	GetId() uint64
+	GetId() int64
 
 	// GetToken 获取玩家 token
 	GetToken() string
@@ -60,7 +60,7 @@ type Player interface {
 }
 
 type player struct {
-	id    uint64
+	id    int64
 	pType uint32
 	index uint32
 	token string
@@ -68,7 +68,7 @@ type player struct {
 	sess net4go.Session
 }
 
-func NewPlayer(id uint64, opts ...PlayerOption) Player {
+func NewPlayer(id int64, opts ...PlayerOption) Player {
 	var p = &player{}
 	p.id = id
 	for _, opt := range opts {
@@ -77,7 +77,7 @@ func NewPlayer(id uint64, opts ...PlayerOption) Player {
 	return p
 }
 
-func (this *player) GetId() uint64 {
+func (this *player) GetId() int64 {
 	return this.id
 }
 

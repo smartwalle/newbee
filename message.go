@@ -7,7 +7,7 @@ import (
 
 type message struct {
 	Type     messageType
-	PlayerId uint64
+	PlayerId int64
 	Packet   net4go.Packet
 	Session  net4go.Session
 }

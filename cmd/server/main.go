@@ -30,7 +30,7 @@ func main() {
 	go room.Run(game)
 
 	var mu = &sync.Mutex{}
-	var playerId uint64 = 0
+	var playerId int64 = 0
 
 	// ws
 	go func() {
@@ -131,13 +131,13 @@ func generateTLSConfig() *tls.Config {
 }
 
 type Game struct {
-	id        uint64
+	id        int64
 	room      newbee.Room
 	state     newbee.GameState
-	tickCount uint64
+	tickCount int64
 }
 
-func (this *Game) GetId() uint64 {
+func (this *Game) GetId() int64 {
 	return this.id
 }
 
