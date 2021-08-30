@@ -46,11 +46,11 @@ func main() {
 			if err != nil {
 				return
 			}
-			nConn := ws.NewConn(c, ws.Text, wsp, nil)
+			nSess := ws.NewSession(c, ws.Text, wsp, nil)
 
 			mu.Lock()
 			playerId = playerId + 1
-			fmt.Println(room.AddPlayer(newbee.NewPlayer(playerId), nConn))
+			fmt.Println(room.AddPlayer(newbee.NewPlayer(playerId), nSess))
 			mu.Unlock()
 		})
 		http.ListenAndServe(":8080", nil)
@@ -71,11 +71,11 @@ func main() {
 				continue
 			}
 
-			nConn := net4go.NewConn(c, tcpp, nil, net4go.WithNoDelay(false))
+			nSess := net4go.NewSession(c, tcpp, nil, net4go.WithNoDelay(false))
 
 			mu.Lock()
 			playerId = playerId + 1
-			room.AddPlayer(newbee.NewPlayer(playerId), nConn)
+			room.AddPlayer(newbee.NewPlayer(playerId), nSess)
 			mu.Unlock()
 		}
 	}()
@@ -95,11 +95,11 @@ func main() {
 				continue
 			}
 
-			nConn := net4go.NewConn(c, tcpp, nil)
+			nSess := net4go.NewSession(c, tcpp, nil)
 
 			mu.Lock()
 			playerId = playerId + 1
-			fmt.Println(room.AddPlayer(newbee.NewPlayer(playerId), nConn))
+			fmt.Println(room.AddPlayer(newbee.NewPlayer(playerId), nSess))
 			mu.Unlock()
 		}
 	}()
@@ -151,11 +151,7 @@ func (this *Game) TickInterval() time.Duration {
 
 func (this *Game) OnTick() {
 	this.tickCount++
-	fmt.Println("OnTick", time.Now(), this.tickCount)
-
-	if this.tickCount >= 200 {
-		this.room.Close()
-	}
+	//fmt.Println("OnTick", time.Now(), this.tickCount)
 }
 
 func (this *Game) OnMessage(player newbee.Player, packet net4go.Packet) {
@@ -186,5 +182,5 @@ func (this *Game) OnLeaveRoom(player newbee.Player) {
 }
 
 func (this *Game) OnCloseRoom(room newbee.Room) {
-	fmt.Println("OnCloseRoom", room.GetPlayersCount())
+	fmt.Println("OnCloseRoom", room.GetPlayerCount())
 }

@@ -9,7 +9,7 @@ type message struct {
 	Type     messageType
 	PlayerId uint64
 	Packet   net4go.Packet
-	Conn     net4go.Conn
+	Session  net4go.Session
 }
 
 type messageType int
@@ -20,30 +20,6 @@ const (
 	mTypePlayerOut messageType = 2
 	mTypeTick      messageType = 3
 )
-
-var messagePool = &sync.Pool{
-	New: func() interface{} {
-		return &message{}
-	},
-}
-
-func newMessage(playerId uint64, mType messageType, packet net4go.Packet) *message {
-	var m = messagePool.Get().(*message)
-	m.PlayerId = playerId
-	m.Type = mType
-	m.Packet = packet
-	return m
-}
-
-func releaseMessage(m *message) {
-	if m != nil {
-		m.PlayerId = 0
-		m.Type = 0
-		m.Packet = nil
-		m.Conn = nil
-		messagePool.Put(m)
-	}
-}
 
 type iMessageQueue interface {
 	Enqueue(m *message)

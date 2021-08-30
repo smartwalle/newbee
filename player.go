@@ -37,23 +37,17 @@ type Player interface {
 	// GetIndex 获取玩家索引
 	GetIndex() uint32
 
-	// Conn
-	Conn() net4go.Conn
+	// Session 获取连接信息
+	Session() net4go.Session
 
 	// Connect 将连接和玩家进行绑定
-	Connect(conn net4go.Conn)
+	Connect(sess net4go.Session)
 
 	// Disconnect 断开玩家连接
 	Disconnect()
 
 	// Connected 获取玩家在线状态
 	Connected() bool
-
-	// SendMessage 发送消息
-	SendMessage([]byte)
-
-	// AsyncSendMessage 异步发送消息
-	AsyncSendMessage([]byte)
 
 	// SendPacket 发送消息
 	SendPacket(net4go.Packet)
@@ -71,7 +65,7 @@ type player struct {
 	index uint32
 	token string
 
-	conn net4go.Conn
+	sess net4go.Session
 }
 
 func NewPlayer(id uint64, opts ...PlayerOption) Player {
@@ -99,61 +93,43 @@ func (this *player) GetIndex() uint32 {
 	return this.index
 }
 
-func (this *player) Conn() net4go.Conn {
-	return this.conn
+func (this *player) Session() net4go.Session {
+	return this.sess
 }
 
-func (this *player) Connect(c net4go.Conn) {
-	if this.conn != nil && this.conn != c {
-		this.conn.Close()
+func (this *player) Connect(sess net4go.Session) {
+	if this.sess != nil && this.sess != sess {
+		this.sess.Close()
 	}
 
-	this.conn = c
+	this.sess = sess
 }
 
 func (this *player) Disconnect() {
-	if this.conn != nil {
-		this.conn.Close()
+	if this.sess != nil {
+		this.sess.Close()
 	}
-	this.conn = nil
+	this.sess = nil
 }
 
 func (this *player) Connected() bool {
-	return this.conn != nil && this.conn.Closed() == false
-}
-
-func (this *player) SendMessage(b []byte) {
-	if this.conn == nil {
-		return
-	}
-	if _, err := this.conn.Write(b); err != nil {
-		this.Close()
-	}
-}
-
-func (this *player) AsyncSendMessage(b []byte) {
-	if this.conn == nil {
-		return
-	}
-	if err := this.conn.AsyncWrite(b); err != nil {
-		this.Close()
-	}
+	return this.sess != nil && this.sess.Closed() == false
 }
 
 func (this *player) SendPacket(p net4go.Packet) {
-	if this.conn == nil {
+	if this.sess == nil {
 		return
 	}
-	if err := this.conn.WritePacket(p); err != nil {
+	if err := this.sess.WritePacket(p); err != nil {
 		this.Close()
 	}
 }
 
 func (this *player) AsyncSendPacket(p net4go.Packet) {
-	if this.conn == nil {
+	if this.sess == nil {
 		return
 	}
-	if err := this.conn.AsyncWritePacket(p); err != nil {
+	if err := this.sess.AsyncWritePacket(p); err != nil {
 		this.Close()
 	}
 }

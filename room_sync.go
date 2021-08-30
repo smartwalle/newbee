@@ -65,7 +65,7 @@ RunLoop:
 				if p == nil {
 					break
 				}
-				p.Connect(m.Conn)
+				p.Connect(m.Session)
 				game.OnJoinRoom(p)
 			case mTypePlayerOut:
 				var p = this.GetPlayer(m.PlayerId)
@@ -82,7 +82,7 @@ RunLoop:
 				game.OnTick()
 				this.tick(d)
 			}
-			releaseMessage(m)
+			this.releaseMessage(m)
 		}
 	}
 	if this.timer != nil {
@@ -95,7 +95,7 @@ RunLoop:
 
 func (this *syncRoom) tick(d time.Duration) {
 	this.timer = time.AfterFunc(d, func() {
-		var m = newMessage(0, mTypeTick, nil)
+		var m = this.newMessage(0, mTypeTick, nil, nil)
 		this.mQueue.Enqueue(m)
 	})
 }

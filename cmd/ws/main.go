@@ -21,7 +21,7 @@ func main() {
 			return
 		}
 
-		ws.NewConn(c, ws.Text, p, h)
+		ws.NewSession(c, ws.Text, p, h)
 	}
 
 	select {}
@@ -30,28 +30,28 @@ func main() {
 type WSHandler struct {
 }
 
-func (this *WSHandler) OnMessage(c net4go.Conn, packet net4go.Packet) bool {
+func (this *WSHandler) OnMessage(sess net4go.Session, packet net4go.Packet) bool {
 	if p := packet.(*protocol.Packet); p != nil {
 		switch p.Type {
 		case protocol.Heartbeat:
 		case protocol.JoinRoomSuccess:
-			go func(nConn net4go.Conn) {
+			go func(nSess net4go.Session) {
 				for {
 					var p = &protocol.Packet{}
 					p.Type = protocol.Heartbeat
 					p.Message = "来自 TCP 的消息"
 
-					nConn.AsyncWritePacket(p)
+					nSess.AsyncWritePacket(p)
 
 					time.Sleep(time.Second * 1)
 				}
-			}(c)
+			}(sess)
 		}
 	}
 	return true
 }
 
-func (this *WSHandler) OnClose(c net4go.Conn, err error) {
+func (this *WSHandler) OnClose(sess net4go.Session, err error) {
 	fmt.Println("OnClose", err)
 	os.Exit(-1)
 }

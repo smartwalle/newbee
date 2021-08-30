@@ -19,8 +19,8 @@ func main() {
 			return
 		}
 
-		var nConn = net4go.NewConn(c, p, h)
-		nConn.Set("index", i)
+		var nSess = net4go.NewSession(c, p, h)
+		nSess.Set("index", i)
 	}
 
 	select {}
@@ -29,28 +29,28 @@ func main() {
 type TCPHandler struct {
 }
 
-func (this *TCPHandler) OnMessage(c net4go.Conn, packet net4go.Packet) bool {
+func (this *TCPHandler) OnMessage(sess net4go.Session, packet net4go.Packet) bool {
 	if p := packet.(*protocol.Packet); p != nil {
 		switch p.Type {
 		case protocol.Heartbeat:
-			fmt.Println(c.Get("index"), p.Message)
+			fmt.Println(sess.Get("index"), p.Message)
 		case protocol.JoinRoomSuccess:
-			go func(nConn net4go.Conn) {
+			go func(nSess net4go.Session) {
 				for {
 					var p = &protocol.Packet{}
 					p.Type = protocol.Heartbeat
 					p.Message = "来自 TCP 的消息"
 
-					nConn.WritePacket(p)
+					nSess.WritePacket(p)
 
 					time.Sleep(time.Second * 1)
 				}
-			}(c)
+			}(sess)
 		}
 	}
 	return true
 }
 
-func (this *TCPHandler) OnClose(c net4go.Conn, err error) {
-	fmt.Println("OnClose", err, c.Get("index"))
+func (this *TCPHandler) OnClose(sess net4go.Session, err error) {
+	fmt.Println("OnClose", err, sess.Get("index"))
 }

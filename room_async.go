@@ -55,7 +55,7 @@ RunLoop:
 			var p = this.GetPlayer(m.PlayerId)
 
 			if p == nil {
-				releaseMessage(m)
+				this.releaseMessage(m)
 				continue
 			}
 
@@ -63,7 +63,7 @@ RunLoop:
 			case mTypeDefault:
 				game.OnMessage(p, m.Packet)
 			case mTypePlayerIn:
-				p.Connect(m.Conn)
+				p.Connect(m.Session)
 				game.OnJoinRoom(p)
 			case mTypePlayerOut:
 				this.mu.Lock()
@@ -73,7 +73,7 @@ RunLoop:
 				game.OnLeaveRoom(p)
 				p.Close()
 			}
-			releaseMessage(m)
+			this.releaseMessage(m)
 		}
 	}
 	close(stopTicker)

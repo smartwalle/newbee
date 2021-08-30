@@ -22,7 +22,7 @@ func main() {
 			return
 		}
 
-		net4go.NewConn(c, p, h)
+		net4go.NewSession(c, p, h)
 	}
 
 	select {}
@@ -31,28 +31,28 @@ func main() {
 type QUICHandler struct {
 }
 
-func (this *QUICHandler) OnMessage(c net4go.Conn, packet net4go.Packet) bool {
+func (this *QUICHandler) OnMessage(sess net4go.Session, packet net4go.Packet) bool {
 	if p := packet.(*protocol.Packet); p != nil {
 		switch p.Type {
 		case protocol.Heartbeat:
 		case protocol.JoinRoomSuccess:
-			go func(nConn net4go.Conn) {
+			go func(nSess net4go.Session) {
 				for {
 					var p = &protocol.Packet{}
 					p.Type = protocol.Heartbeat
 					p.Message = "来自 QUIC 的消息"
 
-					nConn.AsyncWritePacket(p)
+					nSess.AsyncWritePacket(p)
 
 					time.Sleep(time.Second * 10)
 				}
-			}(c)
+			}(sess)
 		}
 	}
 	return true
 }
 
-func (this *QUICHandler) OnClose(c net4go.Conn, err error) {
+func (this *QUICHandler) OnClose(sess net4go.Session, err error) {
 	fmt.Println("OnClose", err)
 	os.Exit(-1)
 }

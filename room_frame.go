@@ -70,7 +70,7 @@ RunLoop:
 					if p == nil {
 						break
 					}
-					p.Connect(m.Conn)
+					p.Connect(m.Session)
 					game.OnJoinRoom(p)
 				case mTypePlayerOut:
 					var p = this.GetPlayer(m.PlayerId)
@@ -84,7 +84,7 @@ RunLoop:
 					game.OnLeaveRoom(p)
 					p.Close()
 				}
-				releaseMessage(m)
+				this.releaseMessage(m)
 			}
 			game.OnTick()
 			this.tick(d)
