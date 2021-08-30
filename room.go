@@ -95,6 +95,9 @@ type Room interface {
 	// GetPlayers 获取所有玩家信息
 	GetPlayers() map[uint64]Player
 
+	// RangePlayer 只读遍历玩家信息，在回调函数中，不可执行 Room 的其它可以影响玩家列表的操作
+	RangePlayer(fn func(player Player))
+
 	// GetPlayerCount 获取玩家数量
 	GetPlayerCount() int
 
@@ -221,6 +224,16 @@ func (this *room) GetPlayers() map[uint64]Player {
 	}
 	this.mu.RUnlock()
 	return ps
+}
+
+func (this *room) RangePlayer(fn func(player Player)) {
+	this.mu.RLock()
+	for _, p := range this.players {
+		if p != nil {
+			fn(p)
+		}
+	}
+	this.mu.RUnlock()
 }
 
 func (this *room) GetPlayerCount() int {
