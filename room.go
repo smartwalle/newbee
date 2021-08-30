@@ -403,4 +403,5 @@ func (this *room) Close() error {
 func (this *room) clean() {
 	this.players = nil
 	this.mode = nil
+	this.messagePool = nil
 }
