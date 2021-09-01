@@ -59,7 +59,9 @@ RunLoop:
 				if p == nil {
 					break
 				}
-				game.OnMessage(p, m.Packet)
+				game.OnMessage(p, m.Data)
+			case mTypeCustom:
+				game.OnDequeue(m.Data)
 			case mTypePlayerIn:
 				var p = this.GetPlayer(m.PlayerId)
 				if p == nil {

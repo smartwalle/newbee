@@ -8,8 +8,8 @@ import (
 type message struct {
 	Type     messageType
 	PlayerId int64
-	Packet   net4go.Packet
 	Session  net4go.Session
+	Data     interface{}
 }
 
 type messageType int
@@ -19,6 +19,7 @@ const (
 	mTypePlayerIn  messageType = 1
 	mTypePlayerOut messageType = 2
 	mTypeTick      messageType = 3
+	mTypeCustom    messageType = 4
 )
 
 type iMessageQueue interface {

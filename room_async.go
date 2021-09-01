@@ -52,20 +52,27 @@ RunLoop:
 				break RunLoop
 			}
 
-			var p = this.GetPlayer(m.PlayerId)
-
-			if p == nil {
-				this.releaseMessage(m)
-				continue
-			}
-
 			switch m.Type {
 			case mTypeDefault:
-				game.OnMessage(p, m.Packet)
+				var p = this.GetPlayer(m.PlayerId)
+				if p == nil {
+					break
+				}
+				game.OnMessage(p, m.Data)
+			case mTypeCustom:
+				game.OnDequeue(m.Data)
 			case mTypePlayerIn:
+				var p = this.GetPlayer(m.PlayerId)
+				if p == nil {
+					break
+				}
 				p.Connect(m.Session)
 				game.OnJoinRoom(p)
 			case mTypePlayerOut:
+				var p = this.GetPlayer(m.PlayerId)
+				if p == nil {
+					break
+				}
 				this.mu.Lock()
 				delete(this.players, p.GetId())
 				this.mu.Unlock()

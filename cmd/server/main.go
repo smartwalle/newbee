@@ -154,14 +154,20 @@ func (this *Game) OnTick() {
 	//fmt.Println("OnTick", time.Now(), this.tickCount)
 }
 
-func (this *Game) OnMessage(player newbee.Player, packet net4go.Packet) {
-	if p := packet.(*protocol.Packet); p != nil {
+func (this *Game) OnMessage(player newbee.Player, message interface{}) {
+	if p := message.(*protocol.Packet); p != nil {
 		switch p.Type {
 		case protocol.Heartbeat:
 			p.Message = "来自服务器的消息"
 			player.AsyncSendPacket(p)
+
+			this.room.Enqueue(fmt.Sprintf("%s haha %d", time.Now(), player.GetId()))
 		}
 	}
+}
+
+func (this *Game) OnDequeue(message interface{}) {
+	fmt.Println(message)
 }
 
 func (this *Game) OnRunInRoom(room newbee.Room) {

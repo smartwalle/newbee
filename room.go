@@ -116,6 +116,9 @@ type Room interface {
 	// Run 启动
 	Run(game Game) error
 
+	// Enqueue 添加自定义消息
+	Enqueue(message interface{})
+
 	// SendPacket 向指定玩家发送消息
 	SendPacket(playerId int64, packet net4go.Packet)
 
@@ -172,12 +175,12 @@ func NewRoom(id int64, opts ...RoomOption) Room {
 	return r
 }
 
-func (this *room) newMessage(playerId int64, mType messageType, sess net4go.Session, packet net4go.Packet) *message {
+func (this *room) newMessage(playerId int64, mType messageType, sess net4go.Session, data interface{}) *message {
 	var m = this.messagePool.Get().(*message)
 	m.PlayerId = playerId
 	m.Type = mType
 	m.Session = sess
-	m.Packet = packet
+	m.Data = data
 	return m
 }
 
@@ -186,7 +189,7 @@ func (this *room) releaseMessage(m *message) {
 		m.PlayerId = 0
 		m.Type = 0
 		m.Session = nil
-		m.Packet = nil
+		m.Data = nil
 		this.messagePool.Put(m)
 	}
 }
@@ -322,6 +325,7 @@ func (this *room) RemovePlayer(playerId int64) {
 		}
 	}
 }
+
 func (this *room) Run(game Game) error {
 	return this.mode.Run(game)
 }
@@ -357,6 +361,11 @@ func (this *room) OnClose(c net4go.Session, err error) {
 	c.UpdateHandler(nil)
 
 	this.enqueuePlayerLeave(playerId)
+}
+
+func (this *room) Enqueue(message interface{}) {
+	var m = this.newMessage(0, mTypeCustom, nil, message)
+	this.mQueue.Enqueue(m)
 }
 
 func (this *room) enqueuePlayerLeave(playerId int64) {
