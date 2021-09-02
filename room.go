@@ -219,6 +219,18 @@ func (this *room) GetPlayer(playerId int64) Player {
 	return p
 }
 
+func (this *room) PopPlayer(playerId int64) Player {
+	if playerId == 0 {
+		return nil
+	}
+
+	this.mu.RLock()
+	var p = this.players[playerId]
+	delete(this.players, playerId)
+	this.mu.RUnlock()
+	return p
+}
+
 func (this *room) GetPlayers() map[int64]Player {
 	this.mu.RLock()
 	var ps = make(map[int64]Player, len(this.players))

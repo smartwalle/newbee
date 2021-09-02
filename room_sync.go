@@ -70,14 +70,10 @@ RunLoop:
 				p.Connect(m.Session)
 				game.OnJoinRoom(p)
 			case mTypePlayerOut:
-				var p = this.GetPlayer(m.PlayerId)
+				var p = this.PopPlayer(m.PlayerId)
 				if p == nil {
 					break
 				}
-				this.mu.Lock()
-				delete(this.players, p.GetId())
-				this.mu.Unlock()
-
 				game.OnLeaveRoom(p)
 				p.Close()
 			case mTypeTick:
