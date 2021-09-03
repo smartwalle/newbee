@@ -58,7 +58,9 @@ RunLoop:
 					break
 				}
 			case mTypeCustom:
-				game.OnDequeue(m.Data)
+				if this.onDequeue(game, m.Data) {
+					break
+				}
 			case mTypePlayerIn:
 				if this.onJoinRoom(game, m.PlayerId, m.Session) {
 					break
