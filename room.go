@@ -50,7 +50,7 @@ func WithToken(token string) RoomOption {
 	}
 }
 
-func WithWait(w *sync.WaitGroup) RoomOption {
+func WithWaiter(w Waiter) RoomOption {
 	return func(r *room) {
 		r.waiter = w
 	}
@@ -147,7 +147,7 @@ type roomMode interface {
 type room struct {
 	id          int64
 	token       string
-	waiter      *sync.WaitGroup
+	waiter      Waiter
 	state       RoomState
 	mu          sync.RWMutex
 	players     map[int64]Player
