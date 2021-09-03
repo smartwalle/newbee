@@ -50,6 +50,12 @@ func WithToken(token string) RoomOption {
 	}
 }
 
+func WithWait(w *sync.WaitGroup) RoomOption {
+	return func(r *room) {
+		r.waiter = w
+	}
+}
+
 // WithSync 网络消息和定时器消息为同步模式
 // 网络消息和定时器消息会放入同一队列等待执行
 // 定时任务放入队列之后，定时器就会暂停，需要等到队列中的定时任务执行之后才会再次激活定时器
@@ -141,6 +147,7 @@ type roomMode interface {
 type room struct {
 	id          int64
 	token       string
+	waiter      *sync.WaitGroup
 	state       RoomState
 	mu          sync.RWMutex
 	players     map[int64]Player
@@ -165,6 +172,10 @@ func NewRoom(id int64, opts ...RoomOption) Room {
 
 	for _, opt := range opts {
 		opt(r)
+	}
+
+	if r.waiter == nil {
+		r.waiter = &sync.WaitGroup{}
 	}
 
 	if r.mQueue == nil {
@@ -219,7 +230,7 @@ func (this *room) GetPlayer(playerId int64) Player {
 	return p
 }
 
-func (this *room) PopPlayer(playerId int64) Player {
+func (this *room) popPlayer(playerId int64) Player {
 	if playerId == 0 {
 		return nil
 	}
@@ -283,8 +294,7 @@ func (this *room) Connect(playerId int64, sess net4go.Session) error {
 	sess.Set(kPlayerId, playerId)
 	sess.UpdateHandler(this)
 
-	var m = this.newMessage(playerId, mTypePlayerIn, sess, nil)
-	this.mQueue.Enqueue(m)
+	this.enqueuePlayerIn(playerId, sess)
 	return nil
 }
 
@@ -339,6 +349,8 @@ func (this *room) RemovePlayer(playerId int64) {
 }
 
 func (this *room) Run(game Game) error {
+	defer this.waiter.Done()
+	this.waiter.Add(1)
 	return this.mode.Run(game)
 }
 
@@ -372,7 +384,7 @@ func (this *room) OnClose(c net4go.Session, err error) {
 
 	c.UpdateHandler(nil)
 
-	this.enqueuePlayerLeave(playerId)
+	this.enqueuePlayerOut(playerId)
 }
 
 func (this *room) Enqueue(message interface{}) {
@@ -380,7 +392,12 @@ func (this *room) Enqueue(message interface{}) {
 	this.mQueue.Enqueue(m)
 }
 
-func (this *room) enqueuePlayerLeave(playerId int64) {
+func (this *room) enqueuePlayerIn(playerId int64, sess net4go.Session) {
+	var m = this.newMessage(playerId, mTypePlayerIn, sess, nil)
+	this.mQueue.Enqueue(m)
+}
+
+func (this *room) enqueuePlayerOut(playerId int64) {
 	var m = this.newMessage(playerId, mTypePlayerOut, nil, nil)
 	this.mQueue.Enqueue(m)
 }
@@ -425,9 +442,11 @@ func (this *room) Close() error {
 
 	this.state = RoomStateClose
 
+	this.mu.RLock()
 	for _, p := range this.players {
-		this.enqueuePlayerLeave(p.GetId())
+		this.enqueuePlayerOut(p.GetId())
 	}
+	this.mu.RUnlock()
 
 	this.mQueue.Enqueue(nil)
 

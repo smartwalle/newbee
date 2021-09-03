@@ -60,27 +60,19 @@ RunLoop:
 
 				switch m.Type {
 				case mTypeDefault:
-					var p = this.GetPlayer(m.PlayerId)
-					if p == nil {
+					if this.onMessage(game, m.PlayerId, m.Data) {
 						break
 					}
-					game.OnMessage(p, m.Data)
 				case mTypeCustom:
 					game.OnDequeue(m.Data)
 				case mTypePlayerIn:
-					var p = this.GetPlayer(m.PlayerId)
-					if p == nil {
+					if this.onJoinRoom(game, m.PlayerId, m.Session) {
 						break
 					}
-					p.Connect(m.Session)
-					game.OnJoinRoom(p)
 				case mTypePlayerOut:
-					var p = this.PopPlayer(m.PlayerId)
-					if p == nil {
+					if this.onLeaveRoom(game, m.PlayerId) {
 						break
 					}
-					game.OnLeaveRoom(p)
-					p.Close()
 				}
 				this.releaseMessage(m)
 			}
