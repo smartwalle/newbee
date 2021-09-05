@@ -16,7 +16,10 @@ import (
 	"math/big"
 	"net"
 	"net/http"
+	"os"
+	"os/signal"
 	"sync"
+	"syscall"
 	"time"
 )
 
@@ -24,10 +27,19 @@ func main() {
 	var tcpp = &protocol.TCPProtocol{}
 	var wsp = &protocol.WSProtocol{}
 
-	var room = newbee.NewRoom(100, newbee.WithFrame())
+	var waiter = &sync.WaitGroup{}
+
+	var room = newbee.NewRoom(100, newbee.WithWaiter(waiter), newbee.WithFrame())
 
 	var game = &Game{}
-	go room.Run(game)
+	go func() {
+		fmt.Println("开始游戏...")
+		room.Run(game)
+		fmt.Println("游戏关闭.")
+	}()
+
+	// sleep 一会儿，让 Room 运行 Game
+	time.Sleep(time.Second * 1)
 
 	var mu = &sync.Mutex{}
 	var playerId int64 = 0
@@ -104,7 +116,24 @@ func main() {
 		}
 	}()
 
-	select {}
+	fmt.Println("运行中...")
+
+	var c = make(chan os.Signal, 1)
+	signal.Notify(c, syscall.SIGQUIT, syscall.SIGTERM, syscall.SIGINT)
+MainLoop:
+	for {
+		s := <-c
+		switch s {
+		case syscall.SIGQUIT, syscall.SIGTERM, syscall.SIGINT:
+			break MainLoop
+		}
+	}
+
+	fmt.Println("开始关闭游戏.")
+	room.Close()
+	fmt.Println("关闭中...")
+	waiter.Wait()
+	fmt.Println("结束.")
 }
 
 func generateTLSConfig() *tls.Config {
@@ -185,6 +214,9 @@ func (this *Game) OnJoinRoom(player newbee.Player) {
 
 func (this *Game) OnLeaveRoom(player newbee.Player) {
 	fmt.Println("OnLeaveRoom", player.GetId(), this.room.GetState())
+	fmt.Println("保存玩家数据:", player.GetId())
+	time.Sleep(time.Second * 3)
+	fmt.Println("保存玩家数据完成:", player.GetId())
 }
 
 func (this *Game) OnCloseRoom(room newbee.Room) {
