@@ -19,7 +19,7 @@ var (
 	ErrPlayerNotExist = errors.New("newbee: player not exist")
 	ErrNilPlayer      = errors.New("newbee: player is nil")
 	ErrFailedToRun    = errors.New("newbee: failed to run the room")
-	ErrBadConnection  = errors.New("newbee: bad connection")
+	ErrBadSession     = errors.New("newbee: bad session")
 	ErrBadInterval    = errors.New("newbee: bad interval")
 )
 
@@ -107,14 +107,8 @@ type Room interface {
 	// GetPlayerCount 获取玩家数量
 	GetPlayerCount() int
 
-	// Connect 将玩家和连接进行绑定
-	Connect(playerId int64, sess net4go.Session) error
-
-	// Disconnect 断开玩家的网络连接, 作用与 RemovePlayer 一致
-	Disconnect(playerId int64)
-
 	// AddPlayer 加入新的玩家，如果玩家已经存在或者 player 参数为空，会返回相应的错误，如果连接不为空，则将该玩家和连接进行绑定
-	AddPlayer(player Player, sess net4go.Session) error
+	AddPlayer(player Player) error
 
 	// RemovePlayer 移除玩家，如果玩家有网络连接，则会断开网络连接
 	RemovePlayer(playerId int64)
@@ -130,9 +124,6 @@ type Room interface {
 
 	// BroadcastPacket 向所有玩家广播消息
 	BroadcastPacket(packet net4go.Packet)
-
-	// BroadcastPacketWithType 向指定类型的玩家广播消息
-	BroadcastPacketWithType(pType uint32, p net4go.Packet)
 
 	// Close 关闭房间
 	Close() error
@@ -186,11 +177,10 @@ func NewRoom(id int64, opts ...RoomOption) Room {
 	return r
 }
 
-func (this *room) newMessage(playerId int64, mType messageType, sess net4go.Session, data interface{}) *message {
+func (this *room) newMessage(playerId int64, mType messageType, data interface{}) *message {
 	var m = this.messagePool.Get().(*message)
 	m.PlayerId = playerId
 	m.Type = mType
-	m.Session = sess
 	m.Data = data
 	return m
 }
@@ -199,7 +189,6 @@ func (this *room) releaseMessage(m *message) {
 	if m != nil {
 		m.PlayerId = 0
 		m.Type = 0
-		m.Session = nil
 		m.Data = nil
 		this.messagePool.Put(m)
 	}
@@ -269,40 +258,7 @@ func (this *room) GetPlayerCount() int {
 	return c
 }
 
-func (this *room) Connect(playerId int64, sess net4go.Session) error {
-	if playerId == 0 {
-		return ErrPlayerNotExist
-	}
-
-	// 验证玩家是否在本房间
-	this.mu.Lock()
-	var p = this.players[playerId]
-	this.mu.Unlock()
-
-	if p == nil {
-		return ErrPlayerNotExist
-	}
-
-	if sess == nil || sess.Closed() {
-		return ErrBadConnection
-	}
-
-	if this.Closed() {
-		return ErrRoomClosed
-	}
-
-	sess.Set(kPlayerId, playerId)
-	sess.UpdateHandler(this)
-
-	this.enqueuePlayerIn(playerId, sess)
-	return nil
-}
-
-func (this *room) Disconnect(playerId int64) {
-	this.RemovePlayer(playerId)
-}
-
-func (this *room) AddPlayer(player Player, sess net4go.Session) error {
+func (this *room) AddPlayer(player Player) error {
 	if player == nil {
 		return ErrNilPlayer
 	}
@@ -311,8 +267,8 @@ func (this *room) AddPlayer(player Player, sess net4go.Session) error {
 		return ErrPlayerNotExist
 	}
 
-	if sess == nil || sess.Closed() {
-		return ErrBadConnection
+	if player.Connected() == false {
+		return ErrBadSession
 	}
 
 	if this.Closed() {
@@ -331,14 +287,17 @@ func (this *room) AddPlayer(player Player, sess net4go.Session) error {
 
 	this.mu.Unlock()
 
-	return this.Connect(player.GetId(), sess)
+	var sess = player.Session()
+	sess.Set(kPlayerId, player.GetId())
+	this.enqueuePlayerIn(player.GetId())
+	sess.UpdateHandler(this)
+	return nil
 }
 
 func (this *room) RemovePlayer(playerId int64) {
 	var p = this.GetPlayer(playerId)
 	if p != nil {
-		var conn = p.Session()
-		if conn != nil && !conn.Closed() {
+		if p.Connected() {
 			p.Close()
 		} else {
 			this.mu.Lock()
@@ -365,14 +324,14 @@ func (this *room) OnMessage(sess net4go.Session, p net4go.Packet) bool {
 		return false
 	}
 
-	var m = this.newMessage(playerId, mTypeDefault, sess, p)
+	var m = this.newMessage(playerId, mTypeDefault, p)
 	this.mQueue.Enqueue(m)
 
 	return true
 }
 
-func (this *room) OnClose(c net4go.Session, err error) {
-	var value = c.Get(kPlayerId)
+func (this *room) OnClose(sess net4go.Session, err error) {
+	var value = sess.Get(kPlayerId)
 	if value == nil {
 		return
 	}
@@ -382,23 +341,23 @@ func (this *room) OnClose(c net4go.Session, err error) {
 		return
 	}
 
-	c.UpdateHandler(nil)
+	sess.UpdateHandler(nil)
 
 	this.enqueuePlayerOut(playerId)
 }
 
 func (this *room) Enqueue(message interface{}) {
-	var m = this.newMessage(0, mTypeCustom, nil, message)
+	var m = this.newMessage(0, mTypeCustom, message)
 	this.mQueue.Enqueue(m)
 }
 
-func (this *room) enqueuePlayerIn(playerId int64, sess net4go.Session) {
-	var m = this.newMessage(playerId, mTypePlayerIn, sess, nil)
+func (this *room) enqueuePlayerIn(playerId int64) {
+	var m = this.newMessage(playerId, mTypePlayerIn, nil)
 	this.mQueue.Enqueue(m)
 }
 
 func (this *room) enqueuePlayerOut(playerId int64) {
-	var m = this.newMessage(playerId, mTypePlayerOut, nil, nil)
+	var m = this.newMessage(playerId, mTypePlayerOut, nil)
 	this.mQueue.Enqueue(m)
 }
 
@@ -413,16 +372,6 @@ func (this *room) BroadcastPacket(packet net4go.Packet) {
 	this.mu.RLock()
 	for _, p := range this.players {
 		p.SendPacket(packet)
-	}
-	this.mu.RUnlock()
-}
-
-func (this *room) BroadcastPacketWithType(pType uint32, packet net4go.Packet) {
-	this.mu.RLock()
-	for _, p := range this.players {
-		if p.GetType() == pType {
-			p.SendPacket(packet)
-		}
 	}
 	this.mu.RUnlock()
 }

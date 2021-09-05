@@ -62,7 +62,7 @@ RunLoop:
 					break
 				}
 			case mTypePlayerIn:
-				if this.onJoinRoom(game, m.PlayerId, m.Session) {
+				if this.onJoinRoom(game, m.PlayerId) {
 					break
 				}
 			case mTypePlayerOut:

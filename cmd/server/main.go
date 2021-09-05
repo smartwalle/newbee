@@ -50,7 +50,7 @@ func main() {
 
 			mu.Lock()
 			playerId = playerId + 1
-			fmt.Println(room.AddPlayer(newbee.NewPlayer(playerId), nSess))
+			fmt.Println(room.AddPlayer(newbee.NewPlayer(playerId, nSess)))
 			mu.Unlock()
 		})
 		http.ListenAndServe(":8080", nil)
@@ -75,7 +75,7 @@ func main() {
 
 			mu.Lock()
 			playerId = playerId + 1
-			room.AddPlayer(newbee.NewPlayer(playerId), nSess)
+			room.AddPlayer(newbee.NewPlayer(playerId, nSess))
 			mu.Unlock()
 		}
 	}()
@@ -99,7 +99,7 @@ func main() {
 
 			mu.Lock()
 			playerId = playerId + 1
-			fmt.Println(room.AddPlayer(newbee.NewPlayer(playerId), nSess))
+			fmt.Println(room.AddPlayer(newbee.NewPlayer(playerId, nSess)))
 			mu.Unlock()
 		}
 	}()

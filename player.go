@@ -40,12 +40,6 @@ type Player interface {
 	// Session 获取连接信息
 	Session() net4go.Session
 
-	// Connect 将连接和玩家进行绑定
-	Connect(sess net4go.Session)
-
-	// Disconnect 断开玩家连接
-	Disconnect()
-
 	// Connected 获取玩家在线状态
 	Connected() bool
 
@@ -68,12 +62,13 @@ type player struct {
 	sess net4go.Session
 }
 
-func NewPlayer(id int64, opts ...PlayerOption) Player {
+func NewPlayer(id int64, sess net4go.Session, opts ...PlayerOption) Player {
 	var p = &player{}
 	p.id = id
 	for _, opt := range opts {
 		opt(p)
 	}
+	p.sess = sess
 	return p
 }
 
@@ -95,21 +90,6 @@ func (this *player) GetIndex() uint32 {
 
 func (this *player) Session() net4go.Session {
 	return this.sess
-}
-
-func (this *player) Connect(sess net4go.Session) {
-	if this.sess != nil && this.sess != sess {
-		this.sess.Close()
-	}
-
-	this.sess = sess
-}
-
-func (this *player) Disconnect() {
-	if this.sess != nil {
-		this.sess.Close()
-	}
-	this.sess = nil
 }
 
 func (this *player) Connected() bool {
@@ -135,6 +115,9 @@ func (this *player) AsyncSendPacket(p net4go.Packet) {
 }
 
 func (this *player) Close() error {
-	this.Disconnect()
+	if this.sess != nil {
+		this.sess.Close()
+	}
+	this.sess = nil
 	return nil
 }

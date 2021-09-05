@@ -1,14 +1,12 @@
 package newbee
 
 import (
-	"github.com/smartwalle/net4go"
 	"sync"
 )
 
 type message struct {
 	Type     messageType
 	PlayerId int64
-	Session  net4go.Session
 	Data     interface{}
 }
 
