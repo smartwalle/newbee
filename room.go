@@ -224,10 +224,10 @@ func (this *room) popPlayer(playerId int64) Player {
 		return nil
 	}
 
-	this.mu.RLock()
+	this.mu.Lock()
 	var p = this.players[playerId]
 	delete(this.players, playerId)
-	this.mu.RUnlock()
+	this.mu.Unlock()
 	return p
 }
 
