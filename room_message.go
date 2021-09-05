@@ -28,7 +28,8 @@ func (this *room) onLeaveRoom(game Game, playerId int64) (exit bool) {
 	if p == nil {
 		return true
 	}
-	game.OnLeaveRoom(p)
+
 	p.Close()
+	game.OnLeaveRoom(p)
 	return false
 }

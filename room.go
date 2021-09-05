@@ -295,16 +295,7 @@ func (this *room) AddPlayer(player Player) error {
 }
 
 func (this *room) RemovePlayer(playerId int64) {
-	var p = this.GetPlayer(playerId)
-	if p != nil {
-		if p.Connected() {
-			p.Close()
-		} else {
-			this.mu.Lock()
-			delete(this.players, p.GetId())
-			this.mu.Unlock()
-		}
-	}
+	this.enqueuePlayerOut(playerId)
 }
 
 func (this *room) Run(game Game) error {
@@ -314,12 +305,7 @@ func (this *room) Run(game Game) error {
 }
 
 func (this *room) OnMessage(sess net4go.Session, p net4go.Packet) bool {
-	var value = sess.Get(kPlayerId)
-	if value == nil {
-		return false
-	}
-
-	var playerId = value.(int64)
+	var playerId, _ = sess.Get(kPlayerId).(int64)
 	if playerId == 0 {
 		return false
 	}
@@ -331,12 +317,7 @@ func (this *room) OnMessage(sess net4go.Session, p net4go.Packet) bool {
 }
 
 func (this *room) OnClose(sess net4go.Session, err error) {
-	var value = sess.Get(kPlayerId)
-	if value == nil {
-		return
-	}
-
-	var playerId = value.(int64)
+	var playerId, _ = sess.Get(kPlayerId).(int64)
 	if playerId == 0 {
 		return
 	}

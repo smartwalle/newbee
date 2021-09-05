@@ -6,36 +6,9 @@ import (
 
 type PlayerOption func(*player)
 
-func WithPlayerToken(token string) PlayerOption {
-	return func(p *player) {
-		p.token = token
-	}
-}
-
-func WithPlayerType(pType uint32) PlayerOption {
-	return func(p *player) {
-		p.pType = pType
-	}
-}
-
-func WithPlayerIndex(index uint32) PlayerOption {
-	return func(p *player) {
-		p.index = index
-	}
-}
-
 type Player interface {
 	// GetId 获取玩家 id
 	GetId() int64
-
-	// GetToken 获取玩家 token
-	GetToken() string
-
-	// GetType 获取玩家所属的类型, 比如用于区分是可以正常进行游戏操作的玩家还是只能观战的观察者
-	GetType() uint32
-
-	// GetIndex 获取玩家索引
-	GetIndex() uint32
 
 	// Session 获取连接信息
 	Session() net4go.Session
@@ -54,11 +27,7 @@ type Player interface {
 }
 
 type player struct {
-	id    int64
-	pType uint32
-	index uint32
-	token string
-
+	id   int64
 	sess net4go.Session
 }
 
@@ -74,18 +43,6 @@ func NewPlayer(id int64, sess net4go.Session, opts ...PlayerOption) Player {
 
 func (this *player) GetId() int64 {
 	return this.id
-}
-
-func (this *player) GetToken() string {
-	return this.token
-}
-
-func (this *player) GetType() uint32 {
-	return this.pType
-}
-
-func (this *player) GetIndex() uint32 {
-	return this.index
 }
 
 func (this *player) Session() net4go.Session {
