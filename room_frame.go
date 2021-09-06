@@ -60,21 +60,13 @@ RunLoop:
 
 				switch m.Type {
 				case mTypeDefault:
-					if this.onMessage(game, m.PlayerId, m.Data) {
-						break
-					}
+					this.onMessage(game, m.PlayerId, m.Data)
 				case mTypeCustom:
-					if this.onDequeue(game, m.Data) {
-						break
-					}
+					this.onDequeue(game, m.Data)
 				case mTypePlayerIn:
-					if this.onJoinRoom(game, m.PlayerId) {
-						break
-					}
+					this.onJoinRoom(game, m.PlayerId)
 				case mTypePlayerOut:
-					if this.onLeaveRoom(game, m.PlayerId) {
-						break
-					}
+					this.onLeaveRoom(game, m.PlayerId)
 				}
 				this.releaseMessage(m)
 			}

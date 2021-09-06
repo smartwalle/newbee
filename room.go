@@ -178,6 +178,9 @@ func NewRoom(id int64, opts ...RoomOption) Room {
 }
 
 func (this *room) newMessage(playerId int64, mType messageType, data interface{}) *message {
+	if this.messagePool == nil {
+		return nil
+	}
 	var m = this.messagePool.Get().(*message)
 	m.PlayerId = playerId
 	m.Type = mType
@@ -186,7 +189,7 @@ func (this *room) newMessage(playerId int64, mType messageType, data interface{}
 }
 
 func (this *room) releaseMessage(m *message) {
-	if m != nil {
+	if m != nil && this.messagePool != nil {
 		m.PlayerId = 0
 		m.Type = 0
 		m.Data = nil
@@ -385,6 +388,7 @@ func (this *room) Close() error {
 
 func (this *room) clean() {
 	this.players = nil
-	this.mode = nil
 	this.messagePool = nil
+	this.mode = nil
+	this.mQueue = nil
 }

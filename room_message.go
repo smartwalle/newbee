@@ -1,35 +1,31 @@
 package newbee
 
-func (this *room) onMessage(game Game, playerId int64, data interface{}) (exit bool) {
+func (this *room) onMessage(game Game, playerId int64, data interface{}) {
 	var p = this.GetPlayer(playerId)
 	if p == nil {
-		return true
+		return
 	}
 	game.OnMessage(p, data)
-	return false
 }
 
-func (this *room) onDequeue(game Game, data interface{}) (exit bool) {
+func (this *room) onDequeue(game Game, data interface{}) {
 	game.OnDequeue(data)
-	return false
 }
 
-func (this *room) onJoinRoom(game Game, playerId int64) (exit bool) {
+func (this *room) onJoinRoom(game Game, playerId int64) {
 	var p = this.GetPlayer(playerId)
 	if p == nil {
-		return true
+		return
 	}
 	game.OnJoinRoom(p)
-	return false
 }
 
-func (this *room) onLeaveRoom(game Game, playerId int64) (exit bool) {
+func (this *room) onLeaveRoom(game Game, playerId int64) {
 	var p = this.popPlayer(playerId)
 	if p == nil {
-		return true
+		return
 	}
 
 	p.Close()
 	game.OnLeaveRoom(p)
-	return false
 }
