@@ -76,6 +76,7 @@ RunLoop:
 	}
 	if this.timer != nil {
 		this.timer.Stop()
+		this.timer = nil
 	}
 	game.OnCloseRoom(this)
 	this.clean()
