@@ -19,4 +19,3 @@
 .idea
 .DS_Store
 *.iml
-go.sum
