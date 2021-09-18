@@ -24,8 +24,6 @@ type iMessageQueue interface {
 	Enqueue(m *message)
 
 	Dequeue(items *[]*message)
-
-	Reset()
 }
 
 type blockMessageQueue struct {
@@ -40,10 +38,6 @@ func (this *blockMessageQueue) Enqueue(m *message) {
 	this.mu.Unlock()
 
 	this.cond.Signal()
-}
-
-func (this *blockMessageQueue) Reset() {
-	this.items = this.items[0:0]
 }
 
 func (this *blockMessageQueue) Dequeue(items *[]*message) {
@@ -61,8 +55,7 @@ func (this *blockMessageQueue) Dequeue(items *[]*message) {
 		}
 	}
 
-	this.Reset()
-
+	this.items = this.items[0:0]
 	this.mu.Unlock()
 }
 
@@ -83,10 +76,6 @@ func (this *messageQueue) Enqueue(m *message) {
 	this.mu.Unlock()
 }
 
-func (this *messageQueue) Reset() {
-	this.items = this.items[0:0]
-}
-
 func (this *messageQueue) Dequeue(items *[]*message) {
 	this.mu.Lock()
 	for len(this.items) == 0 {
@@ -101,7 +90,7 @@ func (this *messageQueue) Dequeue(items *[]*message) {
 		}
 	}
 
-	this.Reset()
+	this.items = this.items[0:0]
 	this.mu.Unlock()
 }
 
