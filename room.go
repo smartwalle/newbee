@@ -331,8 +331,10 @@ func (this *room) OnClose(sess net4go.Session, err error) {
 }
 
 func (this *room) Enqueue(message interface{}) {
-	var m = this.newMessage(0, mTypeCustom, message)
-	this.mQueue.Enqueue(m)
+	if this.state != RoomStateClose {
+		var m = this.newMessage(0, mTypeCustom, message)
+		this.mQueue.Enqueue(m)
+	}
 }
 
 func (this *room) enqueuePlayerIn(playerId int64) {

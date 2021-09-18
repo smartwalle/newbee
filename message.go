@@ -28,26 +28,23 @@ type iMessageQueue interface {
 
 type blockMessageQueue struct {
 	items []*message
-	mu    sync.Mutex
 	cond  *sync.Cond
 }
 
 func (this *blockMessageQueue) Enqueue(m *message) {
-	this.mu.Lock()
+	this.cond.L.Lock()
 	this.items = append(this.items, m)
-	this.mu.Unlock()
+	this.cond.L.Unlock()
 
 	this.cond.Signal()
 }
 
 func (this *blockMessageQueue) Dequeue(items *[]*message) {
-	this.mu.Lock()
+	this.cond.L.Lock()
 	for len(this.items) == 0 {
 		this.cond.Wait()
 	}
-	this.mu.Unlock()
 
-	this.mu.Lock()
 	for _, item := range this.items {
 		*items = append(*items, item)
 		if item == nil {
@@ -56,12 +53,12 @@ func (this *blockMessageQueue) Dequeue(items *[]*message) {
 	}
 
 	this.items = this.items[0:0]
-	this.mu.Unlock()
+	this.cond.L.Unlock()
 }
 
 func newBlockQueue() *blockMessageQueue {
 	var q = &blockMessageQueue{}
-	q.cond = sync.NewCond(&q.mu)
+	q.cond = sync.NewCond(&sync.Mutex{})
 	return q
 }
 
