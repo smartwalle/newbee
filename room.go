@@ -4,7 +4,6 @@ import (
 	"errors"
 	"github.com/smartwalle/net4go"
 	"sync"
-	"sync/atomic"
 )
 
 const (
@@ -142,7 +141,7 @@ type room struct {
 	state       RoomState
 	mu          sync.RWMutex
 	players     map[int64]Player
-	closed      int32
+	closed      bool
 	messagePool *sync.Pool
 
 	mQueue iMessageQueue
@@ -154,7 +153,7 @@ func NewRoom(id int64, opts ...RoomOption) Room {
 	r.id = id
 	r.state = RoomStatePending
 	r.players = make(map[int64]Player)
-	r.closed = 0
+	r.closed = false
 	r.messagePool = &sync.Pool{
 		New: func() interface{} {
 			return &message{}
@@ -274,11 +273,11 @@ func (this *room) AddPlayer(player Player) error {
 		return ErrBadSession
 	}
 
-	if this.Closed() {
+	this.mu.Lock()
+	if this.closed {
+		this.mu.Unlock()
 		return ErrRoomClosed
 	}
-
-	this.mu.Lock()
 
 	// 如果玩家已经存在，则返回错误信息
 	if _, ok := this.players[player.GetId()]; ok {
@@ -307,16 +306,15 @@ func (this *room) Run(game Game) error {
 	return this.mode.Run(game)
 }
 
-func (this *room) OnMessage(sess net4go.Session, p net4go.Packet) bool {
+func (this *room) OnMessage(sess net4go.Session, p net4go.Packet) {
 	var playerId, _ = sess.Get(kPlayerId).(int64)
 	if playerId == 0 {
-		return false
+		sess.Close()
+		return
 	}
 
 	var m = this.newMessage(playerId, mTypeDefault, p)
 	this.mQueue.Enqueue(m)
-
-	return true
 }
 
 func (this *room) OnClose(sess net4go.Session, err error) {
@@ -338,13 +336,17 @@ func (this *room) Enqueue(message interface{}) {
 }
 
 func (this *room) enqueuePlayerIn(playerId int64) {
-	var m = this.newMessage(playerId, mTypePlayerIn, nil)
-	this.mQueue.Enqueue(m)
+	if this.state != RoomStateClose {
+		var m = this.newMessage(playerId, mTypePlayerIn, nil)
+		this.mQueue.Enqueue(m)
+	}
 }
 
 func (this *room) enqueuePlayerOut(playerId int64) {
-	var m = this.newMessage(playerId, mTypePlayerOut, nil)
-	this.mQueue.Enqueue(m)
+	if this.state != RoomStateClose {
+		var m = this.newMessage(playerId, mTypePlayerOut, nil)
+		this.mQueue.Enqueue(m)
+	}
 }
 
 func (this *room) SendPacket(playerId int64, packet net4go.Packet) {
@@ -363,13 +365,19 @@ func (this *room) BroadcastPacket(packet net4go.Packet) {
 }
 
 func (this *room) Closed() bool {
-	return atomic.LoadInt32(&this.closed) != 0
+	this.mu.RLock()
+	defer this.mu.RUnlock()
+	return this.closed
 }
 
 func (this *room) Close() error {
-	if old := atomic.SwapInt32(&this.closed, 1); old != 0 {
+	this.mu.Lock()
+	if this.closed {
+		this.mu.Unlock()
 		return nil
 	}
+	this.closed = true
+	this.mu.Unlock()
 
 	if this.state == RoomStateClose {
 		return nil

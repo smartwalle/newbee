@@ -29,7 +29,7 @@ func main() {
 type TCPHandler struct {
 }
 
-func (this *TCPHandler) OnMessage(sess net4go.Session, packet net4go.Packet) bool {
+func (this *TCPHandler) OnMessage(sess net4go.Session, packet net4go.Packet) {
 	if p := packet.(*protocol.Packet); p != nil {
 		switch p.Type {
 		case protocol.Heartbeat:
@@ -48,7 +48,6 @@ func (this *TCPHandler) OnMessage(sess net4go.Session, packet net4go.Packet) boo
 			}(sess)
 		}
 	}
-	return true
 }
 
 func (this *TCPHandler) OnClose(sess net4go.Session, err error) {

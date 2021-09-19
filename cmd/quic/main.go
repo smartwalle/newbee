@@ -31,7 +31,7 @@ func main() {
 type QUICHandler struct {
 }
 
-func (this *QUICHandler) OnMessage(sess net4go.Session, packet net4go.Packet) bool {
+func (this *QUICHandler) OnMessage(sess net4go.Session, packet net4go.Packet) {
 	if p := packet.(*protocol.Packet); p != nil {
 		switch p.Type {
 		case protocol.Heartbeat:
@@ -49,7 +49,6 @@ func (this *QUICHandler) OnMessage(sess net4go.Session, packet net4go.Packet) bo
 			}(sess)
 		}
 	}
-	return true
 }
 
 func (this *QUICHandler) OnClose(sess net4go.Session, err error) {
