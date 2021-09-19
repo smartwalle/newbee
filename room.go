@@ -301,9 +301,30 @@ func (this *room) RemovePlayer(playerId int64) {
 }
 
 func (this *room) Run(game Game) error {
-	defer this.waiter.Done()
+	if game == nil {
+		return ErrNilGame
+	}
+	this.mu.Lock()
+
+	if this.state == RoomStateClose {
+		this.mu.Unlock()
+		return ErrRoomClosed
+	}
+
+	if this.state == RoomStateRunning {
+		this.mu.Unlock()
+		return ErrRoomRunning
+	}
+
+	this.state = RoomStateRunning
+	this.mu.Unlock()
+
+	game.OnRunInRoom(this)
+
 	this.waiter.Add(1)
-	return this.mode.Run(game)
+	var err = this.mode.Run(game)
+	this.waiter.Done()
+	return err
 }
 
 func (this *room) OnMessage(sess net4go.Session, p net4go.Packet) {

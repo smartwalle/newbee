@@ -18,25 +18,25 @@ func newFrameRoom(room *room) roomMode {
 }
 
 func (this *frameRoom) Run(game Game) error {
-	if game == nil {
-		return ErrNilGame
-	}
-	this.mu.Lock()
-
-	if this.state == RoomStateClose {
-		this.mu.Unlock()
-		return ErrRoomClosed
-	}
-
-	if this.state == RoomStateRunning {
-		this.mu.Unlock()
-		return ErrRoomRunning
-	}
-
-	this.state = RoomStateRunning
-	this.mu.Unlock()
-
-	game.OnRunInRoom(this)
+	//if game == nil {
+	//	return ErrNilGame
+	//}
+	//this.mu.Lock()
+	//
+	//if this.state == RoomStateClose {
+	//	this.mu.Unlock()
+	//	return ErrRoomClosed
+	//}
+	//
+	//if this.state == RoomStateRunning {
+	//	this.mu.Unlock()
+	//	return ErrRoomRunning
+	//}
+	//
+	//this.state = RoomStateRunning
+	//this.mu.Unlock()
+	//
+	//game.OnRunInRoom(this)
 
 	var d = game.TickInterval()
 	if d <= 0 {

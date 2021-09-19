@@ -15,25 +15,25 @@ func newAsyncRoom(room *room) roomMode {
 }
 
 func (this *asyncRoom) Run(game Game) error {
-	if game == nil {
-		return ErrNilGame
-	}
-	this.mu.Lock()
-
-	if this.state == RoomStateClose {
-		this.mu.Unlock()
-		return ErrRoomClosed
-	}
-
-	if this.state == RoomStateRunning {
-		this.mu.Unlock()
-		return ErrRoomRunning
-	}
-
-	this.state = RoomStateRunning
-	this.mu.Unlock()
-
-	game.OnRunInRoom(this)
+	//if game == nil {
+	//	return ErrNilGame
+	//}
+	//this.mu.Lock()
+	//
+	//if this.state == RoomStateClose {
+	//	this.mu.Unlock()
+	//	return ErrRoomClosed
+	//}
+	//
+	//if this.state == RoomStateRunning {
+	//	this.mu.Unlock()
+	//	return ErrRoomRunning
+	//}
+	//
+	//this.state = RoomStateRunning
+	//this.mu.Unlock()
+	//
+	//game.OnRunInRoom(this)
 
 	var stopTicker = make(chan struct{}, 1)
 	var tickerDone = make(chan struct{}, 1)
