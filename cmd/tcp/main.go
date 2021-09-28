@@ -12,7 +12,7 @@ func main() {
 	var p = &protocol.TCPProtocol{}
 	var h = &TCPHandler{}
 
-	for i := 0; i < 2; i++ {
+	for i := 0; i < 1; i++ {
 		c, err := net.Dial("tcp", ":9999")
 		if err != nil {
 			fmt.Println(err)

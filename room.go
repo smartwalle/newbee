@@ -335,7 +335,9 @@ func (this *room) OnMessage(sess net4go.Session, p net4go.Packet) {
 	}
 
 	var m = this.newMessage(playerId, mTypeDefault, p)
-	this.mQueue.Enqueue(m)
+	if this.mQueue != nil && m != nil {
+		this.mQueue.Enqueue(m)
+	}
 }
 
 func (this *room) OnClose(sess net4go.Session, err error) {
@@ -350,22 +352,22 @@ func (this *room) OnClose(sess net4go.Session, err error) {
 }
 
 func (this *room) Enqueue(message interface{}) {
-	if this.state != RoomStateClose {
-		var m = this.newMessage(0, mTypeCustom, message)
+	var m = this.newMessage(0, mTypeCustom, message)
+	if this.mQueue != nil && m != nil {
 		this.mQueue.Enqueue(m)
 	}
 }
 
 func (this *room) enqueuePlayerIn(playerId int64) {
-	if this.state != RoomStateClose {
-		var m = this.newMessage(playerId, mTypePlayerIn, nil)
+	var m = this.newMessage(playerId, mTypePlayerIn, nil)
+	if this.mQueue != nil && m != nil {
 		this.mQueue.Enqueue(m)
 	}
 }
 
 func (this *room) enqueuePlayerOut(playerId int64) {
-	if this.state != RoomStateClose {
-		var m = this.newMessage(playerId, mTypePlayerOut, nil)
+	var m = this.newMessage(playerId, mTypePlayerOut, nil)
+	if this.mQueue != nil && m != nil {
 		this.mQueue.Enqueue(m)
 	}
 }
