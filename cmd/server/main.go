@@ -34,8 +34,14 @@ func main() {
 	var game = &Game{}
 	go func() {
 		fmt.Println("开始游戏...")
-		room.Run(game)
-		fmt.Println("游戏关闭.")
+
+		var err = room.Run(game)
+
+		if err != nil {
+			fmt.Println("游戏异常结束:", err)
+		} else {
+			fmt.Println("游戏结束.")
+		}
 	}()
 
 	// sleep 一会儿，让 Room 运行 Game

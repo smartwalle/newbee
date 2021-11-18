@@ -3,6 +3,7 @@ package newbee
 import (
 	"errors"
 	"github.com/smartwalle/net4go"
+	"runtime/debug"
 	"sync"
 )
 
@@ -300,7 +301,7 @@ func (this *room) RemovePlayer(playerId int64) {
 	this.enqueuePlayerOut(playerId)
 }
 
-func (this *room) Run(game Game) error {
+func (this *room) Run(game Game) (err error) {
 	if game == nil {
 		return ErrNilGame
 	}
@@ -322,8 +323,15 @@ func (this *room) Run(game Game) error {
 	game.OnRunInRoom(this)
 
 	this.waiter.Add(1)
-	var err = this.mode.Run(game)
-	this.waiter.Done()
+
+	defer func() {
+		if v := recover(); v != nil {
+			err = newStackError(v, debug.Stack())
+		}
+		this.waiter.Done()
+	}()
+
+	err = this.mode.Run(game)
 	return err
 }
 
