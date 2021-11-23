@@ -26,22 +26,36 @@ import (
 func main() {
 	var tcpp = &protocol.TCPProtocol{}
 	var wsp = &protocol.WSProtocol{}
-
+	var mu = &sync.Mutex{}
 	var waiter = &sync.WaitGroup{}
 
-	var room = newbee.NewRoom(100, newbee.WithWaiter(waiter), newbee.WithFrame())
+	var roomCount = int64(10)
 
-	var game = &Game{}
-	go func() {
-		fmt.Println("开始游戏...")
-		var err = room.Run(game)
-		fmt.Println("游戏结束:", room.GetState(), err)
-	}()
+	var rooms = make(map[int64]newbee.Room)
+
+	for i := int64(1); i <= roomCount; i++ {
+		var room = newbee.NewRoom(i, newbee.WithWaiter(waiter), newbee.WithAsync())
+		rooms[i] = room
+
+		var game = &Game{id: i}
+		go func() {
+			fmt.Println("开始游戏...")
+			var err = room.Run(game)
+			if err != nil {
+				fmt.Println("游戏异常结束:", room.GetId())
+			} else {
+				fmt.Println("游戏正常结束:", room.GetId())
+			}
+			mu.Lock()
+			delete(rooms, room.GetId())
+			mu.Unlock()
+
+		}()
+	}
 
 	// sleep 一会儿，让 Room 运行 Game
 	time.Sleep(time.Second * 1)
 
-	var mu = &sync.Mutex{}
 	var playerId int64 = 0
 
 	// ws
@@ -62,7 +76,13 @@ func main() {
 
 			mu.Lock()
 			playerId = playerId + 1
-			fmt.Println(room.AddPlayer(newbee.NewPlayer(playerId, nSess)))
+
+			var roomId = playerId % roomCount
+			var room = rooms[roomId]
+			if room != nil {
+				room.AddPlayer(newbee.NewPlayer(playerId, nSess))
+			}
+
 			mu.Unlock()
 		})
 		http.ListenAndServe(":8080", nil)
@@ -87,7 +107,13 @@ func main() {
 
 			mu.Lock()
 			playerId = playerId + 1
-			room.AddPlayer(newbee.NewPlayer(playerId, nSess))
+
+			var roomId = playerId % roomCount
+			var room = rooms[roomId]
+			if room != nil {
+				room.AddPlayer(newbee.NewPlayer(playerId, nSess))
+			}
+
 			mu.Unlock()
 		}
 	}()
@@ -110,8 +136,13 @@ func main() {
 			nSess := net4go.NewSession(c, tcpp, nil)
 
 			mu.Lock()
-			playerId = playerId + 1
-			fmt.Println(room.AddPlayer(newbee.NewPlayer(playerId, nSess)))
+
+			var roomId = playerId % roomCount
+			var room = rooms[roomId]
+			if room != nil {
+				room.AddPlayer(newbee.NewPlayer(playerId, nSess))
+			}
+
 			mu.Unlock()
 		}
 	}()
@@ -130,7 +161,13 @@ MainLoop:
 	}
 
 	fmt.Println("开始关闭游戏.")
-	room.Close()
+
+	mu.Lock()
+	for _, room := range rooms {
+		fmt.Println("关闭", room.GetId(), room.Close())
+	}
+	mu.Unlock()
+
 	fmt.Println("关闭中...")
 	waiter.Wait()
 	fmt.Println("结束.")
@@ -181,12 +218,12 @@ func (this *Game) TickInterval() time.Duration {
 func (this *Game) OnTick() {
 	this.tickCount++
 
-	if this.tickCount > 600 {
+	if this.id == 1 && this.tickCount > 600 {
 		var a = 0
 		fmt.Println(a / a)
 	}
 
-	fmt.Println("OnTick", time.Now(), this.tickCount)
+	//fmt.Println(this.GetId(), "OnTick", time.Now(), this.tickCount)
 }
 
 func (this *Game) OnMessage(player newbee.Player, message interface{}) {
@@ -219,18 +256,18 @@ func (this *Game) OnJoinRoom(player newbee.Player) {
 }
 
 func (this *Game) OnLeaveRoom(player newbee.Player) {
-	fmt.Println("OnLeaveRoom", player.GetId(), this.room.GetState())
-	fmt.Println("保存玩家数据:", player.GetId())
-	//time.Sleep(time.Second * 3)
-	fmt.Println("保存玩家数据完成:", player.GetId())
+	fmt.Println(this.GetId(), "OnLeaveRoom", player.GetId(), this.room.GetState())
+	fmt.Println(this.GetId(), "保存玩家数据:", player.GetId())
+	time.Sleep(time.Second * 3)
+	fmt.Println(this.GetId(), "保存玩家数据完成:", player.GetId())
 }
 
 func (this *Game) OnCloseRoom(room newbee.Room) {
-	fmt.Println("OnCloseRoom", room.GetPlayerCount())
+	fmt.Println(this.GetId(), "OnCloseRoom", room.GetPlayerCount())
 }
 
 func (this *Game) OnPanic(room newbee.Room, err error) {
-	fmt.Println("OnPanic", err)
+	fmt.Println(this.GetId(), "OnPanic", err)
 
 	var p = &protocol.Packet{}
 	p.Type = protocol.Heartbeat
