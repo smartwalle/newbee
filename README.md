@@ -25,14 +25,14 @@ type Game struct {
 func (this *Game) GetId() int64 {}
 func (this *Game) GetState() newbee.GameState {}
 func (this *Game) TickInterval() time.Duration {}
-func (this *Game) OnTick()
-func (this *Game) OnMessage(player newbee.Player, message interface{})
-func (this *Game) OnDequeue(message interface{})
-func (this *Game) OnRunInRoom(room newbee.Room)
-func (this *Game) OnJoinRoom(player newbee.Player)
-func (this *Game) OnLeaveRoom(player newbee.Player)
-func (this *Game) OnCloseRoom(room newbee.Room)
-func (this *Game) OnPanic(room newbee.Room, err error)
+func (this *Game) OnTick() {}
+func (this *Game) OnMessage(player newbee.Player, message interface{}) {}
+func (this *Game) OnDequeue(message interface{}) {}
+func (this *Game) OnRunInRoom(room newbee.Room) {}
+func (this *Game) OnJoinRoom(player newbee.Player) {}
+func (this *Game) OnLeaveRoom(player newbee.Player) {}
+func (this *Game) OnCloseRoom(room newbee.Room) {}
+func (this *Game) OnPanic(room newbee.Room, err error) {}
 ```
 
 ### 运行游戏
