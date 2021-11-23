@@ -43,4 +43,7 @@ type Game interface {
 
 	// OnCloseRoom 房间关闭的时候会调用此方法
 	OnCloseRoom(room Room)
+
+	// OnPanic 有未捕获异常的时候会调用此方法
+	OnPanic(room Room, err error)
 }

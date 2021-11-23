@@ -1,6 +1,7 @@
 package newbee
 
 import (
+	"runtime/debug"
 	"time"
 )
 
@@ -15,7 +16,7 @@ func newSyncRoom(room *room) roomMode {
 	return r
 }
 
-func (this *syncRoom) Run(game Game) error {
+func (this *syncRoom) Run(game Game) (err error) {
 	//if game == nil {
 	//	return ErrNilGame
 	//}
@@ -43,6 +44,23 @@ func (this *syncRoom) Run(game Game) error {
 
 	var mList []*message
 
+	defer func() {
+		if this.timer != nil {
+			this.timer.Stop()
+			this.timer = nil
+		}
+		game.OnCloseRoom(this)
+		this.clean()
+	}()
+
+	defer func() {
+		if v := recover(); v != nil {
+			err = newStackError(v, debug.Stack())
+
+			this.room.panic(game, err)
+		}
+	}()
+
 RunLoop:
 	for {
 		mList = mList[0:0]
@@ -69,13 +87,7 @@ RunLoop:
 			this.releaseMessage(m)
 		}
 	}
-	if this.timer != nil {
-		this.timer.Stop()
-		this.timer = nil
-	}
-	game.OnCloseRoom(this)
-	this.clean()
-	return nil
+	return
 }
 
 func (this *syncRoom) tick(d time.Duration) {

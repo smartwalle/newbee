@@ -34,14 +34,8 @@ func main() {
 	var game = &Game{}
 	go func() {
 		fmt.Println("开始游戏...")
-
 		var err = room.Run(game)
-
-		if err != nil {
-			fmt.Println("游戏异常结束:", err)
-		} else {
-			fmt.Println("游戏结束.")
-		}
+		fmt.Println("游戏结束:", room.GetState(), err)
 	}()
 
 	// sleep 一会儿，让 Room 运行 Game
@@ -186,7 +180,13 @@ func (this *Game) TickInterval() time.Duration {
 
 func (this *Game) OnTick() {
 	this.tickCount++
-	//fmt.Println("OnTick", time.Now(), this.tickCount)
+
+	if this.tickCount > 600 {
+		var a = 0
+		fmt.Println(a / a)
+	}
+
+	fmt.Println("OnTick", time.Now(), this.tickCount)
 }
 
 func (this *Game) OnMessage(player newbee.Player, message interface{}) {
@@ -221,10 +221,25 @@ func (this *Game) OnJoinRoom(player newbee.Player) {
 func (this *Game) OnLeaveRoom(player newbee.Player) {
 	fmt.Println("OnLeaveRoom", player.GetId(), this.room.GetState())
 	fmt.Println("保存玩家数据:", player.GetId())
-	time.Sleep(time.Second * 3)
+	//time.Sleep(time.Second * 3)
 	fmt.Println("保存玩家数据完成:", player.GetId())
 }
 
 func (this *Game) OnCloseRoom(room newbee.Room) {
 	fmt.Println("OnCloseRoom", room.GetPlayerCount())
+}
+
+func (this *Game) OnPanic(room newbee.Room, err error) {
+	fmt.Println("OnPanic", err)
+
+	var p = &protocol.Packet{}
+	p.Type = protocol.Heartbeat
+	p.Message = "panic"
+
+	var players = room.GetPlayers()
+	for _, player := range players {
+		player.SendPacket(p)
+
+		player.Close()
+	}
 }

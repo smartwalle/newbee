@@ -3,7 +3,6 @@ package newbee
 import (
 	"errors"
 	"github.com/smartwalle/net4go"
-	"runtime/debug"
 	"sync"
 )
 
@@ -323,16 +322,9 @@ func (this *room) Run(game Game) (err error) {
 	game.OnRunInRoom(this)
 
 	this.waiter.Add(1)
+	defer this.waiter.Done()
 
-	defer func() {
-		if v := recover(); v != nil {
-			err = newStackError(v, debug.Stack())
-		}
-		this.waiter.Done()
-	}()
-
-	err = this.mode.Run(game)
-	return err
+	return this.mode.Run(game)
 }
 
 func (this *room) OnMessage(sess net4go.Session, p net4go.Packet) {
@@ -418,13 +410,64 @@ func (this *room) Close() error {
 
 	this.mu.RLock()
 	for _, p := range this.players {
-		this.enqueuePlayerOut(p.GetId())
+		if p != nil {
+			this.enqueuePlayerOut(p.GetId())
+		}
+	}
+	if this.mQueue != nil {
+		this.mQueue.Enqueue(nil)
 	}
 	this.mu.RUnlock()
 
-	this.mQueue.Enqueue(nil)
+	var err error
+	if this.mode != nil {
+		err = this.mode.OnClose()
+	}
+	return err
+}
 
-	return this.mode.OnClose()
+func (this *room) panic(game Game, err error) {
+	game.OnPanic(this, err)
+
+	this.mu.Lock()
+	if this.closed {
+		this.mu.Unlock()
+		return
+	}
+	this.closed = true
+	this.mu.Unlock()
+
+	if this.state == RoomStateClose {
+		return
+	}
+
+	this.state = RoomStateClose
+
+	//var players = this.GetPlayers()
+	//for _, p := range players {
+	//	if p != nil {
+	//		this.onLeaveRoom(game, p.GetId())
+	//	}
+	//}
+
+	this.mu.Lock()
+	for _, p := range this.players {
+		if p == nil {
+			continue
+		}
+		delete(this.players, p.GetId())
+		this.mu.Unlock()
+
+		p.Close()
+		game.OnLeaveRoom(p)
+
+		this.mu.Lock()
+	}
+	this.mu.Unlock()
+
+	if this.mode != nil {
+		this.mode.OnClose()
+	}
 }
 
 func (this *room) clean() {

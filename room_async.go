@@ -1,6 +1,7 @@
 package newbee
 
 import (
+	"runtime/debug"
 	"time"
 )
 
@@ -14,7 +15,7 @@ func newAsyncRoom(room *room) roomMode {
 	return r
 }
 
-func (this *asyncRoom) Run(game Game) error {
+func (this *asyncRoom) Run(game Game) (err error) {
 	//if game == nil {
 	//	return ErrNilGame
 	//}
@@ -38,9 +39,38 @@ func (this *asyncRoom) Run(game Game) error {
 	var stopTicker = make(chan struct{}, 1)
 	var tickerDone = make(chan struct{}, 1)
 
-	go this.tick(game, stopTicker, tickerDone)
-
 	var mList []*message
+
+	defer func() {
+		close(stopTicker)
+		<-tickerDone
+		game.OnCloseRoom(this)
+		this.clean()
+	}()
+
+	defer func() {
+		if v := recover(); v != nil {
+			err = newStackError(v, debug.Stack())
+
+			this.room.panic(game, err)
+		}
+	}()
+
+	go func() {
+		defer func() {
+			if v := recover(); v != nil {
+				err = newStackError(v, debug.Stack())
+
+				this.room.panic(game, err)
+
+				if this.mQueue != nil {
+					this.mQueue.Enqueue(nil)
+				}
+			}
+		}()
+
+		this.tick(game, stopTicker, tickerDone)
+	}()
 
 RunLoop:
 	for {
@@ -65,13 +95,7 @@ RunLoop:
 			this.releaseMessage(m)
 		}
 	}
-	close(stopTicker)
-
-	<-tickerDone
-
-	game.OnCloseRoom(this)
-	this.clean()
-	return nil
+	return
 }
 
 func (this *asyncRoom) tick(game Game, stopTicker chan struct{}, tickerDone chan struct{}) {
@@ -81,6 +105,12 @@ func (this *asyncRoom) tick(game Game, stopTicker chan struct{}, tickerDone chan
 	}
 
 	var ticker = time.NewTicker(t)
+
+	defer func() {
+		ticker.Stop()
+		close(tickerDone)
+	}()
+
 TickLoop:
 	for {
 		select {
@@ -93,9 +123,6 @@ TickLoop:
 			game.OnTick()
 		}
 	}
-	ticker.Stop()
-
-	close(tickerDone)
 }
 
 func (this *asyncRoom) OnClose() error {
