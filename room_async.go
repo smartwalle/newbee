@@ -90,7 +90,7 @@ RunLoop:
 			case mTypePlayerIn:
 				this.onJoinRoom(game, m.PlayerId)
 			case mTypePlayerOut:
-				this.onLeaveRoom(game, m.PlayerId)
+				this.onLeaveRoom(game, m.PlayerId, m.Error)
 			}
 			this.releaseMessage(m)
 		}

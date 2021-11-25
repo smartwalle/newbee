@@ -29,11 +29,11 @@ func main() {
 	var mu = &sync.Mutex{}
 	var waiter = &sync.WaitGroup{}
 
-	var roomCount = int64(10)
+	var roomCount = int64(1)
 
 	var rooms = make(map[int64]newbee.Room)
 
-	for i := int64(1); i <= roomCount; i++ {
+	for i := int64(0); i < roomCount; i++ {
 		var room = newbee.NewRoom(i, newbee.WithWaiter(waiter), newbee.WithAsync())
 		rooms[i] = room
 
@@ -218,10 +218,10 @@ func (this *Game) TickInterval() time.Duration {
 func (this *Game) OnTick() {
 	this.tickCount++
 
-	if this.id == 1 && this.tickCount > 600 {
-		var a = 0
-		fmt.Println(a / a)
-	}
+	//if this.id == 1 && this.tickCount > 600 {
+	//	var a = 0
+	//	fmt.Println(a / a)
+	//}
 
 	//fmt.Println(this.GetId(), "OnTick", time.Now(), this.tickCount)
 }
@@ -255,8 +255,8 @@ func (this *Game) OnJoinRoom(player newbee.Player) {
 
 }
 
-func (this *Game) OnLeaveRoom(player newbee.Player) {
-	fmt.Println(this.GetId(), "OnLeaveRoom", player.GetId(), this.room.GetState())
+func (this *Game) OnLeaveRoom(player newbee.Player, err error) {
+	fmt.Println(this.GetId(), "OnLeaveRoom", player.GetId(), err, this.room.GetState())
 	fmt.Println(this.GetId(), "保存玩家数据:", player.GetId())
 	time.Sleep(time.Second * 3)
 	fmt.Println(this.GetId(), "保存玩家数据完成:", player.GetId())

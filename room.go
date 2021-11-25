@@ -176,7 +176,7 @@ func NewRoom(id int64, opts ...RoomOption) Room {
 	return r
 }
 
-func (this *room) newMessage(playerId int64, mType messageType, data interface{}) *message {
+func (this *room) newMessage(playerId int64, mType messageType, data interface{}, err error) *message {
 	if this.messagePool == nil {
 		return nil
 	}
@@ -184,6 +184,7 @@ func (this *room) newMessage(playerId int64, mType messageType, data interface{}
 	m.PlayerId = playerId
 	m.Type = mType
 	m.Data = data
+	m.Error = err
 	return m
 }
 
@@ -192,6 +193,7 @@ func (this *room) releaseMessage(m *message) {
 		m.PlayerId = 0
 		m.Type = 0
 		m.Data = nil
+		m.Error = nil
 		this.messagePool.Put(m)
 	}
 }
@@ -297,7 +299,7 @@ func (this *room) AddPlayer(player Player) error {
 }
 
 func (this *room) RemovePlayer(playerId int64) {
-	this.enqueuePlayerOut(playerId)
+	this.enqueuePlayerOut(playerId, nil)
 }
 
 func (this *room) Run(game Game) (err error) {
@@ -334,7 +336,7 @@ func (this *room) OnMessage(sess net4go.Session, p net4go.Packet) {
 		return
 	}
 
-	var m = this.newMessage(playerId, mTypeDefault, p)
+	var m = this.newMessage(playerId, mTypeDefault, p, nil)
 	if this.mQueue != nil && m != nil {
 		this.mQueue.Enqueue(m)
 	}
@@ -348,25 +350,25 @@ func (this *room) OnClose(sess net4go.Session, err error) {
 
 	sess.UpdateHandler(nil)
 
-	this.enqueuePlayerOut(playerId)
+	this.enqueuePlayerOut(playerId, err)
 }
 
 func (this *room) Enqueue(message interface{}) {
-	var m = this.newMessage(0, mTypeCustom, message)
+	var m = this.newMessage(0, mTypeCustom, message, nil)
 	if this.mQueue != nil && m != nil {
 		this.mQueue.Enqueue(m)
 	}
 }
 
 func (this *room) enqueuePlayerIn(playerId int64) {
-	var m = this.newMessage(playerId, mTypePlayerIn, nil)
+	var m = this.newMessage(playerId, mTypePlayerIn, nil, nil)
 	if this.mQueue != nil && m != nil {
 		this.mQueue.Enqueue(m)
 	}
 }
 
-func (this *room) enqueuePlayerOut(playerId int64) {
-	var m = this.newMessage(playerId, mTypePlayerOut, nil)
+func (this *room) enqueuePlayerOut(playerId int64, err error) {
+	var m = this.newMessage(playerId, mTypePlayerOut, nil, err)
 	if this.mQueue != nil && m != nil {
 		this.mQueue.Enqueue(m)
 	}
@@ -411,7 +413,7 @@ func (this *room) Close() error {
 	this.mu.RLock()
 	for _, p := range this.players {
 		if p != nil {
-			this.enqueuePlayerOut(p.GetId())
+			this.enqueuePlayerOut(p.GetId(), nil)
 		}
 	}
 	if this.mQueue != nil {
@@ -459,7 +461,7 @@ func (this *room) panic(game Game, err error) {
 		this.mu.Unlock()
 
 		p.Close()
-		game.OnLeaveRoom(p)
+		game.OnLeaveRoom(p, nil)
 
 		this.mu.Lock()
 	}

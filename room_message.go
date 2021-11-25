@@ -20,12 +20,12 @@ func (this *room) onJoinRoom(game Game, playerId int64) {
 	game.OnJoinRoom(p)
 }
 
-func (this *room) onLeaveRoom(game Game, playerId int64) {
+func (this *room) onLeaveRoom(game Game, playerId int64, err error) {
 	var p = this.popPlayer(playerId)
 	if p == nil {
 		return
 	}
 
 	p.Close()
-	game.OnLeaveRoom(p)
+	game.OnLeaveRoom(p, err)
 }

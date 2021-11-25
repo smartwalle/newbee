@@ -39,7 +39,7 @@ type Game interface {
 	OnJoinRoom(player Player)
 
 	// OnLeaveRoom 玩家断开网络连接会调用此方法
-	OnLeaveRoom(player Player)
+	OnLeaveRoom(player Player, err error)
 
 	// OnCloseRoom 房间关闭的时候会调用此方法
 	OnCloseRoom(room Room)

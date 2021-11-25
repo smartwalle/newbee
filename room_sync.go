@@ -79,7 +79,7 @@ RunLoop:
 			case mTypePlayerIn:
 				this.onJoinRoom(game, m.PlayerId)
 			case mTypePlayerOut:
-				this.onLeaveRoom(game, m.PlayerId)
+				this.onLeaveRoom(game, m.PlayerId, m.Error)
 			case mTypeTick:
 				game.OnTick()
 				this.tick(d)
@@ -92,7 +92,7 @@ RunLoop:
 
 func (this *syncRoom) tick(d time.Duration) {
 	this.timer = time.AfterFunc(d, func() {
-		var m = this.newMessage(0, mTypeTick, nil)
+		var m = this.newMessage(0, mTypeTick, nil, nil)
 		this.mQueue.Enqueue(m)
 	})
 }

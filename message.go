@@ -8,6 +8,7 @@ type message struct {
 	Type     messageType
 	PlayerId int64
 	Data     interface{}
+	Error    error
 }
 
 type messageType int
