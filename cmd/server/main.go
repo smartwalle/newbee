@@ -106,7 +106,7 @@ func main() {
 			nSess := net4go.NewSession(c, tcpp, nil, net4go.WithNoDelay(false))
 
 			mu.Lock()
-			playerId = playerId + 1
+			playerId = 1 // playerId + 1
 
 			var roomId = playerId % roomCount
 			var room = rooms[roomId]
@@ -234,6 +234,9 @@ func (this *Game) OnMessage(player newbee.Player, message interface{}) {
 			player.AsyncSendPacket(p)
 
 			this.room.Enqueue(fmt.Sprintf("%s haha %d", time.Now(), player.GetId()))
+
+			player.Close()
+			//this.room.RemovePlayer(player.GetId())
 		}
 	}
 }

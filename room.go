@@ -106,10 +106,10 @@ type Room interface {
 	// GetPlayerCount 获取玩家数量
 	GetPlayerCount() int
 
-	// AddPlayer 加入新的玩家，如果玩家已经存在或者 player 参数为空，会返回相应的错误，如果连接不为空，则将该玩家和连接进行绑定
+	// AddPlayer 添加玩家，如果玩家已经存在或者 player 参数为空，会返回相应的错误，如果连接不为空，则将该玩家和连接进行绑定
 	AddPlayer(player Player) error
 
-	// RemovePlayer 移除玩家，如果玩家有网络连接，则会断开网络连接
+	// RemovePlayer 移除玩家
 	RemovePlayer(playerId int64)
 
 	// Run 启动
@@ -299,7 +299,11 @@ func (this *room) AddPlayer(player Player) error {
 }
 
 func (this *room) RemovePlayer(playerId int64) {
-	this.enqueuePlayerOut(playerId, nil)
+	//this.enqueuePlayerOut(playerId, nil)
+	var p = this.GetPlayer(playerId)
+	if p != nil {
+		p.Close()
+	}
 }
 
 func (this *room) Run(game Game) (err error) {

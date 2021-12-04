@@ -22,7 +22,8 @@ type Player interface {
 	// AsyncSendPacket 异步发送消息
 	AsyncSendPacket(net4go.Packet)
 
-	// Close 关闭该玩家的所有信息，同时会断开连接
+	// Close 关闭玩家
+	// 注意：不要重写本方法，如果需要清理玩家信息，应该在 Game 的 OnLeaveRoom 中完成
 	Close() error
 }
 
