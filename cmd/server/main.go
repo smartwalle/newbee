@@ -235,7 +235,7 @@ func (this *Game) OnMessage(player newbee.Player, message interface{}) {
 
 			this.room.Enqueue(fmt.Sprintf("%s haha %d", time.Now(), player.GetId()))
 
-			player.Close()
+			//player.Close()
 			//this.room.RemovePlayer(player.GetId())
 		}
 	}
