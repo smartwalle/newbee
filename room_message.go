@@ -25,5 +25,10 @@ func (this *room) onLeaveRoom(game Game, playerId int64, err error) {
 	if p == nil {
 		return
 	}
+
+	if p.Connected() {
+		p.Close()
+	}
+
 	game.OnLeaveRoom(p, err)
 }

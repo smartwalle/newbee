@@ -299,11 +299,7 @@ func (this *room) AddPlayer(player Player) error {
 }
 
 func (this *room) RemovePlayer(playerId int64) {
-	//this.enqueuePlayerOut(playerId, nil)
-	var p = this.GetPlayer(playerId)
-	if p != nil {
-		p.Close()
-	}
+	this.enqueuePlayerOut(playerId, nil)
 }
 
 func (this *room) Run(game Game) (err error) {
