@@ -36,7 +36,9 @@ func NewPlayer(id int64, sess net4go.Session, opts ...PlayerOption) Player {
 	var p = &player{}
 	p.id = id
 	for _, opt := range opts {
-		opt(p)
+		if opt != nil {
+			opt(p)
+		}
 	}
 	p.sess = sess
 	return p

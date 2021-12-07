@@ -161,7 +161,9 @@ func NewRoom(id int64, opts ...RoomOption) Room {
 	}
 
 	for _, opt := range opts {
-		opt(r)
+		if opt != nil {
+			opt(r)
+		}
 	}
 
 	if r.waiter == nil {
