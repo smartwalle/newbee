@@ -18,3 +18,5 @@ github.com/smartwalle/net4go v0.0.45 h1:4xsD5SkOwdUC+9zHBb7/XaTVDA7LVEwi9405llFp
 github.com/smartwalle/net4go v0.0.45/go.mod h1:6R+zGr2Ugz/voywQsiCAUWkb3ul9cvYjI+0potuaLNU=
 github.com/smartwalle/net4go v0.0.46 h1:ZadYDF1s6tawwXtv19Iv8tX302XPx6U8XDFWlpyTA4w=
 github.com/smartwalle/net4go v0.0.46/go.mod h1:6R+zGr2Ugz/voywQsiCAUWkb3ul9cvYjI+0potuaLNU=
+github.com/smartwalle/net4go v0.0.47 h1:Ohpu+woOeuKSBp0dYG/FOQcb+XdXtQuqdFWkMZptwgk=
+github.com/smartwalle/net4go v0.0.47/go.mod h1:6R+zGr2Ugz/voywQsiCAUWkb3ul9cvYjI+0potuaLNU=
