@@ -141,7 +141,6 @@ type room struct {
 	state       RoomState
 	mu          sync.RWMutex
 	players     map[int64]Player
-	closed      bool
 	messagePool *sync.Pool
 
 	mQueue iMessageQueue
@@ -153,7 +152,6 @@ func NewRoom(id int64, opts ...RoomOption) Room {
 	r.id = id
 	r.state = RoomStatePending
 	r.players = make(map[int64]Player)
-	r.closed = false
 	r.messagePool = &sync.Pool{
 		New: func() interface{} {
 			return &message{}
@@ -278,7 +276,7 @@ func (this *room) AddPlayer(player Player) error {
 	}
 
 	this.mu.Lock()
-	if this.closed {
+	if this.state == RoomStateClose {
 		this.mu.Unlock()
 		return ErrRoomClosed
 	}
@@ -394,25 +392,17 @@ func (this *room) BroadcastPacket(packet net4go.Packet) {
 func (this *room) Closed() bool {
 	this.mu.RLock()
 	defer this.mu.RUnlock()
-	return this.closed
+	return this.state == RoomStateClose
 }
 
 func (this *room) Close() error {
 	this.mu.Lock()
-	if this.closed {
+	if this.state == RoomStateClose {
 		this.mu.Unlock()
 		return nil
 	}
-	this.closed = true
-	this.mu.Unlock()
-
-	if this.state == RoomStateClose {
-		return nil
-	}
-
 	this.state = RoomStateClose
 
-	this.mu.RLock()
 	for _, p := range this.players {
 		if p != nil {
 			this.enqueuePlayerOut(p.GetId(), nil)
@@ -421,7 +411,7 @@ func (this *room) Close() error {
 	if this.mQueue != nil {
 		this.mQueue.Enqueue(nil)
 	}
-	this.mu.RUnlock()
+	this.mu.Unlock()
 
 	var err error
 	if this.mode != nil {
@@ -434,17 +424,10 @@ func (this *room) panic(game Game, err error) {
 	game.OnPanic(this, err)
 
 	this.mu.Lock()
-	if this.closed {
+	if this.state == RoomStateClose {
 		this.mu.Unlock()
 		return
 	}
-	this.closed = true
-	this.mu.Unlock()
-
-	if this.state == RoomStateClose {
-		return
-	}
-
 	this.state = RoomStateClose
 
 	//var players = this.GetPlayers()
@@ -454,7 +437,6 @@ func (this *room) panic(game Game, err error) {
 	//	}
 	//}
 
-	this.mu.Lock()
 	for _, p := range this.players {
 		if p == nil {
 			continue
