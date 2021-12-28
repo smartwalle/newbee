@@ -77,7 +77,7 @@ RunLoop:
 			case mTypeCustom:
 				this.onDequeue(game, m.Data)
 			case mTypePlayerIn:
-				this.onJoinRoom(game, m.PlayerId)
+				this.onJoinRoom(game, m.Player)
 			case mTypePlayerOut:
 				this.onLeaveRoom(game, m.PlayerId, m.Error)
 			case mTypeTick:

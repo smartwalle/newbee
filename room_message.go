@@ -12,12 +12,27 @@ func (this *room) onDequeue(game Game, data interface{}) {
 	game.OnDequeue(data)
 }
 
-func (this *room) onJoinRoom(game Game, playerId int64) {
-	var p = this.GetPlayer(playerId)
-	if p == nil {
+func (this *room) onJoinRoom(game Game, player Player) {
+	if player == nil {
 		return
 	}
-	game.OnJoinRoom(p)
+	this.mu.Lock()
+
+	if _, ok := this.players[player.GetId()]; ok {
+		this.mu.Unlock()
+		return
+	}
+
+	if player.Connected() {
+		this.players[player.GetId()] = player
+
+		var sess = player.Session()
+		sess.SetId(player.GetId())
+		sess.UpdateHandler(this)
+	}
+	this.mu.Unlock()
+
+	game.OnJoinRoom(player)
 }
 
 func (this *room) onLeaveRoom(game Game, playerId int64, err error) {

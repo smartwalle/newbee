@@ -6,16 +6,13 @@ import (
 	"sync"
 )
 
-const (
-	kPlayerId = "player_id"
-)
-
 var (
 	ErrRoomClosed     = errors.New("newbee: room is closed")
 	ErrRoomRunning    = errors.New("newbee: room is running")
 	ErrNilGame        = errors.New("newbee: game is nil")
 	ErrPlayerExists   = errors.New("newbee: player already exists")
 	ErrPlayerNotExist = errors.New("newbee: player not exist")
+	ErrInvalidPlayer  = errors.New("newbee: invalid player")
 	ErrNilPlayer      = errors.New("newbee: player is nil")
 	ErrFailedToRun    = errors.New("newbee: failed to run the room")
 	ErrBadSession     = errors.New("newbee: bad session")
@@ -181,8 +178,9 @@ func (this *room) newMessage(playerId int64, mType messageType, data interface{}
 		return nil
 	}
 	var m = this.messagePool.Get().(*message)
-	m.PlayerId = playerId
 	m.Type = mType
+	m.PlayerId = playerId
+	m.Player = nil
 	m.Data = data
 	m.Error = err
 	return m
@@ -190,8 +188,9 @@ func (this *room) newMessage(playerId int64, mType messageType, data interface{}
 
 func (this *room) releaseMessage(m *message) {
 	if m != nil && this.messagePool != nil {
-		m.PlayerId = 0
 		m.Type = 0
+		m.PlayerId = 0
+		m.Player = nil
 		m.Data = nil
 		m.Error = nil
 		this.messagePool.Put(m)
@@ -229,8 +228,10 @@ func (this *room) popPlayer(playerId int64) Player {
 	}
 
 	this.mu.Lock()
-	var p = this.players[playerId]
-	delete(this.players, playerId)
+	var p, ok = this.players[playerId]
+	if ok {
+		delete(this.players, playerId)
+	}
 	this.mu.Unlock()
 	return p
 }
@@ -268,7 +269,7 @@ func (this *room) AddPlayer(player Player) error {
 	}
 
 	if player.GetId() == 0 {
-		return ErrPlayerNotExist
+		return ErrInvalidPlayer
 	}
 
 	if player.Connected() == false {
@@ -281,20 +282,24 @@ func (this *room) AddPlayer(player Player) error {
 		return ErrRoomClosed
 	}
 
-	// 如果玩家已经存在，则返回错误信息
-	if _, ok := this.players[player.GetId()]; ok {
-		this.mu.Unlock()
-		return ErrPlayerExists
-	}
-
-	this.players[player.GetId()] = player
-
 	this.mu.Unlock()
 
-	var sess = player.Session()
-	sess.Set(kPlayerId, player.GetId())
-	this.enqueuePlayerIn(player.GetId())
-	sess.UpdateHandler(this)
+	this.enqueuePlayerIn(player)
+
+	//// 如果玩家已经存在，则返回错误信息
+	//if _, ok := this.players[player.GetId()]; ok {
+	//	this.mu.Unlock()
+	//	return ErrPlayerExists
+	//}
+	//
+	//this.players[player.GetId()] = player
+	//
+	//this.mu.Unlock()
+	//
+	//var sess = player.Session()
+	//sess.Set(kPlayerId, player.GetId())
+	//this.enqueuePlayerIn(player.GetId())
+	//sess.UpdateHandler(this)
 	return nil
 }
 
@@ -330,7 +335,7 @@ func (this *room) Run(game Game) (err error) {
 }
 
 func (this *room) OnMessage(sess net4go.Session, p net4go.Packet) {
-	var playerId, _ = sess.Get(kPlayerId).(int64)
+	var playerId = sess.GetId()
 	if playerId == 0 {
 		sess.Close()
 		return
@@ -343,7 +348,7 @@ func (this *room) OnMessage(sess net4go.Session, p net4go.Packet) {
 }
 
 func (this *room) OnClose(sess net4go.Session, err error) {
-	var playerId, _ = sess.Get(kPlayerId).(int64)
+	var playerId = sess.GetId()
 	if playerId == 0 {
 		return
 	}
@@ -360,8 +365,12 @@ func (this *room) Enqueue(message interface{}) {
 	}
 }
 
-func (this *room) enqueuePlayerIn(playerId int64) {
-	var m = this.newMessage(playerId, mTypePlayerIn, nil, nil)
+func (this *room) enqueuePlayerIn(player Player) {
+	if player == nil {
+		return
+	}
+	var m = this.newMessage(player.GetId(), mTypePlayerIn, nil, nil)
+	m.Player = player
 	if this.mQueue != nil && m != nil {
 		this.mQueue.Enqueue(m)
 	}
