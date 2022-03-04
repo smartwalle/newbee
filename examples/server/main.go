@@ -12,7 +12,7 @@ import (
 	"github.com/smartwalle/net4go/quic"
 	"github.com/smartwalle/net4go/ws"
 	"github.com/smartwalle/newbee"
-	"github.com/smartwalle/newbee/cmd/protocol"
+	"github.com/smartwalle/newbee/examples/protocol"
 	"math/big"
 	"net"
 	"net/http"

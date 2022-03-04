@@ -5,7 +5,7 @@ import (
 	"github.com/gorilla/websocket"
 	"github.com/smartwalle/net4go"
 	"github.com/smartwalle/net4go/ws"
-	"github.com/smartwalle/newbee/cmd/protocol"
+	"github.com/smartwalle/newbee/examples/protocol"
 	"os"
 	"time"
 )

@@ -1,4 +1,4 @@
-module github.com/smartwalle/newbee/cmd
+module github.com/smartwalle/newbee/examples
 
 go 1.12
 
