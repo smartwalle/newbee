@@ -1,5 +1,8 @@
 module github.com/smartwalle/newbee
 
-go 1.12
+require (
+	github.com/smartwalle/net4go v0.0.49
+	github.com/smartwalle/queue v0.0.1
+)
 
-require github.com/smartwalle/net4go v0.0.48
+go 1.18

@@ -14,7 +14,7 @@ func main() {
 	var p = &protocol.WSProtocol{}
 	var h = &WSHandler{}
 
-	for i := 0; i < 1; i++ {
+	for i := 0; i < 10; i++ {
 		c, _, err := websocket.DefaultDialer.Dial("ws://127.0.0.1:8080/ws", nil)
 		if err != nil {
 			fmt.Println(err)

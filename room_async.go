@@ -75,12 +75,12 @@ func (this *asyncRoom) Run(game Game) (err error) {
 RunLoop:
 	for {
 		mList = mList[0:0]
-		this.mQueue.Dequeue(&mList)
+		var ok = this.mQueue.Dequeue(&mList)
 
 		for _, m := range mList {
-			if m == nil {
-				break RunLoop
-			}
+			//if m == nil {
+			//	break RunLoop
+			//}
 
 			switch m.Type {
 			case mTypeDefault:
@@ -93,6 +93,10 @@ RunLoop:
 				this.onLeaveRoom(game, m.PlayerId, m.Error)
 			}
 			this.releaseMessage(m)
+		}
+
+		if ok == false {
+			break RunLoop
 		}
 	}
 	return

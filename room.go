@@ -417,9 +417,10 @@ func (this *room) Close() error {
 			this.enqueuePlayerOut(p.GetId(), nil)
 		}
 	}
-	if this.mQueue != nil {
-		this.mQueue.Enqueue(nil)
-	}
+	//if this.mQueue != nil {
+	//	this.mQueue.Enqueue(nil)
+	//}
+	this.mQueue.Close()
 	this.mu.Unlock()
 
 	var err error
@@ -469,5 +470,4 @@ func (this *room) clean() {
 	this.players = nil
 	this.messagePool = nil
 	this.mode = nil
-	this.mQueue = nil
 }

@@ -180,6 +180,8 @@ github.com/smartwalle/net4go v0.0.47 h1:Ohpu+woOeuKSBp0dYG/FOQcb+XdXtQuqdFWkMZpt
 github.com/smartwalle/net4go v0.0.47/go.mod h1:6R+zGr2Ugz/voywQsiCAUWkb3ul9cvYjI+0potuaLNU=
 github.com/smartwalle/net4go v0.0.48 h1:AXkMjinht5poG4DXUVr0Q6pPQwrEFuPO6PF7Wtd36V4=
 github.com/smartwalle/net4go v0.0.48/go.mod h1:6R+zGr2Ugz/voywQsiCAUWkb3ul9cvYjI+0potuaLNU=
+github.com/smartwalle/net4go v0.0.49 h1:9k9VrdnGNqUBiixo+PTy+hOHXFks736w2I6Ke+5b0q0=
+github.com/smartwalle/net4go v0.0.49/go.mod h1:YyLP5zmczM5D3k5PsvAwhxSBkulOwpjE/o44QSFtYAo=
 github.com/smartwalle/net4go/quic v0.0.2 h1:ucPED2jOfcY6g29gGUCf35wrue1XPm6LWkj6pmFxsr8=
 github.com/smartwalle/net4go/quic v0.0.2/go.mod h1:SNn1v6ZVtqFQxdR98yPfahmI8zLappObtfasfhEKcQ0=
 github.com/smartwalle/net4go/quic v0.0.3 h1:8QhMb+GT9QENmocCG3rx27ornIJ72/D3VskZQJYd50E=
@@ -212,12 +214,16 @@ github.com/smartwalle/net4go/ws v0.0.17 h1:SjMCcm2Cq+cBVRRgxjgN4cBw7024Cf5H68HY6
 github.com/smartwalle/net4go/ws v0.0.17/go.mod h1:3vO4l8vILisvmaVxJukmHp37U4qsRBQFdWiOdfeoGbc=
 github.com/smartwalle/net4go/ws v0.0.19 h1:Wq2jhdMW9BmLYuMZ9rQRdKOr+djknwAH8EeZm1huZBM=
 github.com/smartwalle/net4go/ws v0.0.19/go.mod h1:1k3jnvx4V2xjJesMjnXm5j2dZFB49yj8zaFEThXC9eE=
+github.com/smartwalle/net4go/ws v0.0.20 h1:ajsODWtpdgTrdLMKq6pVP+9Y1mfqC/E+l36tyfr634U=
+github.com/smartwalle/net4go/ws v0.0.20/go.mod h1:9vcKR4pYyT+OFYTzo912maF9vbU0PoaUhJjcvyCtwyM=
 github.com/smartwalle/newbee v0.0.22 h1:4pn9dRlTumV6MHN3uMtrU35aFe5wBwvftE3cSrLGVzI=
 github.com/smartwalle/newbee v0.0.22/go.mod h1:e5uzWET9DMCRPTtb+DVQVZZgCpfpqd7JVN8btw5ASqU=
 github.com/smartwalle/newbee v0.0.23 h1:yu1m0ExXV/RFkOcaENZJBPb0gLDrh5YnuqVNcSNi+7A=
 github.com/smartwalle/newbee v0.0.23/go.mod h1:e5uzWET9DMCRPTtb+DVQVZZgCpfpqd7JVN8btw5ASqU=
 github.com/smartwalle/newbee v0.0.34 h1:WESn9F1qKUsHuMjPW77mzyWWLRoc2CycJEA8ckNQntw=
 github.com/smartwalle/newbee v0.0.34/go.mod h1:VjAkAUBqqfCi3/e1zvSAZ3fD4r5Hxe52gtUYKlhh2/s=
+github.com/smartwalle/queue v0.0.1 h1:gqGowFtRZcKPJxiezFeDj+3iiWCdsPitxRfjTdzfWDo=
+github.com/smartwalle/queue v0.0.1/go.mod h1:zMEHt/7zLtVwATDUQi3OdBUlbQ2XUzWd7OXP8p/684c=
 github.com/sourcegraph/annotate v0.0.0-20160123013949-f4cad6c6324d/go.mod h1:UdhH50NIW0fCiwBSr0co2m7BnFLdv4fQTgdqdJTHFeE=
 github.com/sourcegraph/syntaxhighlight v0.0.0-20170531221838-bd320f5d308e/go.mod h1:HuIsMU8RRBOtsCgI77wP899iHVBQpCmg4ErYMZB+2IA=
 github.com/stretchr/objx v0.1.0/go.mod h1:HFkY916IF+rwdDfMAkV7OtwuqBVzrE8GR6GFx+wExME=

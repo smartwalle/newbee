@@ -1,19 +1,12 @@
 package main
 
 import (
-	"crypto/rand"
-	"crypto/rsa"
-	"crypto/tls"
-	"crypto/x509"
-	"encoding/pem"
 	"fmt"
 	"github.com/gorilla/websocket"
 	"github.com/smartwalle/net4go"
-	"github.com/smartwalle/net4go/quic"
 	"github.com/smartwalle/net4go/ws"
 	"github.com/smartwalle/newbee"
 	"github.com/smartwalle/newbee/examples/protocol"
-	"math/big"
 	"net"
 	"net/http"
 	"os"
@@ -34,7 +27,7 @@ func main() {
 	var rooms = make(map[int64]newbee.Room)
 
 	for i := int64(0); i < roomCount; i++ {
-		var room = newbee.NewRoom(i, newbee.WithWaiter(waiter), newbee.WithAsync())
+		var room = newbee.NewRoom(i, newbee.WithWaiter(waiter), newbee.WithFrame())
 		rooms[i] = room
 
 		var game = &Game{id: i}
@@ -119,33 +112,33 @@ func main() {
 	}()
 
 	// quic
-	go func() {
-		l, err := quic.Listen(":8898", generateTLSConfig(), nil)
-		if err != nil {
-			fmt.Println(err)
-			return
-		}
-
-		for {
-			c, err := l.Accept()
-			if err != nil {
-				fmt.Println(err)
-				continue
-			}
-
-			nSess := net4go.NewSession(c, tcpp, nil)
-
-			mu.Lock()
-
-			var roomId = playerId % roomCount
-			var room = rooms[roomId]
-			if room != nil {
-				room.AddPlayer(newbee.NewPlayer(playerId, nSess))
-			}
-
-			mu.Unlock()
-		}
-	}()
+	//go func() {
+	//	l, err := quic.Listen(":8898", generateTLSConfig(), nil)
+	//	if err != nil {
+	//		fmt.Println(err)
+	//		return
+	//	}
+	//
+	//	for {
+	//		c, err := l.Accept()
+	//		if err != nil {
+	//			fmt.Println(err)
+	//			continue
+	//		}
+	//
+	//		nSess := net4go.NewSession(c, tcpp, nil)
+	//
+	//		mu.Lock()
+	//
+	//		var roomId = playerId % roomCount
+	//		var room = rooms[roomId]
+	//		if room != nil {
+	//			room.AddPlayer(newbee.NewPlayer(playerId, nSess))
+	//		}
+	//
+	//		mu.Unlock()
+	//	}
+	//}()
 
 	fmt.Println("运行中...")
 
@@ -173,28 +166,28 @@ MainLoop:
 	fmt.Println("结束.")
 }
 
-func generateTLSConfig() *tls.Config {
-	key, err := rsa.GenerateKey(rand.Reader, 1024)
-	if err != nil {
-		panic(err)
-	}
-	template := x509.Certificate{SerialNumber: big.NewInt(1)}
-	certDER, err := x509.CreateCertificate(rand.Reader, &template, &template, &key.PublicKey, key)
-	if err != nil {
-		panic(err)
-	}
-	keyPEM := pem.EncodeToMemory(&pem.Block{Type: "RSA PRIVATE KEY", Bytes: x509.MarshalPKCS1PrivateKey(key)})
-	certPEM := pem.EncodeToMemory(&pem.Block{Type: "CERTIFICATE", Bytes: certDER})
-
-	tlsCert, err := tls.X509KeyPair(certPEM, keyPEM)
-	if err != nil {
-		panic(err)
-	}
-	return &tls.Config{
-		Certificates: []tls.Certificate{tlsCert},
-		NextProtos:   []string{"newbee"},
-	}
-}
+//func generateTLSConfig() *tls.Config {
+//	key, err := rsa.GenerateKey(rand.Reader, 1024)
+//	if err != nil {
+//		panic(err)
+//	}
+//	template := x509.Certificate{SerialNumber: big.NewInt(1)}
+//	certDER, err := x509.CreateCertificate(rand.Reader, &template, &template, &key.PublicKey, key)
+//	if err != nil {
+//		panic(err)
+//	}
+//	keyPEM := pem.EncodeToMemory(&pem.Block{Type: "RSA PRIVATE KEY", Bytes: x509.MarshalPKCS1PrivateKey(key)})
+//	certPEM := pem.EncodeToMemory(&pem.Block{Type: "CERTIFICATE", Bytes: certDER})
+//
+//	tlsCert, err := tls.X509KeyPair(certPEM, keyPEM)
+//	if err != nil {
+//		panic(err)
+//	}
+//	return &tls.Config{
+//		Certificates: []tls.Certificate{tlsCert},
+//		NextProtos:   []string{"newbee"},
+//	}
+//}
 
 type Game struct {
 	id        int64
@@ -261,7 +254,7 @@ func (this *Game) OnJoinRoom(player newbee.Player) {
 func (this *Game) OnLeaveRoom(player newbee.Player, err error) {
 	fmt.Println(this.GetId(), "OnLeaveRoom", player.GetId(), err, this.room.GetState())
 	fmt.Println(this.GetId(), "保存玩家数据:", player.GetId())
-	time.Sleep(time.Second * 3)
+	//time.Sleep(time.Second * 3)
 	fmt.Println(this.GetId(), "保存玩家数据完成:", player.GetId())
 }
 

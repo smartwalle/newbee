@@ -1,7 +1,9 @@
 package newbee
 
 import (
+	"github.com/smartwalle/queue/block"
 	"sync"
+	"sync/atomic"
 )
 
 type message struct {
@@ -25,75 +27,82 @@ const (
 type iMessageQueue interface {
 	Enqueue(m *message)
 
-	Dequeue(items *[]*message)
+	Dequeue(items *[]*message) bool
+
+	Close()
 }
 
 type blockMessageQueue struct {
-	items []*message
-	cond  *sync.Cond
+	bq block.Queue[*message]
 }
 
 func (this *blockMessageQueue) Enqueue(m *message) {
-	this.cond.L.Lock()
-	this.items = append(this.items, m)
-	this.cond.L.Unlock()
-
-	this.cond.Signal()
+	this.bq.Enqueue(m)
 }
 
-func (this *blockMessageQueue) Dequeue(items *[]*message) {
-	this.cond.L.Lock()
-	for len(this.items) == 0 {
-		this.cond.Wait()
-	}
+func (this *blockMessageQueue) Dequeue(items *[]*message) bool {
+	return this.bq.Dequeue(items)
+}
 
-	for _, item := range this.items {
-		*items = append(*items, item)
-		if item == nil {
-			break
-		}
-	}
-
-	this.items = this.items[0:0]
-	this.cond.L.Unlock()
+func (this *blockMessageQueue) Close() {
+	this.bq.Close()
 }
 
 func newBlockQueue() *blockMessageQueue {
 	var q = &blockMessageQueue{}
-	q.cond = sync.NewCond(&sync.Mutex{})
+	q.bq = block.New[*message]()
 	return q
 }
 
 type messageQueue struct {
-	items []*message
-	mu    sync.Mutex
+	elements []*message
+	mu       sync.Mutex
+	closed   int32
 }
 
 func (this *messageQueue) Enqueue(m *message) {
-	this.mu.Lock()
-	this.items = append(this.items, m)
-	this.mu.Unlock()
-}
-
-func (this *messageQueue) Dequeue(items *[]*message) {
-	this.mu.Lock()
-	for len(this.items) == 0 {
-		this.mu.Unlock()
+	if atomic.LoadInt32(&this.closed) == 1 {
 		return
 	}
 
-	for _, item := range this.items {
-		*items = append(*items, item)
-		if item == nil {
-			break
-		}
+	this.mu.Lock()
+
+	n := len(this.elements)
+	c := cap(this.elements)
+	if n+1 > c {
+		npq := make([]*message, n, c*2)
+		copy(npq, this.elements)
+		this.elements = npq
+	}
+	this.elements = this.elements[0 : n+1]
+	this.elements[n] = m
+
+	this.mu.Unlock()
+}
+
+func (this *messageQueue) Dequeue(elements *[]*message) bool {
+	this.mu.Lock()
+	for len(this.elements) == 0 {
+		this.mu.Unlock()
+		return atomic.LoadInt32(&this.closed) != 1
 	}
 
-	this.items = this.items[0:0]
+	for _, item := range this.elements {
+		*elements = append(*elements, item)
+	}
+
+	this.elements = this.elements[0:0]
 	this.mu.Unlock()
+	return atomic.LoadInt32(&this.closed) != 1
+}
+
+func (this *messageQueue) Close() {
+	if atomic.CompareAndSwapInt32(&this.closed, 0, 1) {
+	}
 }
 
 func newQueue() *messageQueue {
 	var q = &messageQueue{}
+	q.elements = make([]*message, 0, 32)
 	return q
 }
