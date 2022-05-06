@@ -99,12 +99,15 @@ func main() {
 			nSess := net4go.NewSession(c, tcpp, nil, net4go.WithNoDelay(false))
 
 			mu.Lock()
-			playerId = 1 // playerId + 1
+			playerId = playerId + 1
 
 			var roomId = playerId % roomCount
 			var room = rooms[roomId]
 			if room != nil {
-				room.AddPlayer(newbee.NewPlayer(playerId, nSess))
+				if err := room.AddPlayer(newbee.NewPlayer(playerId, nSess)); err != nil {
+					fmt.Println("加入房间发生错误", err)
+					nSess.Close()
+				}
 			}
 
 			mu.Unlock()

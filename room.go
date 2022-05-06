@@ -193,6 +193,7 @@ func (this *room) releaseMessage(m *message) {
 		m.Player = nil
 		m.Data = nil
 		m.Error = nil
+		m.rError = nil
 		this.messagePool.Put(m)
 	}
 }
@@ -284,7 +285,7 @@ func (this *room) AddPlayer(player Player) error {
 
 	this.mu.Unlock()
 
-	this.enqueuePlayerIn(player)
+	return this.enqueuePlayerIn(player)
 
 	//// 如果玩家已经存在，则返回错误信息
 	//if _, ok := this.players[player.GetId()]; ok {
@@ -300,7 +301,7 @@ func (this *room) AddPlayer(player Player) error {
 	//sess.Set(kPlayerId, player.GetId())
 	//this.enqueuePlayerIn(player.GetId())
 	//sess.UpdateHandler(this)
-	return nil
+	//return nil
 }
 
 func (this *room) RemovePlayer(playerId int64) {
@@ -342,7 +343,7 @@ func (this *room) OnMessage(sess net4go.Session, p net4go.Packet) {
 	}
 
 	var m = this.newMessage(playerId, mTypeDefault, p, nil)
-	if this.mQueue != nil && m != nil {
+	if m != nil {
 		this.mQueue.Enqueue(m)
 	}
 }
@@ -360,25 +361,29 @@ func (this *room) OnClose(sess net4go.Session, err error) {
 
 func (this *room) Enqueue(message interface{}) {
 	var m = this.newMessage(0, mTypeCustom, message, nil)
-	if this.mQueue != nil && m != nil {
+	if m != nil {
 		this.mQueue.Enqueue(m)
 	}
 }
 
-func (this *room) enqueuePlayerIn(player Player) {
-	if player == nil {
-		return
-	}
+func (this *room) enqueuePlayerIn(player Player) error {
 	var m = this.newMessage(player.GetId(), mTypePlayerIn, nil, nil)
-	m.Player = player
-	if this.mQueue != nil && m != nil {
+	if m != nil {
+		var rErr = make(chan error, 1)
+		m.Player = player
+		m.rError = rErr
 		this.mQueue.Enqueue(m)
+
+		var err = <-rErr
+		close(rErr)
+		return err
 	}
+	return nil
 }
 
 func (this *room) enqueuePlayerOut(playerId int64, err error) {
 	var m = this.newMessage(playerId, mTypePlayerOut, nil, err)
-	if this.mQueue != nil && m != nil {
+	if m != nil {
 		this.mQueue.Enqueue(m)
 	}
 }

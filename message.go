@@ -12,6 +12,7 @@ type message struct {
 	Player   Player
 	Data     interface{}
 	Error    error
+	rError   chan<- error
 }
 
 type messageType int
