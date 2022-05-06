@@ -183,6 +183,7 @@ func (this *room) newMessage(playerId int64, mType messageType, data interface{}
 	m.Player = nil
 	m.Data = data
 	m.Error = err
+	m.rError = nil
 	return m
 }
 
