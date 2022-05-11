@@ -182,6 +182,8 @@ github.com/smartwalle/net4go v0.0.48 h1:AXkMjinht5poG4DXUVr0Q6pPQwrEFuPO6PF7Wtd3
 github.com/smartwalle/net4go v0.0.48/go.mod h1:6R+zGr2Ugz/voywQsiCAUWkb3ul9cvYjI+0potuaLNU=
 github.com/smartwalle/net4go v0.0.49 h1:9k9VrdnGNqUBiixo+PTy+hOHXFks736w2I6Ke+5b0q0=
 github.com/smartwalle/net4go v0.0.49/go.mod h1:YyLP5zmczM5D3k5PsvAwhxSBkulOwpjE/o44QSFtYAo=
+github.com/smartwalle/net4go v0.0.50 h1:X10B2Ky5vtSZtmE9uKOnYzJYDZH0zYL7JuehZbmJmwM=
+github.com/smartwalle/net4go v0.0.50/go.mod h1:/1/htyhliAVYvSEvAB9ueU8iWQfWvnMNtdPuTWz5FDY=
 github.com/smartwalle/net4go/quic v0.0.2 h1:ucPED2jOfcY6g29gGUCf35wrue1XPm6LWkj6pmFxsr8=
 github.com/smartwalle/net4go/quic v0.0.2/go.mod h1:SNn1v6ZVtqFQxdR98yPfahmI8zLappObtfasfhEKcQ0=
 github.com/smartwalle/net4go/quic v0.0.3 h1:8QhMb+GT9QENmocCG3rx27ornIJ72/D3VskZQJYd50E=
@@ -216,6 +218,8 @@ github.com/smartwalle/net4go/ws v0.0.19 h1:Wq2jhdMW9BmLYuMZ9rQRdKOr+djknwAH8EeZm
 github.com/smartwalle/net4go/ws v0.0.19/go.mod h1:1k3jnvx4V2xjJesMjnXm5j2dZFB49yj8zaFEThXC9eE=
 github.com/smartwalle/net4go/ws v0.0.20 h1:ajsODWtpdgTrdLMKq6pVP+9Y1mfqC/E+l36tyfr634U=
 github.com/smartwalle/net4go/ws v0.0.20/go.mod h1:9vcKR4pYyT+OFYTzo912maF9vbU0PoaUhJjcvyCtwyM=
+github.com/smartwalle/net4go/ws v0.0.21 h1:dRXJwm6MLC8hLNVi7eknJmTKqxKlKBtSYA8TwNkWuhM=
+github.com/smartwalle/net4go/ws v0.0.21/go.mod h1:4T4MmLfiCPX/r4SbJdzxjOUWPBblZM1L/USK4sGhE1g=
 github.com/smartwalle/newbee v0.0.22 h1:4pn9dRlTumV6MHN3uMtrU35aFe5wBwvftE3cSrLGVzI=
 github.com/smartwalle/newbee v0.0.22/go.mod h1:e5uzWET9DMCRPTtb+DVQVZZgCpfpqd7JVN8btw5ASqU=
 github.com/smartwalle/newbee v0.0.23 h1:yu1m0ExXV/RFkOcaENZJBPb0gLDrh5YnuqVNcSNi+7A=
