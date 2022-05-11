@@ -9,7 +9,7 @@ require (
 	github.com/smartwalle/net4go/ws v0.0.20
 	github.com/smartwalle/newbee v0.0.35
 	go.opencensus.io v0.22.2 // indirect
-	github.com/smartwalle/queue v0.0.1
+	github.com/smartwalle/queue v0.0.2
 )
 
 replace github.com/smartwalle/newbee => ../
