@@ -9,6 +9,7 @@ import (
 var (
 	ErrRoomClosed     = errors.New("newbee: room is closed")
 	ErrRoomRunning    = errors.New("newbee: room is running")
+	ErrRoomNotRunning = errors.New("newbee: room is not running")
 	ErrNilGame        = errors.New("newbee: game is nil")
 	ErrPlayerExists   = errors.New("newbee: player already exists")
 	ErrPlayerNotExist = errors.New("newbee: player not exist")
@@ -279,9 +280,9 @@ func (this *room) AddPlayer(player Player) error {
 	}
 
 	this.mu.Lock()
-	if this.state == RoomStateClose {
+	if this.state != RoomStateRunning {
 		this.mu.Unlock()
-		return ErrRoomClosed
+		return ErrRoomNotRunning
 	}
 
 	this.mu.Unlock()
