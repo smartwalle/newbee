@@ -4,8 +4,6 @@ import (
 	"github.com/smartwalle/net4go"
 )
 
-type PlayerOption func(*player)
-
 type Player interface {
 	// GetId 获取玩家 id
 	GetId() int64
@@ -32,14 +30,9 @@ type player struct {
 	sess net4go.Session
 }
 
-func NewPlayer(id int64, sess net4go.Session, opts ...PlayerOption) Player {
+func NewPlayer(id int64, sess net4go.Session) Player {
 	var p = &player{}
 	p.id = id
-	for _, opt := range opts {
-		if opt != nil {
-			opt(p)
-		}
-	}
 	p.sess = sess
 	return p
 }
