@@ -39,7 +39,7 @@ const (
 //	return o
 //}
 
-type RoomOption func(options *room)
+type RoomOption func(r *room)
 
 func WithToken(token string) RoomOption {
 	return func(r *room) {
