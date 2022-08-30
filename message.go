@@ -7,12 +7,12 @@ import (
 )
 
 type message struct {
-	Type     messageType
-	PlayerId int64
 	Player   Player
 	Data     interface{}
 	Error    error
 	rError   chan<- error
+	Type     messageType
+	PlayerId int64
 }
 
 type messageType int

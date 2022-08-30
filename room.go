@@ -133,16 +133,15 @@ type roomMode interface {
 }
 
 type room struct {
-	id          int64
-	token       string
+	mQueue      iMessageQueue
 	waiter      Waiter
-	state       RoomState
-	mu          sync.RWMutex
-	players     map[int64]Player
+	mode        roomMode
 	messagePool *sync.Pool
-
-	mQueue iMessageQueue
-	mode   roomMode
+	players     map[int64]Player
+	token       string
+	id          int64
+	mu          sync.RWMutex
+	state       RoomState
 }
 
 func NewRoom(id int64, opts ...RoomOption) Room {

@@ -26,8 +26,8 @@ type Player interface {
 }
 
 type player struct {
-	id   int64
 	sess net4go.Session
+	id   int64
 }
 
 func NewPlayer(id int64, sess net4go.Session) Player {
