@@ -1,3 +1,5 @@
+github.com/gorilla/websocket v1.4.2 h1:+/TMaTYc4QFitKJxsQ7Yye35DkWvkdLcvGKqM+x0Ufc=
+github.com/gorilla/websocket v1.4.2/go.mod h1:YR8l580nyteQvAITg2hZ9XVh4b55+EU/adAjf1fMHhE=
 github.com/mattn/go-isatty v0.0.7 h1:UvyT9uN+3r7yLEYSlJsbQGdsaB/a0DlgWP3pql6iwOc=
 github.com/mattn/go-isatty v0.0.7/go.mod h1:Iq45c/XA43vh69/j3iqttzPXn0bhXyGjM0Hdxcsrc5s=
 github.com/smartwalle/log4go v1.0.4 h1:VSu2cWZZgBnFViNwf28I9HXT/KEhZ10FoKAQHxxU22Y=
@@ -32,7 +34,13 @@ github.com/smartwalle/net4go v0.0.49 h1:9k9VrdnGNqUBiixo+PTy+hOHXFks736w2I6Ke+5b
 github.com/smartwalle/net4go v0.0.49/go.mod h1:YyLP5zmczM5D3k5PsvAwhxSBkulOwpjE/o44QSFtYAo=
 github.com/smartwalle/net4go v0.0.50 h1:X10B2Ky5vtSZtmE9uKOnYzJYDZH0zYL7JuehZbmJmwM=
 github.com/smartwalle/net4go v0.0.50/go.mod h1:/1/htyhliAVYvSEvAB9ueU8iWQfWvnMNtdPuTWz5FDY=
+github.com/smartwalle/net4go v0.0.51 h1:3yL7xu9/9FRwN86aAjBu35Wfo2PDSOnivdNmUaIxj2Q=
+github.com/smartwalle/net4go v0.0.51/go.mod h1:gzSN2xADMI/Zn8wxnDMK5sMfweOjARMpbAzkSicXBrs=
+github.com/smartwalle/net4go/ws v0.0.22 h1:NdfQbcwGhzRC2fNSPXKFIIAqoR05NTISlLuSWIbGlac=
+github.com/smartwalle/net4go/ws v0.0.22/go.mod h1:14VeLzOfKGkL+3AFrLG41V8zf3FMHgJRaHuch4AE/4k=
 github.com/smartwalle/queue v0.0.2 h1:vMi8pBDlTY1HtWI/utkDyroVC72cI0MggqC26zTGo4k=
 github.com/smartwalle/queue v0.0.2/go.mod h1:zMEHt/7zLtVwATDUQi3OdBUlbQ2XUzWd7OXP8p/684c=
+github.com/smartwalle/queue v0.0.3 h1:6QpTliu/gS2vdk/vXXDU8WEcC0/d/M/Ft+xXxkv9kRw=
+github.com/smartwalle/queue v0.0.3/go.mod h1:zMEHt/7zLtVwATDUQi3OdBUlbQ2XUzWd7OXP8p/684c=
 golang.org/x/sys v0.0.0-20190222072716-a9d3bda3a223 h1:DH4skfRX4EBpamg7iV4ZlCpblAHI6s6TDM39bFZumv8=
 golang.org/x/sys v0.0.0-20190222072716-a9d3bda3a223/go.mod h1:STP8DvDyc/dI5b8T5hshtkjS+E42TnysNCUPdjciGhY=

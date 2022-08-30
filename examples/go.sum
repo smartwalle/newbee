@@ -184,6 +184,8 @@ github.com/smartwalle/net4go v0.0.49 h1:9k9VrdnGNqUBiixo+PTy+hOHXFks736w2I6Ke+5b
 github.com/smartwalle/net4go v0.0.49/go.mod h1:YyLP5zmczM5D3k5PsvAwhxSBkulOwpjE/o44QSFtYAo=
 github.com/smartwalle/net4go v0.0.50 h1:X10B2Ky5vtSZtmE9uKOnYzJYDZH0zYL7JuehZbmJmwM=
 github.com/smartwalle/net4go v0.0.50/go.mod h1:/1/htyhliAVYvSEvAB9ueU8iWQfWvnMNtdPuTWz5FDY=
+github.com/smartwalle/net4go v0.0.51 h1:3yL7xu9/9FRwN86aAjBu35Wfo2PDSOnivdNmUaIxj2Q=
+github.com/smartwalle/net4go v0.0.51/go.mod h1:gzSN2xADMI/Zn8wxnDMK5sMfweOjARMpbAzkSicXBrs=
 github.com/smartwalle/net4go/quic v0.0.2 h1:ucPED2jOfcY6g29gGUCf35wrue1XPm6LWkj6pmFxsr8=
 github.com/smartwalle/net4go/quic v0.0.2/go.mod h1:SNn1v6ZVtqFQxdR98yPfahmI8zLappObtfasfhEKcQ0=
 github.com/smartwalle/net4go/quic v0.0.3 h1:8QhMb+GT9QENmocCG3rx27ornIJ72/D3VskZQJYd50E=
@@ -220,6 +222,8 @@ github.com/smartwalle/net4go/ws v0.0.20 h1:ajsODWtpdgTrdLMKq6pVP+9Y1mfqC/E+l36ty
 github.com/smartwalle/net4go/ws v0.0.20/go.mod h1:9vcKR4pYyT+OFYTzo912maF9vbU0PoaUhJjcvyCtwyM=
 github.com/smartwalle/net4go/ws v0.0.21 h1:dRXJwm6MLC8hLNVi7eknJmTKqxKlKBtSYA8TwNkWuhM=
 github.com/smartwalle/net4go/ws v0.0.21/go.mod h1:4T4MmLfiCPX/r4SbJdzxjOUWPBblZM1L/USK4sGhE1g=
+github.com/smartwalle/net4go/ws v0.0.22 h1:NdfQbcwGhzRC2fNSPXKFIIAqoR05NTISlLuSWIbGlac=
+github.com/smartwalle/net4go/ws v0.0.22/go.mod h1:14VeLzOfKGkL+3AFrLG41V8zf3FMHgJRaHuch4AE/4k=
 github.com/smartwalle/newbee v0.0.22 h1:4pn9dRlTumV6MHN3uMtrU35aFe5wBwvftE3cSrLGVzI=
 github.com/smartwalle/newbee v0.0.22/go.mod h1:e5uzWET9DMCRPTtb+DVQVZZgCpfpqd7JVN8btw5ASqU=
 github.com/smartwalle/newbee v0.0.23 h1:yu1m0ExXV/RFkOcaENZJBPb0gLDrh5YnuqVNcSNi+7A=
@@ -230,6 +234,8 @@ github.com/smartwalle/queue v0.0.1 h1:gqGowFtRZcKPJxiezFeDj+3iiWCdsPitxRfjTdzfWD
 github.com/smartwalle/queue v0.0.1/go.mod h1:zMEHt/7zLtVwATDUQi3OdBUlbQ2XUzWd7OXP8p/684c=
 github.com/smartwalle/queue v0.0.2 h1:vMi8pBDlTY1HtWI/utkDyroVC72cI0MggqC26zTGo4k=
 github.com/smartwalle/queue v0.0.2/go.mod h1:zMEHt/7zLtVwATDUQi3OdBUlbQ2XUzWd7OXP8p/684c=
+github.com/smartwalle/queue v0.0.3 h1:6QpTliu/gS2vdk/vXXDU8WEcC0/d/M/Ft+xXxkv9kRw=
+github.com/smartwalle/queue v0.0.3/go.mod h1:zMEHt/7zLtVwATDUQi3OdBUlbQ2XUzWd7OXP8p/684c=
 github.com/sourcegraph/annotate v0.0.0-20160123013949-f4cad6c6324d/go.mod h1:UdhH50NIW0fCiwBSr0co2m7BnFLdv4fQTgdqdJTHFeE=
 github.com/sourcegraph/syntaxhighlight v0.0.0-20170531221838-bd320f5d308e/go.mod h1:HuIsMU8RRBOtsCgI77wP899iHVBQpCmg4ErYMZB+2IA=
 github.com/stretchr/objx v0.1.0/go.mod h1:HFkY916IF+rwdDfMAkV7OtwuqBVzrE8GR6GFx+wExME=
