@@ -142,6 +142,7 @@ type room struct {
 	id          int64
 	mu          sync.RWMutex
 	state       RoomState
+	closed      chan struct{}
 }
 
 func NewRoom(id int64, opts ...RoomOption) Room {
@@ -326,6 +327,7 @@ func (this *room) Run(game Game) (err error) {
 	}
 
 	this.state = RoomStateRunning
+	this.closed = make(chan struct{}, 1)
 	this.mu.Unlock()
 
 	game.OnRunInRoom(this)
@@ -375,7 +377,12 @@ func (this *room) enqueuePlayerIn(player Player) error {
 		m.rError = rErr
 		this.mQueue.Enqueue(m)
 
-		var err = <-rErr
+		var err error
+		select {
+		case err = <-rErr:
+		case <-this.closed:
+			err = ErrRoomClosed
+		}
 		close(rErr)
 		return err
 	}
@@ -476,4 +483,5 @@ func (this *room) clean() {
 	this.players = nil
 	this.messagePool = nil
 	this.mode = nil
+	close(this.closed)
 }

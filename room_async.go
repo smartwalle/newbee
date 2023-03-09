@@ -63,7 +63,7 @@ func (this *asyncRoom) Run(game Game) (err error) {
 
 				this.room.panic(game, err)
 
-				this.mQueue.Enqueue(nil)
+				this.mQueue.Close()
 			}
 		}()
 
