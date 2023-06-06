@@ -93,7 +93,7 @@ RunLoop:
 			this.releaseMessage(m)
 		}
 
-		if ok == false {
+		if !ok {
 			break RunLoop
 		}
 	}

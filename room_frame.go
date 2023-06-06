@@ -7,14 +7,12 @@ import (
 
 type frameRoom struct {
 	*room
-	frame chan struct{}
 	timer *time.Timer
 }
 
 func newFrameRoom(room *room) roomMode {
 	var r = &frameRoom{}
 	r.room = room
-	r.frame = make(chan struct{}, 1)
 	return r
 }
 
@@ -54,7 +52,6 @@ func (this *frameRoom) Run(game Game) (err error) {
 		}
 		game.OnCloseRoom(this)
 		this.clean()
-		close(this.frame)
 	}()
 
 	defer func() {
@@ -68,7 +65,7 @@ func (this *frameRoom) Run(game Game) (err error) {
 RunLoop:
 	for {
 		select {
-		case <-this.frame:
+		case <-this.timer.C:
 			mList = mList[0:0]
 			var ok = this.mQueue.Dequeue(&mList)
 
@@ -90,7 +87,7 @@ RunLoop:
 				this.releaseMessage(m)
 			}
 
-			if ok == false {
+			if !ok {
 				break RunLoop
 			}
 
@@ -102,9 +99,17 @@ RunLoop:
 }
 
 func (this *frameRoom) tick(d time.Duration) {
-	this.timer = time.AfterFunc(d, func() {
-		this.frame <- struct{}{}
-	})
+	if this.timer == nil {
+		this.timer = time.NewTimer(d)
+	} else {
+		if !this.timer.Stop() {
+			select {
+			case <-this.timer.C:
+			default:
+			}
+		}
+		this.timer.Reset(d)
+	}
 }
 
 func (this *frameRoom) OnClose() error {

@@ -36,11 +36,15 @@ github.com/smartwalle/net4go v0.0.50 h1:X10B2Ky5vtSZtmE9uKOnYzJYDZH0zYL7JuehZbmJ
 github.com/smartwalle/net4go v0.0.50/go.mod h1:/1/htyhliAVYvSEvAB9ueU8iWQfWvnMNtdPuTWz5FDY=
 github.com/smartwalle/net4go v0.0.51 h1:3yL7xu9/9FRwN86aAjBu35Wfo2PDSOnivdNmUaIxj2Q=
 github.com/smartwalle/net4go v0.0.51/go.mod h1:gzSN2xADMI/Zn8wxnDMK5sMfweOjARMpbAzkSicXBrs=
+github.com/smartwalle/net4go v0.0.52 h1:i1hJMN7+E7ctSiH47B82oQFLTunS6zMo+UlwqYP8KH8=
+github.com/smartwalle/net4go v0.0.52/go.mod h1:qc9caFSAuayH0Fl7GkIg6vc1HvRPQm9zIvdFyA6CPG0=
 github.com/smartwalle/net4go/ws v0.0.22 h1:NdfQbcwGhzRC2fNSPXKFIIAqoR05NTISlLuSWIbGlac=
 github.com/smartwalle/net4go/ws v0.0.22/go.mod h1:14VeLzOfKGkL+3AFrLG41V8zf3FMHgJRaHuch4AE/4k=
 github.com/smartwalle/queue v0.0.2 h1:vMi8pBDlTY1HtWI/utkDyroVC72cI0MggqC26zTGo4k=
 github.com/smartwalle/queue v0.0.2/go.mod h1:zMEHt/7zLtVwATDUQi3OdBUlbQ2XUzWd7OXP8p/684c=
 github.com/smartwalle/queue v0.0.3 h1:6QpTliu/gS2vdk/vXXDU8WEcC0/d/M/Ft+xXxkv9kRw=
 github.com/smartwalle/queue v0.0.3/go.mod h1:zMEHt/7zLtVwATDUQi3OdBUlbQ2XUzWd7OXP8p/684c=
+github.com/smartwalle/queue v0.0.4 h1:h2YfM/I1yjPOQjMkhPOVuN5cSk62fRPqzqhlyZ/5zDA=
+github.com/smartwalle/queue v0.0.4/go.mod h1:zMEHt/7zLtVwATDUQi3OdBUlbQ2XUzWd7OXP8p/684c=
 golang.org/x/sys v0.0.0-20190222072716-a9d3bda3a223 h1:DH4skfRX4EBpamg7iV4ZlCpblAHI6s6TDM39bFZumv8=
 golang.org/x/sys v0.0.0-20190222072716-a9d3bda3a223/go.mod h1:STP8DvDyc/dI5b8T5hshtkjS+E42TnysNCUPdjciGhY=

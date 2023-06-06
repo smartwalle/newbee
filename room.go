@@ -275,7 +275,7 @@ func (this *room) AddPlayer(player Player) error {
 		return ErrInvalidPlayer
 	}
 
-	if player.Connected() == false {
+	if !player.Connected() {
 		return ErrBadSession
 	}
 
