@@ -1,43 +1,43 @@
 package newbee
 
-func (this *room) onMessage(game Game, playerId int64, data interface{}) {
-	var p = this.GetPlayer(playerId)
+func (r *room) onMessage(game Game, playerId int64, data interface{}) {
+	var p = r.GetPlayer(playerId)
 	if p == nil {
 		return
 	}
 	game.OnMessage(p, data)
 }
 
-func (this *room) onDequeue(game Game, data interface{}) {
+func (r *room) onDequeue(game Game, data interface{}) {
 	game.OnDequeue(data)
 }
 
-func (this *room) onJoinRoom(game Game, player Player) error {
+func (r *room) onJoinRoom(game Game, player Player) error {
 	if player == nil {
 		return ErrNilPlayer
 	}
-	this.mu.Lock()
+	r.mu.Lock()
 
-	if _, ok := this.players[player.GetId()]; ok {
-		this.mu.Unlock()
+	if _, ok := r.players[player.GetId()]; ok {
+		r.mu.Unlock()
 		return ErrPlayerExists
 	}
 
 	if player.Connected() {
-		this.players[player.GetId()] = player
+		r.players[player.GetId()] = player
 
 		var sess = player.Session()
 		sess.SetId(player.GetId())
-		sess.UpdateHandler(this)
+		sess.UpdateHandler(r)
 	}
-	this.mu.Unlock()
+	r.mu.Unlock()
 
 	game.OnJoinRoom(player)
 	return nil
 }
 
-func (this *room) onLeaveRoom(game Game, playerId int64, err error) {
-	var p = this.popPlayer(playerId)
+func (r *room) onLeaveRoom(game Game, playerId int64, err error) {
+	var p = r.popPlayer(playerId)
 	if p == nil {
 		return
 	}

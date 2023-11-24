@@ -37,40 +37,40 @@ func NewPlayer(id int64, sess net4go.Session) Player {
 	return p
 }
 
-func (this *player) GetId() int64 {
-	return this.id
+func (p *player) GetId() int64 {
+	return p.id
 }
 
-func (this *player) Session() net4go.Session {
-	return this.sess
+func (p *player) Session() net4go.Session {
+	return p.sess
 }
 
-func (this *player) Connected() bool {
-	return this.sess != nil && this.sess.Closed() == false
+func (p *player) Connected() bool {
+	return p.sess != nil && p.sess.Closed() == false
 }
 
-func (this *player) SendPacket(p net4go.Packet) {
-	if this.sess == nil {
+func (p *player) SendPacket(packet net4go.Packet) {
+	if p.sess == nil {
 		return
 	}
-	if err := this.sess.WritePacket(p); err != nil {
-		this.Close()
+	if err := p.sess.WritePacket(packet); err != nil {
+		p.Close()
 	}
 }
 
-func (this *player) AsyncSendPacket(p net4go.Packet) {
-	if this.sess == nil {
+func (p *player) AsyncSendPacket(packet net4go.Packet) {
+	if p.sess == nil {
 		return
 	}
-	if err := this.sess.AsyncWritePacket(p); err != nil {
-		this.Close()
+	if err := p.sess.AsyncWritePacket(packet); err != nil {
+		p.Close()
 	}
 }
 
-func (this *player) Close() error {
-	if this.sess != nil {
-		this.sess.Close()
+func (p *player) Close() error {
+	if p.sess != nil {
+		p.sess.Close()
 	}
-	this.sess = nil
+	p.sess = nil
 	return nil
 }

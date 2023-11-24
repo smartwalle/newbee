@@ -17,6 +17,6 @@ func newStackError(v interface{}, stack []byte) *stackError {
 	return &stackError{value: v, stack: stack}
 }
 
-func (this *stackError) Error() string {
-	return fmt.Sprintf("%v\n%s", this.value, this.stack)
+func (err *stackError) Error() string {
+	return fmt.Sprintf("%v\n%s", err.value, err.stack)
 }

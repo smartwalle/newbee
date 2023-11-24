@@ -15,26 +15,26 @@ func newAsyncRoom(room *room) roomMode {
 	return r
 }
 
-func (this *asyncRoom) Run(game Game) (err error) {
+func (r *asyncRoom) Run(game Game) (err error) {
 	//if game == nil {
 	//	return ErrNilGame
 	//}
-	//this.mu.Lock()
+	//r.mu.Lock()
 	//
-	//if this.state == RoomStateClose {
-	//	this.mu.Unlock()
+	//if r.state == RoomStateClose {
+	//	r.mu.Unlock()
 	//	return ErrRoomClosed
 	//}
 	//
-	//if this.state == RoomStateRunning {
-	//	this.mu.Unlock()
+	//if r.state == RoomStateRunning {
+	//	r.mu.Unlock()
 	//	return ErrRoomRunning
 	//}
 	//
-	//this.state = RoomStateRunning
-	//this.mu.Unlock()
+	//r.state = RoomStateRunning
+	//r.mu.Unlock()
 	//
-	//game.OnRunInRoom(this)
+	//game.OnRunInRoom(r)
 
 	var stopTicker = make(chan struct{}, 1)
 	var tickerDone = make(chan struct{}, 1)
@@ -44,15 +44,15 @@ func (this *asyncRoom) Run(game Game) (err error) {
 	defer func() {
 		close(stopTicker)
 		<-tickerDone
-		game.OnCloseRoom(this)
-		this.clean()
+		game.OnCloseRoom(r)
+		r.clean()
 	}()
 
 	defer func() {
 		if v := recover(); v != nil {
 			err = newStackError(v, debug.Stack())
 
-			this.room.panic(game, err)
+			r.room.panic(game, err)
 		}
 	}()
 
@@ -61,19 +61,19 @@ func (this *asyncRoom) Run(game Game) (err error) {
 			if v := recover(); v != nil {
 				err = newStackError(v, debug.Stack())
 
-				this.room.panic(game, err)
+				r.room.panic(game, err)
 
-				this.mQueue.Close()
+				r.queue.Close()
 			}
 		}()
 
-		this.tick(game, stopTicker, tickerDone)
+		r.tick(game, stopTicker, tickerDone)
 	}()
 
 RunLoop:
 	for {
 		mList = mList[0:0]
-		var ok = this.mQueue.Dequeue(&mList)
+		var ok = r.queue.Dequeue(&mList)
 
 		for _, m := range mList {
 			//if m == nil {
@@ -82,15 +82,15 @@ RunLoop:
 
 			switch m.Type {
 			case mTypeDefault:
-				this.onMessage(game, m.PlayerId, m.Data)
+				r.onMessage(game, m.PlayerId, m.Data)
 			case mTypeCustom:
-				this.onDequeue(game, m.Data)
+				r.onDequeue(game, m.Data)
 			case mTypePlayerIn:
-				m.rError <- this.onJoinRoom(game, m.Player)
+				m.rError <- r.onJoinRoom(game, m.Player)
 			case mTypePlayerOut:
-				this.onLeaveRoom(game, m.PlayerId, m.Error)
+				r.onLeaveRoom(game, m.PlayerId, m.Error)
 			}
-			this.releaseMessage(m)
+			r.releaseMessage(m)
 		}
 
 		if !ok {
@@ -100,7 +100,7 @@ RunLoop:
 	return
 }
 
-func (this *asyncRoom) tick(game Game, stopTicker chan struct{}, tickerDone chan struct{}) {
+func (r *asyncRoom) tick(game Game, stopTicker chan struct{}, tickerDone chan struct{}) {
 	var t = game.TickInterval()
 	if t <= 0 {
 		return
@@ -119,7 +119,7 @@ TickLoop:
 		case <-stopTicker:
 			break TickLoop
 		case <-ticker.C:
-			if this.Closed() {
+			if r.Closed() {
 				break TickLoop
 			}
 			game.OnTick()
@@ -127,6 +127,6 @@ TickLoop:
 	}
 }
 
-func (this *asyncRoom) OnClose() error {
+func (r *asyncRoom) OnClose() error {
 	return nil
 }

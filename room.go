@@ -58,7 +58,7 @@ func WithWaiter(w Waiter) RoomOption {
 // 定时任务放入队列之后，定时器就会暂停，需要等到队列中的定时任务执行之后才会再次激活定时器
 func WithSync() RoomOption {
 	return func(r *room) {
-		r.mQueue = newBlockQueue()
+		r.queue = newBlockQueue()
 		r.mode = newSyncRoom(r)
 	}
 }
@@ -68,7 +68,7 @@ func WithSync() RoomOption {
 // 定时器会定时触发，不管上一次的定时任务是否处理完成
 func WithAsync() RoomOption {
 	return func(r *room) {
-		r.mQueue = newBlockQueue()
+		r.queue = newBlockQueue()
 		r.mode = newAsyncRoom(r)
 	}
 }
@@ -77,7 +77,7 @@ func WithAsync() RoomOption {
 // 会启用一个定时器定时处理网络消息，网络消息处理完成之后，会触发游戏的 OnTick 方法
 func WithFrame() RoomOption {
 	return func(r *room) {
-		r.mQueue = newQueue()
+		r.queue = newQueue()
 		r.mode = newFrameRoom(r)
 	}
 }
@@ -133,7 +133,7 @@ type roomMode interface {
 }
 
 type room struct {
-	mQueue      iMessageQueue
+	queue       iMessageQueue
 	waiter      Waiter
 	mode        roomMode
 	messagePool *sync.Pool
@@ -166,19 +166,19 @@ func NewRoom(id int64, opts ...RoomOption) Room {
 		r.waiter = &sync.WaitGroup{}
 	}
 
-	if r.mQueue == nil {
-		r.mQueue = newBlockQueue()
+	if r.queue == nil {
+		r.queue = newBlockQueue()
 		r.mode = newAsyncRoom(r)
 	}
 
 	return r
 }
 
-func (this *room) newMessage(playerId int64, mType messageType, data interface{}, err error) *message {
-	if this.messagePool == nil {
+func (r *room) newMessage(playerId int64, mType messageType, data interface{}, err error) *message {
+	if r.messagePool == nil {
 		return nil
 	}
-	var m = this.messagePool.Get().(*message)
+	var m = r.messagePool.Get().(*message)
 	m.Type = mType
 	m.PlayerId = playerId
 	m.Player = nil
@@ -188,85 +188,85 @@ func (this *room) newMessage(playerId int64, mType messageType, data interface{}
 	return m
 }
 
-func (this *room) releaseMessage(m *message) {
-	if m != nil && this.messagePool != nil {
+func (r *room) releaseMessage(m *message) {
+	if m != nil && r.messagePool != nil {
 		m.Type = 0
 		m.PlayerId = 0
 		m.Player = nil
 		m.Data = nil
 		m.Error = nil
 		m.rError = nil
-		this.messagePool.Put(m)
+		r.messagePool.Put(m)
 	}
 }
 
-func (this *room) GetId() int64 {
-	return this.id
+func (r *room) GetId() int64 {
+	return r.id
 }
 
-func (this *room) GetToken() string {
-	return this.token
+func (r *room) GetToken() string {
+	return r.token
 }
 
-func (this *room) GetState() RoomState {
-	this.mu.Lock()
-	defer this.mu.Unlock()
-	return this.state
+func (r *room) GetState() RoomState {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	return r.state
 }
 
-func (this *room) GetPlayer(playerId int64) Player {
+func (r *room) GetPlayer(playerId int64) Player {
 	if playerId == 0 {
 		return nil
 	}
 
-	this.mu.RLock()
-	var p = this.players[playerId]
-	this.mu.RUnlock()
+	r.mu.RLock()
+	var p = r.players[playerId]
+	r.mu.RUnlock()
 	return p
 }
 
-func (this *room) popPlayer(playerId int64) Player {
+func (r *room) popPlayer(playerId int64) Player {
 	if playerId == 0 {
 		return nil
 	}
 
-	this.mu.Lock()
-	var p, ok = this.players[playerId]
+	r.mu.Lock()
+	var p, ok = r.players[playerId]
 	if ok {
-		delete(this.players, playerId)
+		delete(r.players, playerId)
 	}
-	this.mu.Unlock()
+	r.mu.Unlock()
 	return p
 }
 
-func (this *room) GetPlayers() map[int64]Player {
-	this.mu.RLock()
-	var ps = make(map[int64]Player, len(this.players))
-	for pId, p := range this.players {
+func (r *room) GetPlayers() map[int64]Player {
+	r.mu.RLock()
+	var ps = make(map[int64]Player, len(r.players))
+	for pId, p := range r.players {
 		ps[pId] = p
 	}
-	this.mu.RUnlock()
+	r.mu.RUnlock()
 	return ps
 }
 
-func (this *room) RangePlayer(fn func(player Player)) {
-	this.mu.RLock()
-	for _, p := range this.players {
+func (r *room) RangePlayer(fn func(player Player)) {
+	r.mu.RLock()
+	for _, p := range r.players {
 		if p != nil {
 			fn(p)
 		}
 	}
-	this.mu.RUnlock()
+	r.mu.RUnlock()
 }
 
-func (this *room) GetPlayerCount() int {
-	this.mu.RLock()
-	var c = len(this.players)
-	this.mu.RUnlock()
+func (r *room) GetPlayerCount() int {
+	r.mu.RLock()
+	var c = len(r.players)
+	r.mu.RUnlock()
 	return c
 }
 
-func (this *room) AddPlayer(player Player) error {
+func (r *room) AddPlayer(player Player) error {
 	if player == nil {
 		return ErrNilPlayer
 	}
@@ -279,79 +279,79 @@ func (this *room) AddPlayer(player Player) error {
 		return ErrBadSession
 	}
 
-	this.mu.Lock()
-	if this.state != RoomStateRunning {
-		this.mu.Unlock()
+	r.mu.Lock()
+	if r.state != RoomStateRunning {
+		r.mu.Unlock()
 		return ErrRoomNotRunning
 	}
 
-	this.mu.Unlock()
+	r.mu.Unlock()
 
-	return this.enqueuePlayerIn(player)
+	return r.enqueuePlayerIn(player)
 
 	//// 如果玩家已经存在，则返回错误信息
-	//if _, ok := this.players[player.GetId()]; ok {
-	//	this.mu.Unlock()
+	//if _, ok := r.players[player.GetId()]; ok {
+	//	r.mu.Unlock()
 	//	return ErrPlayerExists
 	//}
 	//
-	//this.players[player.GetId()] = player
+	//r.players[player.GetId()] = player
 	//
-	//this.mu.Unlock()
+	//r.mu.Unlock()
 	//
 	//var sess = player.Session()
 	//sess.Set(kPlayerId, player.GetId())
-	//this.enqueuePlayerIn(player.GetId())
-	//sess.UpdateHandler(this)
+	//r.enqueuePlayerIn(player.GetId())
+	//sess.UpdateHandler(r)
 	//return nil
 }
 
-func (this *room) RemovePlayer(playerId int64) {
-	this.enqueuePlayerOut(playerId, nil)
+func (r *room) RemovePlayer(playerId int64) {
+	r.enqueuePlayerOut(playerId, nil)
 }
 
-func (this *room) Run(game Game) (err error) {
+func (r *room) Run(game Game) (err error) {
 	if game == nil {
 		return ErrNilGame
 	}
-	this.mu.Lock()
+	r.mu.Lock()
 
-	if this.state == RoomStateClose {
-		this.mu.Unlock()
+	if r.state == RoomStateClose {
+		r.mu.Unlock()
 		return ErrRoomClosed
 	}
 
-	if this.state == RoomStateRunning {
-		this.mu.Unlock()
+	if r.state == RoomStateRunning {
+		r.mu.Unlock()
 		return ErrRoomRunning
 	}
 
-	this.state = RoomStateRunning
-	this.closed = make(chan struct{}, 1)
-	this.mu.Unlock()
+	r.state = RoomStateRunning
+	r.closed = make(chan struct{}, 1)
+	r.mu.Unlock()
 
-	game.OnRunInRoom(this)
+	game.OnRunInRoom(r)
 
-	this.waiter.Add(1)
-	defer this.waiter.Done()
+	r.waiter.Add(1)
+	defer r.waiter.Done()
 
-	return this.mode.Run(game)
+	return r.mode.Run(game)
 }
 
-func (this *room) OnMessage(sess net4go.Session, p net4go.Packet) {
+func (r *room) OnMessage(sess net4go.Session, p net4go.Packet) {
 	var playerId = sess.GetId()
 	if playerId == 0 {
 		sess.Close()
 		return
 	}
 
-	var m = this.newMessage(playerId, mTypeDefault, p, nil)
+	var m = r.newMessage(playerId, mTypeDefault, p, nil)
 	if m != nil {
-		this.mQueue.Enqueue(m)
+		r.queue.Enqueue(m)
 	}
 }
 
-func (this *room) OnClose(sess net4go.Session, err error) {
+func (r *room) OnClose(sess net4go.Session, err error) {
 	var playerId = sess.GetId()
 	if playerId == 0 {
 		return
@@ -359,28 +359,28 @@ func (this *room) OnClose(sess net4go.Session, err error) {
 
 	sess.UpdateHandler(nil)
 
-	this.enqueuePlayerOut(playerId, err)
+	r.enqueuePlayerOut(playerId, err)
 }
 
-func (this *room) Enqueue(message interface{}) {
-	var m = this.newMessage(0, mTypeCustom, message, nil)
+func (r *room) Enqueue(message interface{}) {
+	var m = r.newMessage(0, mTypeCustom, message, nil)
 	if m != nil {
-		this.mQueue.Enqueue(m)
+		r.queue.Enqueue(m)
 	}
 }
 
-func (this *room) enqueuePlayerIn(player Player) error {
-	var m = this.newMessage(player.GetId(), mTypePlayerIn, nil, nil)
+func (r *room) enqueuePlayerIn(player Player) error {
+	var m = r.newMessage(player.GetId(), mTypePlayerIn, nil, nil)
 	if m != nil {
 		var rErr = make(chan error, 1)
 		m.Player = player
 		m.rError = rErr
-		this.mQueue.Enqueue(m)
+		r.queue.Enqueue(m)
 
 		var err error
 		select {
 		case err = <-rErr:
-		case <-this.closed:
+		case <-r.closed:
 			err = ErrRoomClosed
 		}
 		close(rErr)
@@ -389,99 +389,99 @@ func (this *room) enqueuePlayerIn(player Player) error {
 	return nil
 }
 
-func (this *room) enqueuePlayerOut(playerId int64, err error) {
-	var m = this.newMessage(playerId, mTypePlayerOut, nil, err)
+func (r *room) enqueuePlayerOut(playerId int64, err error) {
+	var m = r.newMessage(playerId, mTypePlayerOut, nil, err)
 	if m != nil {
-		this.mQueue.Enqueue(m)
+		r.queue.Enqueue(m)
 	}
 }
 
-func (this *room) SendPacket(playerId int64, packet net4go.Packet) {
-	var p = this.GetPlayer(playerId)
+func (r *room) SendPacket(playerId int64, packet net4go.Packet) {
+	var p = r.GetPlayer(playerId)
 	if p != nil {
 		p.SendPacket(packet)
 	}
 }
 
-func (this *room) BroadcastPacket(packet net4go.Packet) {
-	this.mu.RLock()
-	for _, p := range this.players {
+func (r *room) BroadcastPacket(packet net4go.Packet) {
+	r.mu.RLock()
+	for _, p := range r.players {
 		p.SendPacket(packet)
 	}
-	this.mu.RUnlock()
+	r.mu.RUnlock()
 }
 
-func (this *room) Closed() bool {
-	this.mu.RLock()
-	defer this.mu.RUnlock()
-	return this.state == RoomStateClose
+func (r *room) Closed() bool {
+	r.mu.RLock()
+	defer r.mu.RUnlock()
+	return r.state == RoomStateClose
 }
 
-func (this *room) Close() error {
-	this.mu.Lock()
-	if this.state == RoomStateClose {
-		this.mu.Unlock()
+func (r *room) Close() error {
+	r.mu.Lock()
+	if r.state == RoomStateClose {
+		r.mu.Unlock()
 		return nil
 	}
-	this.state = RoomStateClose
+	r.state = RoomStateClose
 
-	for _, p := range this.players {
+	for _, p := range r.players {
 		if p != nil {
-			this.enqueuePlayerOut(p.GetId(), nil)
+			r.enqueuePlayerOut(p.GetId(), nil)
 		}
 	}
-	//if this.mQueue != nil {
-	//	this.mQueue.Enqueue(nil)
+	//if r.queue != nil {
+	//	r.queue.Enqueue(nil)
 	//}
-	this.mQueue.Close()
-	this.mu.Unlock()
+	r.queue.Close()
+	r.mu.Unlock()
 
 	var err error
-	if this.mode != nil {
-		err = this.mode.OnClose()
+	if r.mode != nil {
+		err = r.mode.OnClose()
 	}
 	return err
 }
 
-func (this *room) panic(game Game, err error) {
-	game.OnPanic(this, err)
+func (r *room) panic(game Game, err error) {
+	game.OnPanic(r, err)
 
-	this.mu.Lock()
-	if this.state == RoomStateClose {
-		this.mu.Unlock()
+	r.mu.Lock()
+	if r.state == RoomStateClose {
+		r.mu.Unlock()
 		return
 	}
-	this.state = RoomStateClose
+	r.state = RoomStateClose
 
-	//var players = this.GetPlayers()
+	//var players = r.GetPlayers()
 	//for _, p := range players {
 	//	if p != nil {
-	//		this.onLeaveRoom(game, p.GetId())
+	//		r.onLeaveRoom(game, p.GetId())
 	//	}
 	//}
 
-	for _, p := range this.players {
+	for _, p := range r.players {
 		if p == nil {
 			continue
 		}
-		delete(this.players, p.GetId())
-		this.mu.Unlock()
+		delete(r.players, p.GetId())
+		r.mu.Unlock()
 
 		p.Close()
 		game.OnLeaveRoom(p, nil)
 
-		this.mu.Lock()
+		r.mu.Lock()
 	}
-	this.mu.Unlock()
+	r.mu.Unlock()
 
-	if this.mode != nil {
-		this.mode.OnClose()
+	if r.mode != nil {
+		r.mode.OnClose()
 	}
 }
 
-func (this *room) clean() {
-	this.players = nil
-	this.messagePool = nil
-	this.mode = nil
-	close(this.closed)
+func (r *room) clean() {
+	r.players = nil
+	r.messagePool = nil
+	r.mode = nil
+	close(r.closed)
 }

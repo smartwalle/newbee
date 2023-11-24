@@ -37,16 +37,16 @@ type blockMessageQueue struct {
 	bq block.Queue[*message]
 }
 
-func (this *blockMessageQueue) Enqueue(m *message) {
-	this.bq.Enqueue(m)
+func (q *blockMessageQueue) Enqueue(m *message) {
+	q.bq.Enqueue(m)
 }
 
-func (this *blockMessageQueue) Dequeue(items *[]*message) bool {
-	return this.bq.Dequeue(items)
+func (q *blockMessageQueue) Dequeue(items *[]*message) bool {
+	return q.bq.Dequeue(items)
 }
 
-func (this *blockMessageQueue) Close() {
-	this.bq.Close()
+func (q *blockMessageQueue) Close() {
+	q.bq.Close()
 }
 
 func newBlockQueue() *blockMessageQueue {
@@ -61,44 +61,44 @@ type messageQueue struct {
 	closed   int32
 }
 
-func (this *messageQueue) Enqueue(m *message) {
-	if atomic.LoadInt32(&this.closed) == 1 {
+func (q *messageQueue) Enqueue(m *message) {
+	if atomic.LoadInt32(&q.closed) == 1 {
 		return
 	}
 
-	this.mu.Lock()
+	q.mu.Lock()
 
-	n := len(this.elements)
-	c := cap(this.elements)
+	n := len(q.elements)
+	c := cap(q.elements)
 	if n+1 > c {
 		npq := make([]*message, n, c*2)
-		copy(npq, this.elements)
-		this.elements = npq
+		copy(npq, q.elements)
+		q.elements = npq
 	}
-	this.elements = this.elements[0 : n+1]
-	this.elements[n] = m
+	q.elements = q.elements[0 : n+1]
+	q.elements[n] = m
 
-	this.mu.Unlock()
+	q.mu.Unlock()
 }
 
-func (this *messageQueue) Dequeue(elements *[]*message) bool {
-	this.mu.Lock()
-	for len(this.elements) == 0 {
-		this.mu.Unlock()
-		return atomic.LoadInt32(&this.closed) != 1
+func (q *messageQueue) Dequeue(elements *[]*message) bool {
+	q.mu.Lock()
+	for len(q.elements) == 0 {
+		q.mu.Unlock()
+		return atomic.LoadInt32(&q.closed) != 1
 	}
 
-	for _, item := range this.elements {
+	for _, item := range q.elements {
 		*elements = append(*elements, item)
 	}
 
-	this.elements = this.elements[0:0]
-	this.mu.Unlock()
-	return atomic.LoadInt32(&this.closed) != 1
+	q.elements = q.elements[0:0]
+	q.mu.Unlock()
+	return atomic.LoadInt32(&q.closed) != 1
 }
 
-func (this *messageQueue) Close() {
-	if atomic.CompareAndSwapInt32(&this.closed, 0, 1) {
+func (q *messageQueue) Close() {
+	if atomic.CompareAndSwapInt32(&q.closed, 0, 1) {
 	}
 }
 

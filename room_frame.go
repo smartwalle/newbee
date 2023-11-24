@@ -16,58 +16,58 @@ func newFrameRoom(room *room) roomMode {
 	return r
 }
 
-func (this *frameRoom) Run(game Game) (err error) {
+func (r *frameRoom) Run(game Game) (err error) {
 	//if game == nil {
 	//	return ErrNilGame
 	//}
-	//this.mu.Lock()
+	//r.mu.Lock()
 	//
-	//if this.state == RoomStateClose {
-	//	this.mu.Unlock()
+	//if r.state == RoomStateClose {
+	//	r.mu.Unlock()
 	//	return ErrRoomClosed
 	//}
 	//
-	//if this.state == RoomStateRunning {
-	//	this.mu.Unlock()
+	//if r.state == RoomStateRunning {
+	//	r.mu.Unlock()
 	//	return ErrRoomRunning
 	//}
 	//
-	//this.state = RoomStateRunning
-	//this.mu.Unlock()
+	//r.state = RoomStateRunning
+	//r.mu.Unlock()
 	//
-	//game.OnRunInRoom(this)
+	//game.OnRunInRoom(r)
 
 	var d = game.TickInterval()
 	if d <= 0 {
 		return ErrBadInterval
 	}
-	this.tick(d)
+	r.tick(d)
 
 	var mList []*message
 
 	defer func() {
-		if this.timer != nil {
-			this.timer.Stop()
-			this.timer = nil
+		if r.timer != nil {
+			r.timer.Stop()
+			r.timer = nil
 		}
-		game.OnCloseRoom(this)
-		this.clean()
+		game.OnCloseRoom(r)
+		r.clean()
 	}()
 
 	defer func() {
 		if v := recover(); v != nil {
 			err = newStackError(v, debug.Stack())
 
-			this.room.panic(game, err)
+			r.room.panic(game, err)
 		}
 	}()
 
 RunLoop:
 	for {
 		select {
-		case <-this.timer.C:
+		case <-r.timer.C:
 			mList = mList[0:0]
-			var ok = this.mQueue.Dequeue(&mList)
+			var ok = r.queue.Dequeue(&mList)
 
 			for _, m := range mList {
 				//if m == nil {
@@ -76,15 +76,15 @@ RunLoop:
 
 				switch m.Type {
 				case mTypeDefault:
-					this.onMessage(game, m.PlayerId, m.Data)
+					r.onMessage(game, m.PlayerId, m.Data)
 				case mTypeCustom:
-					this.onDequeue(game, m.Data)
+					r.onDequeue(game, m.Data)
 				case mTypePlayerIn:
-					m.rError <- this.onJoinRoom(game, m.Player)
+					m.rError <- r.onJoinRoom(game, m.Player)
 				case mTypePlayerOut:
-					this.onLeaveRoom(game, m.PlayerId, m.Error)
+					r.onLeaveRoom(game, m.PlayerId, m.Error)
 				}
-				this.releaseMessage(m)
+				r.releaseMessage(m)
 			}
 
 			if !ok {
@@ -92,26 +92,26 @@ RunLoop:
 			}
 
 			game.OnTick()
-			this.tick(d)
+			r.tick(d)
 		}
 	}
 	return
 }
 
-func (this *frameRoom) tick(d time.Duration) {
-	if this.timer == nil {
-		this.timer = time.NewTimer(d)
+func (r *frameRoom) tick(d time.Duration) {
+	if r.timer == nil {
+		r.timer = time.NewTimer(d)
 	} else {
-		if !this.timer.Stop() {
+		if !r.timer.Stop() {
 			select {
-			case <-this.timer.C:
+			case <-r.timer.C:
 			default:
 			}
 		}
-		this.timer.Reset(d)
+		r.timer.Reset(d)
 	}
 }
 
-func (this *frameRoom) OnClose() error {
+func (r *frameRoom) OnClose() error {
 	return nil
 }
